@@ -1,3 +1,4 @@
+import { showActionMessage } from './action-message.js'
 import { createPlanLink, disablePlanLink, readPlanLink, readPlanRecipients, revokePlanShare, sharePracticePlan } from './library.js'
 
 export function setupPlanSharing() {
@@ -6,7 +7,6 @@ export function setupPlanSharing() {
   const form = document.getElementById('share-plan-form')
   const username = document.getElementById('share-username')
   const list = document.getElementById('share-recipients')
-  const status = document.getElementById('share-plan-status')
   const create = document.getElementById('create-plan-link')
   const linkControls = document.getElementById('plan-link-controls')
   const linkUrl = document.getElementById('plan-link-url')
@@ -30,10 +30,10 @@ export function setupPlanSharing() {
       const result = await action(plan.id)
       if (activePlan === plan) {
         showLink(result?.token)
-        status.textContent = message
+        showActionMessage(message)
       }
     } catch (error) {
-      if (activePlan === plan) status.textContent = error.message
+      if (activePlan === plan) showActionMessage(error.message)
     } finally {
       if (activePlan === plan) button.disabled = false
     }
@@ -45,11 +45,11 @@ export function setupPlanSharing() {
     const url = linkUrl.value
     try {
       await navigator.clipboard.writeText(url)
-      status.textContent = 'Link copied.'
+      showActionMessage('Link copied.')
     } catch {
       linkUrl.focus()
       linkUrl.select()
-      status.textContent = 'Copy the selected link to share it.'
+      showActionMessage('Copy the selected link to share it.')
     }
   })
 
@@ -73,9 +73,9 @@ export function setupPlanSharing() {
         try {
           await revokePlanShare(plan.id, recipient.id)
           await refresh(plan)
-          if (activePlan === plan) status.textContent = 'Access removed for ' + recipient.username + '.'
+          if (activePlan === plan) showActionMessage('Access removed for ' + recipient.username + '.')
         } catch (error) {
-          if (activePlan === plan) status.textContent = error.message
+          if (activePlan === plan) showActionMessage(error.message)
           remove.disabled = false
         }
       })
@@ -95,10 +95,10 @@ export function setupPlanSharing() {
       await refresh(plan)
       if (activePlan === plan) {
         form.reset()
-        status.textContent = 'Read-only access granted.'
+        showActionMessage('Read-only access granted.')
       }
     } catch (error) {
-      if (activePlan === plan) status.textContent = error.message
+      if (activePlan === plan) showActionMessage(error.message)
     } finally {
       if (activePlan === plan) submit.disabled = false
     }
@@ -113,7 +113,6 @@ export function setupPlanSharing() {
     form.reset()
     form.querySelector('button').disabled = false
     list.replaceChildren()
-    status.textContent = ''
     showLink(null)
     create.disabled = true
     disable.disabled = false
@@ -122,7 +121,7 @@ export function setupPlanSharing() {
       const [, link] = await Promise.all([refresh(requested), readPlanLink(plan.id)])
       if (activePlan === requested) showLink(link.token)
     } catch (error) {
-      if (activePlan === requested) status.textContent = error.message
+      if (activePlan === requested) showActionMessage(error.message)
     } finally {
       if (activePlan === requested) create.disabled = false
     }

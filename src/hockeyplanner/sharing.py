@@ -6,6 +6,7 @@ from sqlalchemy import and_, delete, or_, select
 from sqlalchemy.dialects.sqlite import insert
 from sqlalchemy.orm import Session, sessionmaker
 
+from .library import check_capacity, lock_library
 from .database import LibraryRecord, PlanShare, PlanShareLink, User, UserAccess
 
 
@@ -106,10 +107,16 @@ class Sharing:
             link = find_link(session, token)
             record = find_plan(session, link.owner_id, link.plan_id)
             owner = session.get(User, link.owner_id)
-            return {"owner": owner.username, "plan": resolved_plan(session, record)}
+            plan = resolved_plan(session, record)
+            activities = [
+                {key: drill[key] for key in ("title", "description", "layout", "items") if key in drill}
+                for drill in plan["activities"]
+            ]
+            return {"owner": owner.username, "plan": {"name": plan["name"], "activities": activities}}
 
     def claim_link(self, recipient_id: int, token: str) -> None:
         with self.sessions.begin() as session:
+            lock_library(session, recipient_id)
             link = find_link(session, token)
             find_plan(session, link.owner_id, link.plan_id)
             if recipient_id != link.owner_id:
@@ -135,6 +142,7 @@ class Sharing:
         if copy_id == plan_id:
             raise ValueError("A copy requires a new plan ID.")
         with self.sessions.begin() as session:
+            lock_library(session, recipient_id)
             share = session.get(PlanShare, (owner_id, plan_id, recipient_id))
             if share is None:
                 raise ShareNotFound("Shared plan not found.")
@@ -148,6 +156,8 @@ class Sharing:
                 return copy_id
 
             plan = resolved_plan(session, original)
+            check_capacity(session, recipient_id, "plans", 1)
+            check_capacity(session, recipient_id, "drills", len({drill["id"] for drill in plan["activities"]}))
             copied = {}
             activities = []
             for drill in plan["activities"]:

@@ -1,49 +1,102 @@
 # Hockey Planner
 
-Planificador de atividades de hockey com arena interativa e banco de exercícios local.
+Plan hockey drills with an interactive rink and a local drill library.
 
-## Executar
+## Run the application
 
-Na raiz do projeto, execute:
+From the project root, run these commands.
 
 ```sh
 uv sync
 uv run hockeyplanner
 ```
 
-Abra [http://127.0.0.1:8000](http://127.0.0.1:8000) em um navegador moderno. Crie uma conta com nome de usuário, e-mail e senha. Use o nome de usuário ou o e-mail para entrar. Contas antigas sem e-mail precisam cadastrá-lo após entrar pela primeira vez com o nome de usuário. Para alterar o endereço depois, clique no próprio nome no cabeçalho. No PyCharm, também é possível executar `src/main.py` com o interpretador da pasta `.venv`.
+Open [http://127.0.0.1:8000](http://127.0.0.1:8000) in a modern browser. Create an account with a username, email address, and password. Then choose **Free** on the plan selection page. **Full Access** is listed as coming soon. Free users can select **Upgrade plan** to compare plans. Power users and Full Access subscribers can manage their subscription in **Account Profile**. Switching to Free preserves saved content and applies the Free limits to new drills and plans. Sign in with either your username or your email address. If you have an older account without an email address, sign in with your username and add an email address when prompted. To change your email address later, click your name in the header. In PyCharm, you can also run `src/main.py` with the interpreter from the `.venv` folder.
 
-## Montar um exercício
+Free accounts can save up to 10 drills and 3 practice plans. All other features are available. Editing a saved item does not use another slot, and deleting an item frees its slot. Copies of shared plans and their drills use slots in the recipient’s library.
 
-- Em **Layout**, escolha **Full rink**, **Half rink** ou **Quarter rink**. O quarto de pista é cortado nos dois eixos, com uma margem além da linha horizontal do meio para preservar o gol e sua área.
+## Create a drill
 
-- Escolha um marcador e clique na arena para posicioná-lo. Clique em **Player** para ver as equipes. O azul é o padrão. Escolha **Team B** para colocar um jogador vermelho. Use **Referee** para colocar um árbitro. Em **Select and Move**, use **Shift + clique** para selecionar vários jogadores e escolha uma cor no controle **Player** para alterá-los juntos. Use **Shot on goal** para indicar o ponto de onde sai o chute.
-- Para indicar a sequência do exercício, escolha **Step number**, selecione um número de 1 a 9 e clique na arena.
-- Escolha um movimento e o formato da linha. Arraste do ponto inicial ao destino. Ao desenhar uma curva, desvie o cursor durante o arraste para controlar a curvatura. Escolha **Freehand** para seguir o cursor com curvas suavizadas.
-- Use **Select and Move** para reposicionar ou excluir um elemento. Ao selecionar um gol, use os botões de rotação para girá-lo em passos de 15°. Para mover vários elementos, arraste um retângulo a partir de uma área livre para envolvê-los. Depois, arraste um dos elementos selecionados. Segure **Shift** para iniciar o retângulo sobre um elemento. Os botões de desfazer e refazer afetam as alterações na arena.
-- Preencha o nome e a descrição. Use **Save Drill** para adicioná-la ao banco ou atualizar a versão já salva.
-- Use **PNG** ou **PDF** para baixar a arena com o nome e a descrição da atividade.
+- Under **Layout**, choose **Full rink**, **Half rink**, or **Quarter rink**. The quarter-rink view crops both axes and extends past the horizontal midpoint enough to keep the entire goal and crease visible.
+- Choose a marker and click the rink to place it. Click **Player** to see the teams. Blue is the default. Select **Team B** to place a red player. Use **Referee** to place an official. With **Select and Move**, Shift-click to select multiple players, then choose a color in **Player** to change them together. Use **Shot on goal** to mark where a shot begins.
+- To mark the steps of a drill, choose **Step number**, select a number from 1 to 9, and click the rink.
+- Choose a movement and a line shape. Drag from the starting point to the destination. When drawing a curve, move the pointer off the direct path to shape the bend. Choose **Freehand** to follow the pointer with a smoothed line.
+- Use **Select and Move** to reposition or delete an item. When a goal is selected, use the rotation buttons to turn it in 15° increments. To move several items, drag from an empty area to draw a rectangle around them, then drag any selected item. Hold **Shift** to start the rectangle over an item. Undo and redo apply to changes on the rink.
+- Enter a name and description. Click **Save Drill** to add the drill to the library or update the saved version.
+- Use **PNG** or **PDF** to download the rink diagram with the drill name and description.
 
-O aplicativo salva atividades e planos em `data/hockeyplanner.sqlite3`, na máquina que executa o servidor. Os dados são privados por conta e ficam disponíveis após fechar o navegador ou reiniciar o servidor. A primeira conta criada recebe o banco existente no servidor, inclusive os planos. Crie essa conta no computador antes de habilitar o acesso pela rede. Ao abrir a versão atualizada no mesmo endereço e perfil em que você salvou atividades anteriormente, o aplicativo importa esses registros para o SQLite.
+The application stores drills and plans in `data/hockeyplanner.sqlite3` on the machine running the server. Data is private to each account and remains available after you close the browser or restart the server. The first account created inherits the existing server library, including practice plans. Create that account on the computer before enabling network access. If you previously saved drills in your browser, open the updated app using the same address and browser profile to import those records into SQLite.
 
-Para acessar o mesmo banco pelo celular, execute `uv run hockeyplanner --host 0.0.0.0` no computador e abra `http://<IP-do-computador>:8000` no celular conectado à mesma rede. Entre com a mesma conta para acessar seus dados. O servidor local usa HTTP. Em redes públicas, sirva o aplicativo por um proxy HTTPS e inicie-o com `--secure-cookies`.
+To access the same library from your phone, run `uv run hockeyplanner --host 0.0.0.0` on the computer and open `http://<computer-ip>:8000` on a phone connected to the same network. Sign in with the same account to access your data. The local server uses HTTP. On public networks, serve the application through an HTTPS proxy and start it with `--secure-cookies`.
 
-## Consultar atividades e planos
+## Browse drills and plans
 
-Use **Drill Library** no cabeçalho para listar os exercícios salvos e abri-los no editor. **Practice Plans** abre a página dos planos e das atividades que fazem parte de cada um.
+Use **Drill Library** in the header to browse saved drills and open them in the editor. **Practice Plans** shows your plans and the drills in each one.
 
-## Organizar um plano de treino
+## Build a practice plan
 
-Abra **Practice Plans**, clique em **New Plan**, dê um nome e selecione uma ou mais atividades salvas na ordem em que serão executadas. Você pode reabrir as atividades pelo plano, editar a seleção ou excluir o plano. Os planos ficam no mesmo banco do aplicativo.
+Open **Practice Plans**, click **New Plan**, enter a name, and select one or more saved drills in the order they should be run. You can reopen drills from the plan, change the selection, or delete the plan. Plans and drills are stored in the same application database.
 
-Use **View Fullscreen** em um plano para percorrer as atividades na ordem salva. Use **Previous** e **Next** ou as setas esquerda e direita do teclado e use **Exit Presentation** para voltar à lista.
+Use **View Fullscreen** to present drills in the saved order. Use **Previous** and **Next** or the left and right arrow keys to navigate. Click **Exit Presentation** to return to the list.
 
-## Administrar contas
+## Delete your account
 
-A primeira conta do aplicativo recebe o perfil `poweruser`. Em instalações existentes, a conta mais antiga recebe esse perfil ao atualizar. Entre com essa conta e abra **Administration** para alterar o perfil de outras contas, desativar ou reativar acessos e redefinir senhas. Desativar uma conta ou redefinir sua senha encerra as sessões dessa conta. Os exercícios e planos permanecem vinculados ao seu proprietário.
+Open **Account Profile**, choose **Delete my account**, and enter your current password. Account deletion permanently removes your profile, drills, practice plans, and shares and ends all active sessions. Copies already saved by other users remain in their accounts.
 
-## Compartilhar planos
+## Administer accounts
 
-Abra **Share** em um plano e informe o nome de usuário do destinatário. O plano aparece em **Shared with me** na conta dele, com acesso somente para leitura. **Copy to My Account** cria um plano e cópias independentes dos exercícios no banco do destinatário. O proprietário pode retirar o acesso ao original. O destinatário também pode removê-lo de **Shared with me** sem afetar cópias já feitas.
+The first account created receives the `poweruser` role. In existing installations, the oldest account receives this role on upgrade. Sign in with that account and open **Administration** to change other users’ roles, disable or re-enable their access, or reset their passwords, or permanently delete an account and its owned drills and plans. Independent copies already saved by other users remain in those accounts. Disabling an account or resetting its password signs that user out of all active sessions. Drills and plans remain linked to their owner.
 
-Em **Share**, também é possível criar um link. Quem recebe o link precisa entrar e aceitar o compartilhamento. Desativar o link impede novos aceites. Na mesma janela, **Remove access** retira o acesso de quem já aceitou.
+## Share plans
+
+Click **Share** on a plan and enter the recipient’s username. The plan appears under **Shared with me** in the recipient’s account with read-only access. **Copy to My Account** saves an independent copy of the plan and each drill to the recipient’s library. The owner can revoke access to the original. The recipient can also remove it from **Shared with me**. Copies already saved remain available.
+
+You can also create a share link from **Share**. Anyone with the link can preview the plan, present it in fullscreen, and print it without signing in. Recipients must sign in to accept the share or make an editable copy. Disabling the link prevents new recipients from accepting it. In the same dialog, use **Remove access** to revoke access for someone who has already accepted.
+
+## Configure account email
+
+Registration and email changes require a six-digit code sent to the new address. The email contains a link to the confirmation page. Requests expire after 30 minutes. The app creates an account only after confirmation and keeps the existing address active until an email change is confirmed.
+
+The sign-in page also lets users request a password reset at their registered email address. Reset links expire after 30 minutes and can be used once. Resetting a password signs out all existing sessions for the account.
+
+If you do not already have a local `.env` file, copy the template.
+
+```sh
+cp -n .env-template .env
+```
+
+Fill in the values supplied by your SMTP provider, then start the application.
+
+```sh
+uv run --env-file .env hockeyplanner
+```
+
+Keep the `.env` file private. It is excluded from Git.
+
+| Variable | Purpose |
+| --- | --- |
+| `HOCKEYPLANNER_PUBLIC_URL` | The browser-accessible URL used in confirmation and password reset links, such as `https://planner.example.com`. |
+| `HOCKEYPLANNER_SMTP_HOST` | SMTP server hostname. |
+| `HOCKEYPLANNER_SMTP_FROM` | Sender email address. |
+| `HOCKEYPLANNER_SMTP_SECURITY` | `starttls` by default, or `ssl` for implicit TLS. |
+| `HOCKEYPLANNER_SMTP_PORT` | Defaults to `587` for STARTTLS and `465` for implicit TLS. |
+| `HOCKEYPLANNER_SMTP_USERNAME`, `HOCKEYPLANNER_SMTP_PASSWORD` | Credentials for an authenticated SMTP server. |
+
+## Deploy with Podman
+
+Build the image from the project root. Stop any other instance that uses port 8000 or the same SQLite database before starting the container.
+
+```sh
+podman build -t localhost/hockeyplanner:latest .
+mkdir -p data
+podman run --detach --name hockeyplanner --restart=unless-stopped \
+  --userns=keep-id --user "$(id -u):$(id -g)" \
+  --publish 127.0.0.1:8000:8000 \
+  --env-file .env \
+  --volume "$PWD/data:/app/data:Z" \
+  localhost/hockeyplanner:latest
+```
+
+Open [http://127.0.0.1:8000](http://127.0.0.1:8000). The bind mount keeps your existing SQLite database in the project’s `data/` directory and preserves it when the container is replaced. The `.env` file provides environment variables at runtime and is excluded from the build context.
+
+Check the container with `podman ps` and `podman logs hockeyplanner`. To serve on a trusted LAN, publish with `--publish 8000:8000` and set `HOCKEYPLANNER_PUBLIC_URL` in `.env` to the host address that recipients can reach.

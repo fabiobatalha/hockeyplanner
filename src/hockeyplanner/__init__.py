@@ -1,4 +1,5 @@
 import argparse
+from collections.abc import Callable
 from pathlib import Path
 
 from flask import Flask
@@ -7,14 +8,20 @@ from sqlalchemy.exc import SQLAlchemyError
 from .accounts import Accounts
 from .api import create_api
 from .database import open_database
+from .email_confirmation import EmailConfirmations, smtp_confirmation
 from .library import Library
+from .password_reset import PasswordResets, smtp_password_reset
 from .sharing import Sharing
 
 
 PROJECT_DIR = Path(__file__).resolve().parents[2]
 
 
-def create_app(data_file: Path | None = None, *, secure_cookies: bool = False) -> Flask:
+def create_app(
+    data_file: Path | None = None, *, secure_cookies: bool = False,
+    send_confirmation: Callable[[str, str, str], None] = smtp_confirmation,
+    send_password_reset: Callable[[str, str], None] = smtp_password_reset,
+) -> Flask:
     web = PROJECT_DIR / "web"
     if not (web / "index.html").is_file():
         raise FileNotFoundError("Web directory not found. Run the editor from the project.")
@@ -22,7 +29,12 @@ def create_app(data_file: Path | None = None, *, secure_cookies: bool = False) -
     app = Flask(__name__, static_folder=str(web), static_url_path="")
     app.config["MAX_CONTENT_LENGTH"] = 25 * 1024 * 1024
     sessions = open_database(data_file or PROJECT_DIR / "data" / "hockeyplanner.sqlite3")
-    app.register_blueprint(create_api(Library(sessions), Accounts(sessions), Sharing(sessions), secure_cookies))
+    confirmations = EmailConfirmations(sessions, send_confirmation)
+    confirmations.cleanup()
+    app.register_blueprint(create_api(
+        Library(sessions), Accounts(sessions), Sharing(sessions), confirmations,
+        PasswordResets(sessions, send_password_reset), secure_cookies,
+    ))
 
     @app.get("/")
     def index():

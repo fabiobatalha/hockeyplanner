@@ -11,15 +11,18 @@
 <body>
   <header class="topbar">
     <a href="#editor" class="brand"><img src="hockey-planner-logo.png" alt="Hockey Planner" width="2172" height="724"></a>
-    <nav id="account-nav" class="actions page-nav" aria-label="Main navigation" hidden>
-      <a href="#editor" aria-current="page">Editor</a>
-      <a href="#drills">Drill Library <span id="activity-count">0</span></a>
-      <a href="#plans">Practice Plans</a>
-      <a id="admin-link" href="#admin" hidden>Administration</a>
-      <button id="account-name" type="button" title="Account profile"></button>
-      <button id="sign-out" type="button">Sign out</button>
-      <span id="sign-out-status" role="status"></span>
-    </nav>
+    <div id="account-nav" class="header-controls" hidden>
+      <nav class="page-nav" aria-label="Main navigation">
+        <a href="#editor" aria-current="page">Editor</a>
+        <a href="#drills">Drill Library <span id="activity-count">0</span></a>
+        <a href="#plans">Practice Plans</a>
+        <a id="admin-link" href="#admin" hidden>Administration</a>
+      </nav>
+      <div class="header-account">
+        <button id="account-name" type="button" title="Account profile"><span id="account-name-label"></span></button>
+        <button id="sign-out" type="button">Sign out</button>
+      </div>
+    </div>
   </header>
   <main id="account-entry">
     <section class="card sign-in-card" aria-labelledby="auth-heading">
@@ -32,13 +35,48 @@
         <input id="registration-email" name="email" type="email" autocomplete="email" maxlength="320" hidden disabled>
         <label for="password">Password</label>
         <input id="password" name="password" type="password" autocomplete="current-password" required maxlength="128">
+        <button id="forgot-password" type="button">Forgot password?</button>
         <p id="registration-help" hidden>Use a username of 3–32 characters and a password of 12–128 characters with at least one uppercase letter and one special character.</p>
         <div class="actions">
           <button id="auth-submit" class="primary" type="submit">Sign in</button>
           <button id="auth-switch" type="button">Create an account</button>
+          <button id="back-to-shared-plan" type="button" hidden>Back to shared plan</button>
+        </div>
+      </form>
+      <form id="forgot-password-form" hidden>
+        <label for="reset-email">Registered email address</label>
+        <input id="reset-email" name="email" type="email" autocomplete="email" maxlength="320" required>
+        <div class="actions">
+          <button class="primary" type="submit">Send reset link</button>
+          <button id="back-to-sign-in" type="button">Back to sign in</button>
         </div>
       </form>
       <p id="auth-status" class="status" role="status">Connecting to the planner…</p>
+    </section>
+  </main>
+  <main id="email-confirmation-page" hidden>
+    <section class="card sign-in-card" aria-labelledby="email-confirmation-title">
+      <img class="sign-in-logo" src="hockey-planner-logo.png" alt="Hockey Planner" width="2172" height="724">
+      <h1 id="email-confirmation-title">Confirm your email</h1>
+      <form id="email-confirmation-form">
+        <label for="email-confirmation-code">Six-digit code</label>
+        <input id="email-confirmation-code" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required>
+        <div class="actions"><button class="primary" type="submit">Confirm email</button></div>
+      </form>
+      <a href="#editor">Back to Hockey Planner</a>
+    </section>
+  </main>
+  <main id="password-reset-page" hidden>
+    <section class="card sign-in-card" aria-labelledby="password-reset-title">
+      <img class="sign-in-logo" src="hockey-planner-logo.png" alt="Hockey Planner" width="2172" height="724">
+      <h1 id="password-reset-title">Reset your password</h1>
+      <form id="password-reset-form">
+        <label for="reset-new-password">New password</label>
+        <input id="reset-new-password" name="password" type="password" autocomplete="new-password" aria-describedby="reset-password-help" required>
+        <p id="reset-password-help">Use 12–128 characters, including at least one uppercase letter and one special character.</p>
+        <div class="actions"><button class="primary" type="submit">Reset password</button></div>
+      </form>
+      <a href="#editor">Back to Hockey Planner</a>
     </section>
   </main>
   <main id="planner" hidden>
@@ -162,26 +200,111 @@
     <section id="plan-invite-page" aria-labelledby="plan-invite-title" hidden>
       <div class="page-heading plan-invite-heading">
         <h1 id="plan-invite-title" tabindex="-1">Shared Practice Plan</h1>
-        <button id="accept-plan-link" type="button" class="primary" disabled>Accept shared plan</button>
+        <div class="actions">
+          <button id="fullscreen-plan-link" type="button" disabled>View Fullscreen</button>
+          <button id="print-plan-link" type="button" disabled>Print PDF</button>
+          <button id="accept-plan-link" type="button" class="primary" disabled>Accept shared plan</button>
+        </div>
       </div>
       <section class="card plan-invite">
         <div id="plan-invite-preview" hidden>
           <h2 id="plan-preview-name"></h2>
           <p id="plan-preview-owner"></p>
           <ol id="plan-preview-drills"></ol>
-          <p>Accept to add this read-only plan to Shared with me.</p>
+          <p id="plan-invite-guidance"></p>
         </div>
         <p id="plan-invite-status" class="status" role="status"></p>
       </section>
+    </section>
+    <section id="membership-page" aria-labelledby="membership-title" hidden>
+      <header class="membership-heading">
+        <div>
+          <h1 id="membership-title" tabindex="-1">Choose your plan</h1>
+          <p>Both plans include the same coaching tools. The difference is how many drills and plans you can save.</p>
+        </div>
+        <div id="membership-account-actions" class="actions" hidden>
+          <button id="membership-delete-account" class="danger-outline" type="button">Delete my account</button>
+          <button id="membership-sign-out" type="button">Sign out</button>
+        </div>
+      </header>
+      <div class="membership-options">
+        <article class="card membership-option">
+          <h2>Free</h2>
+          <dl class="membership-limits">
+            <div><dt>Drills</dt><dd>10</dd></div>
+            <div><dt>Practice plans</dt><dd>3</dd></div>
+          </dl>
+          <ul class="membership-features">
+            <li>Draw and edit on the rink</li>
+            <li>Present plans in fullscreen</li>
+            <li>Share, receive, and copy practice plans</li>
+            <li>Export drills and plans</li>
+          </ul>
+          <button id="choose-free-plan" class="primary" type="button" hidden>Continue with Free</button>
+          <p id="current-free-plan" class="membership-current" hidden>Current plan</p>
+        </article>
+        <article class="card membership-option membership-full">
+          <h2>Full Access</h2>
+          <dl class="membership-limits">
+            <div><dt>Drills</dt><dd>Unlimited</dd></div>
+            <div><dt>Practice plans</dt><dd>Unlimited</dd></div>
+          </dl>
+          <ul class="membership-features">
+            <li>Draw and edit on the rink</li>
+            <li>Present plans in fullscreen</li>
+            <li>Share, receive, and copy practice plans</li>
+            <li>Export drills and plans</li>
+          </ul>
+          <button id="choose-full-plan" type="button" disabled>Coming soon</button>
+          <p id="current-full-plan" class="membership-current" hidden>Current plan</p>
+        </article>
+      </div>
     </section>
     <section id="admin-page" aria-labelledby="admin-title" hidden>
       <div class="page-heading"><h1 id="admin-title" tabindex="-1">Account Administration</h1></div>
       <p id="admin-status" class="status" role="status"></p>
       <div id="admin-users"></div>
     </section>
+    <a id="upgrade-plan" class="upgrade-link" href="#membership" hidden>Upgrade plan</a>
   </main>
   <footer class="site-footer">© 2026 Hockey Planner</footer>
-  <div id="save-confirmation" role="status" aria-atomic="true"></div>
+  <dialog id="action-message" aria-labelledby="action-message-title" aria-describedby="action-message-body">
+    <div class="action-message-header">
+      <span class="action-message-icon" aria-hidden="true">i</span>
+      <h2 id="action-message-title">Notification</h2>
+    </div>
+    <div class="action-message-content">
+      <p id="action-message-body"></p>
+      <form method="dialog"><button class="primary" type="submit" autofocus>Close</button></form>
+    </div>
+    <div class="action-message-track" aria-hidden="true"><div id="action-message-countdown"></div></div>
+  </dialog>
+  <dialog id="delete-account-dialog" aria-labelledby="delete-account-title" aria-describedby="delete-account-warning">
+    <div class="delete-account-content">
+      <h2 id="delete-account-title">Delete account</h2>
+      <p id="delete-account-warning"></p>
+      <p id="delete-account-status" class="status" role="status"></p>
+      <div class="actions">
+        <form method="dialog"><button id="cancel-account-delete" type="submit" autofocus>Cancel</button></form>
+        <button id="confirm-account-delete" class="danger" type="button">Permanently delete</button>
+      </div>
+    </div>
+  </dialog>
+  <dialog id="plan-limit-dialog" aria-labelledby="plan-limit-title" aria-describedby="plan-limit-guidance">
+    <div class="plan-limit-content">
+      <h2 id="plan-limit-title"></h2>
+      <div class="plan-limit-usage">
+        <strong id="plan-limit-count"></strong>
+        <progress id="plan-limit-meter" aria-label="Free plan usage"></progress>
+      </div>
+      <p id="plan-limit-guidance"></p>
+      <p>Full Access will remove these storage limits when it becomes available.</p>
+      <div class="actions">
+        <form method="dialog"><button type="submit" autofocus>Close</button></form>
+        <a id="compare-plan-limits" class="primary" href="#membership">Compare plans</a>
+      </div>
+    </div>
+  </dialog>
   <dialog id="account-profile" aria-labelledby="account-profile-title">
     <header class="card-heading">
       <h2 id="account-profile-title">Account Profile</h2>
@@ -189,6 +312,14 @@
       <button id="profile-sign-out" type="button" hidden>Sign out</button>
     </header>
     <div class="share-plan-body">
+      <section id="profile-subscription" aria-labelledby="profile-subscription-title" hidden>
+        <h2 id="profile-subscription-title">Subscription</h2>
+        <p id="profile-account-tier"></p>
+        <div class="actions">
+          <button id="profile-compare-plans" type="button">Compare plans</button>
+          <button id="profile-downgrade" type="button" hidden>Switch to Free</button>
+        </div>
+      </section>
       <p id="profile-email-required" hidden>Add an email address to continue to the planner.</p>
       <form id="profile-email-form">
         <label for="profile-email">Email</label>
@@ -197,7 +328,6 @@
         <input id="profile-password" type="password" autocomplete="current-password" maxlength="128" required>
         <div class="actions"><button type="submit" class="primary">Save email</button></div>
       </form>
-      <p id="profile-status" class="status" role="status"></p>
       <section id="profile-password-section" aria-labelledby="change-password-title" hidden>
         <h2 id="change-password-title">Change Password</h2>
         <form id="change-password-form">
@@ -208,8 +338,28 @@
           <p id="change-password-help"></p>
           <div class="actions"><button class="primary" type="submit">Change password</button></div>
         </form>
-        <p id="change-password-status" class="status" role="status"></p>
       </section>
+      <section class="profile-deletion" aria-labelledby="profile-deletion-title">
+        <h2 id="profile-deletion-title">Delete account</h2>
+        <p>Permanently remove your profile, drills, and practice plans.</p>
+        <button id="profile-delete-account" class="danger-outline" type="button">Delete my account</button>
+      </section>
+    </div>
+  </dialog>
+  <dialog id="self-delete-dialog" aria-labelledby="self-delete-title" aria-describedby="self-delete-warning">
+    <div class="delete-account-content">
+      <h2 id="self-delete-title">Delete my account</h2>
+      <p id="self-delete-warning">This permanently deletes your account, drills, plans, and sharing links, and signs you out on all devices. Independent copies saved by others remain in their accounts.</p>
+      <p id="self-delete-admin-warning" hidden>If you are the only power user, assign another power user first to keep Administration available for other accounts.</p>
+      <form id="self-delete-form">
+        <label for="self-delete-password">Current password</label>
+        <input id="self-delete-password" type="password" autocomplete="current-password" maxlength="128" required>
+        <div class="actions">
+          <button id="self-delete-cancel" type="button" autofocus>Cancel</button>
+          <button id="self-delete-confirm" type="submit" class="danger">Permanently delete my account</button>
+        </div>
+      </form>
+      <p id="self-delete-status" class="status" role="status"></p>
     </div>
   </dialog>
   <dialog id="share-plan" aria-labelledby="share-plan-title">
@@ -226,11 +376,10 @@
           <button type="submit" class="primary">Share</button>
         </div>
       </form>
-      <p id="share-plan-status" class="status" role="status"></p>
       <ul id="share-recipients" aria-label="People with access"></ul>
       <section class="plan-link-settings" aria-labelledby="plan-link-title">
         <h3 id="plan-link-title">Share by link</h3>
-        <p>Anyone with the link who signs in can accept read-only access. Disabling it stops new access.</p>
+        <p>Anyone with the link can preview and print this plan. Signing in is required to accept it. Disabling the link stops new access.</p>
         <button id="create-plan-link" type="button">Create share link</button>
         <div id="plan-link-controls" hidden>
           <label for="plan-link-url">Share link</label>

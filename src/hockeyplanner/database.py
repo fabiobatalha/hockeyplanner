@@ -18,12 +18,51 @@ class User(Base):
     password_hash: Mapped[bytes]
 
 
+class RetiredUserId(Base):
+    __tablename__ = "retired_user_ids"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+
+
 class UserEmail(Base):
     __tablename__ = "user_emails"
 
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), primary_key=True)
     address: Mapped[str]
     lookup_key: Mapped[str] = mapped_column(unique=True)
+
+
+class EmailConfirmation(Base):
+    __tablename__ = "email_confirmations"
+
+    token_hash: Mapped[bytes] = mapped_column(primary_key=True)
+    email: Mapped[str]
+    user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), index=True)
+    username: Mapped[str | None]
+    password_salt: Mapped[bytes | None]
+    password_digest: Mapped[bytes]
+    code_salt: Mapped[bytes]
+    code_digest: Mapped[bytes]
+    expires: Mapped[int] = mapped_column(index=True)
+    attempts_left: Mapped[int]
+    return_to: Mapped[str]
+
+
+class PasswordResetRequest(Base):
+    __tablename__ = "password_reset_requests"
+
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), primary_key=True)
+    token_hash: Mapped[bytes] = mapped_column(unique=True)
+    email_key: Mapped[str]
+    password_digest: Mapped[bytes]
+    expires: Mapped[int] = mapped_column(index=True)
+
+
+class UserMembership(Base):
+    __tablename__ = "user_memberships"
+
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), primary_key=True)
+    tier: Mapped[str]
 
 
 class UserAccess(Base):

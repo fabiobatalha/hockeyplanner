@@ -8,7 +8,10 @@ async function request(path, method = 'GET', record) {
   if (response.status === 401) location.reload()
   if (!response.ok) {
     const details = await response.json().catch(() => null)
-    throw new Error(details?.error || 'Request failed (' + response.status + ').')
+    const error = new Error(details?.error || 'Request failed (' + response.status + ').')
+    error.code = details?.code
+    error.capacity = details?.capacity
+    throw error
   }
   if (response.status !== 204) return response.json()
 }
@@ -60,6 +63,10 @@ export async function importLegacyLibrary() {
 
 export function readAccounts() {
   return request('admin/users')
+}
+
+export function deleteAccount(id) {
+  return request('admin/users/' + encodeURIComponent(id), 'DELETE')
 }
 
 export function updateAccount(id, changes) {

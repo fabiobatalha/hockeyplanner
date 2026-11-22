@@ -1,35 +1,14 @@
+import { showActionMessage } from './action-message.js'
+import { presentPlan } from './plan-viewer.js'
+import { showPlanLimit } from './plan-limit.js'
 import { setupPlanSharing } from './plan-sharing.js'
 import { copySharedPlan, deleteRecord, readSharedPlans, removeReceivedShare, saveRecord } from './library.js'
 import { newRecordId } from './record-id.js'
 import { exportTrainingPlan } from './export.js'
-import { activityThumbnail, drawItem, drawRink, rinkHeight, rinkWidth } from './drawing.js'
-import { drillSearch, markdownText } from './markdown.js'
+import { activityThumbnail } from './drawing.js'
+import { drillSearch } from './markdown.js'
 
 export function setupPlans({ getActivities, openActivity, refreshLibrary }) {
-  const viewer = document.getElementById('plan-viewer')
-  const presentation = document.getElementById('plan-presentation')
-  const viewerTitle = document.getElementById('plan-viewer-title')
-  const viewerActivities = document.getElementById('plan-viewer-activities')
-  const previous = document.getElementById('plan-viewer-prev')
-  const next = document.getElementById('plan-viewer-next')
-  const position = document.getElementById('plan-viewer-position')
-  let displayedActivities = []
-  let activityIndex = 0
-  let presentationWasFullscreen = false
-
-  document.addEventListener('fullscreenchange', () => {
-    if (document.fullscreenElement === presentation) presentationWasFullscreen = true
-    else if (presentationWasFullscreen) {
-      presentationWasFullscreen = false
-      if (viewer.open) viewer.close()
-    }
-  })
-  viewer.addEventListener('close', () => {
-    if (document.fullscreenElement === presentation) document.exitFullscreen().catch(() => {})
-    viewerActivities.replaceChildren()
-    displayedActivities = []
-  })
-
   const form = document.getElementById('plan-form')
   const name = document.getElementById('plan-name')
   const list = document.getElementById('plans-list')
@@ -64,68 +43,8 @@ export function setupPlans({ getActivities, openActivity, refreshLibrary }) {
     return getActivities().find(activity => activity.id === entry.id)
   }
 
-  function showActivity(index) {
-    const activity = displayedActivities[index]
-    if (!activity) return
-    activityIndex = index
-    const section = document.createElement('article')
-    section.className = 'plan-viewer-activity'
-    const title = document.createElement('h3')
-    title.textContent = activity.title
-
-    const diagram = document.createElement('canvas')
-    diagram.width = rinkWidth(activity.layout)
-    diagram.height = rinkHeight(activity.layout)
-    diagram.style.setProperty('--diagram-ratio', diagram.width / diagram.height)
-    diagram.setAttribute('aria-label', 'Rink diagram for ' + activity.title)
-    const context = diagram.getContext('2d')
-    drawRink(context)
-    for (const item of activity.items) drawItem(context, item)
-    section.append(title, diagram)
-
-    const description = markdownText(activity.description ?? '').trim()
-    if (description) {
-      const text = document.createElement('p')
-      text.className = 'plan-viewer-description'
-      text.textContent = description
-      section.append(text)
-    }
-    viewerActivities.replaceChildren(section)
-    viewerActivities.scrollTop = 0
-    position.textContent = (index + 1) + ' of ' + displayedActivities.length
-    const focusedControl = document.activeElement
-    previous.disabled = index === 0
-    next.disabled = index === displayedActivities.length - 1
-    if ((focusedControl === previous && previous.disabled) || (focusedControl === next && next.disabled)) {
-      viewerActivities.focus({ preventScroll: true })
-    }
-  }
-
-  previous.addEventListener('click', () => showActivity(activityIndex - 1))
-  next.addEventListener('click', () => showActivity(activityIndex + 1))
-  presentation.addEventListener('keydown', event => {
-    if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return
-    event.preventDefault()
-    showActivity(activityIndex + (event.key === 'ArrowRight' ? 1 : -1))
-  })
-
   function planActivities(plan, shared) {
     return shared ? plan.activities : plan.activities.map(saved => currentActivity(saved) ?? saved)
-  }
-
-  async function present(plan, shared = false) {
-    viewerTitle.textContent = plan.name
-    displayedActivities = planActivities(plan, shared)
-    showActivity(0)
-    viewer.showModal()
-    viewerActivities.focus({ preventScroll: true })
-    if (document.fullscreenEnabled && presentation.requestFullscreen) {
-      try {
-        await presentation.requestFullscreen()
-      } catch {
-        // The open dialog still fills the browser viewport.
-      }
-    }
   }
 
   function exerciseList(plan, readOnly = false) {
@@ -157,10 +76,11 @@ export function setupPlans({ getActivities, openActivity, refreshLibrary }) {
       status.textContent = 'Generating the plan PDF…'
       try {
         await exportTrainingPlan(plan.name, planActivities(plan, shared))
-        status.textContent = 'Plan PDF ready.'
+        showActionMessage('Plan PDF ready.')
       } catch {
-        status.textContent = 'Could not generate the plan PDF.'
+        showActionMessage('Could not generate the plan PDF.')
       } finally {
+        status.textContent = ''
         print.disabled = false
       }
     })
@@ -168,14 +88,14 @@ export function setupPlans({ getActivities, openActivity, refreshLibrary }) {
     return print
   }
 
-  function showList(message = '') {
+  function showList() {
     builder.hidden = true
     draggedKey = null
     reorderingKey = null
     dropZone.classList.remove('drag-over')
     planColumns.hidden = false
     list.replaceChildren()
-    feedback.textContent = message
+    feedback.textContent = ''
     if (!plans.length) list.textContent = 'No saved practice plans.'
 
     for (const plan of plans) {
@@ -186,7 +106,7 @@ export function setupPlans({ getActivities, openActivity, refreshLibrary }) {
       const exercises = exerciseList(plan)
       const actions = document.createElement('div')
       actions.className = 'actions'
-      const view = button('View Fullscreen', () => present(plan))
+      const view = button('View Fullscreen', () => presentPlan(plan.name, planActivities(plan, false)))
       view.className = 'primary'
       actions.append(view, button('Edit Plan', () => edit(plan)), button('Delete Plan', async () => {
         if (saving || !confirm('Delete the plan “' + plan.name + '”?')) return
@@ -194,9 +114,10 @@ export function setupPlans({ getActivities, openActivity, refreshLibrary }) {
         try {
           await deleteRecord('plans', plan.id)
           plans = plans.filter(item => item.id !== plan.id)
-          showList('Plan deleted.')
+          showList()
+          showActionMessage('Plan deleted.')
         } catch {
-          feedback.textContent = 'Could not delete the plan on the application server.'
+          showActionMessage('Could not delete the plan on the application server.')
         } finally {
           saving = false
         }
@@ -225,7 +146,7 @@ export function setupPlans({ getActivities, openActivity, refreshLibrary }) {
     if (!entry) return
     const { drill, sharedSource } = entry
     selection.set(key, sharedSource ? { ...drill, id: newRecordId(), sharedSource } : drill)
-    feedback.textContent = drill.title + ' added to the plan.'
+    showActionMessage(drill.title + ' added to the plan.')
     renderBuilder()
   }
 
@@ -237,7 +158,7 @@ export function setupPlans({ getActivities, openActivity, refreshLibrary }) {
     const [entry] = entries.splice(current, 1)
     entries.splice(index, 0, entry)
     selection = new Map(entries)
-    feedback.textContent = entry[1].title + ' moved to position ' + (index + 1) + '.'
+    showActionMessage(entry[1].title + ' moved to position ' + (index + 1) + '.')
     renderBuilder()
   }
 
@@ -298,7 +219,7 @@ export function setupPlans({ getActivities, openActivity, refreshLibrary }) {
       const remove = button('Remove', () => {
         if (saving) return
         selection.delete(key)
-        feedback.textContent = drill.title + ' removed from the plan.'
+        showActionMessage(drill.title + ' removed from the plan.')
         renderBuilder()
       })
       controls.append(up, down, remove)
@@ -399,7 +320,7 @@ export function setupPlans({ getActivities, openActivity, refreshLibrary }) {
       return
     }
     if (!selection.size) {
-      feedback.textContent = 'Select at least one drill.'
+      showActionMessage('Select at least one drill.')
       return
     }
     const plan = {
@@ -414,9 +335,10 @@ export function setupPlans({ getActivities, openActivity, refreshLibrary }) {
       await saveRecord('plans', plan)
       plans = [plan, ...plans.filter(item => item.id !== plan.id)]
       newPlanId = null
-      showList('Plan saved.')
-    } catch {
-      feedback.textContent = 'Could not save the plan on the application server. Try again.'
+      showList()
+      showActionMessage('Plan saved.')
+    } catch (error) {
+      if (!showPlanLimit(error)) showActionMessage(error.message || 'Could not save the plan. Try again.')
     } finally {
       saving = false
       for (const control of controls) control.disabled = false
@@ -431,7 +353,7 @@ export function setupPlans({ getActivities, openActivity, refreshLibrary }) {
   })
   document.getElementById('cancel-plan').addEventListener('click', () => showList())
 
-  async function refreshShared(message = '') {
+  async function refreshShared() {
     const version = ++sharedVersion
     try {
       const { plans: shared } = await readSharedPlans()
@@ -439,7 +361,7 @@ export function setupPlans({ getActivities, openActivity, refreshLibrary }) {
       sharedDrills = shared.flatMap(({ owner, owner_id: ownerId, plan }) =>
         plan.activities.map(drill => ({ drill, sharedSource: { owner, ownerId, drillId: drill.id } })))
       if (!builder.hidden) renderBuilder()
-      sharedStatus.textContent = message
+      sharedStatus.textContent = ''
       sharedList.replaceChildren()
       if (!shared.length) sharedList.textContent = 'No practice plans have been shared with you.'
       for (const { owner, owner_id: ownerId, plan } of shared) {
@@ -458,10 +380,10 @@ export function setupPlans({ getActivities, openActivity, refreshLibrary }) {
           try {
             await copySharedPlan(ownerId, plan.id, copyId)
             await refreshLibrary()
-            sharedStatus.textContent = 'Plan and drills copied to your account.'
+            showActionMessage('Plan and drills copied to your account.')
             copy.textContent = 'Copied to My Account'
           } catch (error) {
-            sharedStatus.textContent = error.message
+            if (!showPlanLimit(error)) showActionMessage(error.message)
             copy.disabled = false
           } finally {
             remove.disabled = false
@@ -474,14 +396,15 @@ export function setupPlans({ getActivities, openActivity, refreshLibrary }) {
           remove.disabled = copy.disabled = true
           try {
             await removeReceivedShare(ownerId, plan.id)
-            await refreshShared('Plan removed from Shared with me.')
+            await refreshShared()
+            showActionMessage('Plan removed from Shared with me.')
           } catch (error) {
-            sharedStatus.textContent = error.message
+            showActionMessage(error.message)
             remove.disabled = false
             copy.disabled = copyWasDisabled
           }
         })
-        actions.append(button('View Fullscreen', () => present(plan, true)), printButton(plan, true), copy, remove)
+        actions.append(button('View Fullscreen', () => presentPlan(plan.name, plan.activities)), printButton(plan, true), copy, remove)
         card.append(heading, byline, exerciseList(plan, true), actions)
         sharedList.append(card)
       }

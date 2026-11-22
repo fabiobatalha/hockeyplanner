@@ -1,10 +1,38 @@
+import { showActionMessage } from './action-message.js'
 import { addPasswordVisibility, checkNewPassword, passwordRequirements } from './password-policy.js'
-import { readAccounts, updateAccount } from './library.js'
+import { deleteAccount, readAccounts, updateAccount } from './library.js'
 
 export function setupAdmin(currentUserId) {
   const list = document.getElementById('admin-users')
   const status = document.getElementById('admin-status')
+  const dialog = document.getElementById('delete-account-dialog')
+  const warning = document.getElementById('delete-account-warning')
+  const deleteStatus = document.getElementById('delete-account-status')
+  const remove = document.getElementById('confirm-account-delete')
+  const cancel = document.getElementById('cancel-account-delete')
+  let target
   let version = 0
+
+  dialog.addEventListener('cancel', event => {
+    if (remove.disabled) event.preventDefault()
+  })
+  remove.addEventListener('click', async () => {
+    if (!target || remove.disabled) return
+    const { id, username } = target
+    remove.disabled = cancel.disabled = true
+    deleteStatus.textContent = 'Deleting account…'
+    try {
+      await deleteAccount(id)
+      dialog.close()
+      showActionMessage(username + ' and their content were deleted.')
+      await refreshAdmin()
+    } catch (error) {
+      deleteStatus.textContent = ''
+      showActionMessage(error.message)
+    } finally {
+      remove.disabled = cancel.disabled = false
+    }
+  })
 
   function field(form, text, input, id) {
     input.id = id
@@ -33,10 +61,11 @@ export function setupAdmin(currentUserId) {
     email.className = 'admin-account-email'
     email.textContent = user.email ?? 'No email on file'
     card.append(heading, email)
+    const plans = new Map([['free', 'Free'], ['full', 'Full Access'], ['pending', 'Plan not selected']])
 
     if (user.id === currentUserId) {
       const description = document.createElement('p')
-      description.textContent = 'Poweruser · Your account'
+      description.textContent = 'Poweruser · Your account · ' + plans.get(user.tier)
       card.append(description)
       return card
     }
@@ -45,6 +74,8 @@ export function setupAdmin(currentUserId) {
     form.setAttribute('aria-label', 'Manage ' + user.username)
     const role = select([['user', 'User'], ['poweruser', 'Poweruser']], user.role)
     const access = select([['enabled', 'Active'], ['disabled', 'Disabled']], user.enabled ? 'enabled' : 'disabled')
+    let savedTier = user.tier
+    const tier = select([...plans].filter(([value]) => value !== 'pending' || savedTier === 'pending'), savedTier)
     const password = document.createElement('input')
     password.type = 'password'
     password.autocomplete = 'new-password'
@@ -53,6 +84,7 @@ export function setupAdmin(currentUserId) {
     password.addEventListener('input', () => password.setCustomValidity(''))
     field(form, 'Role', role, 'admin-role-' + user.id)
     field(form, 'Access', access, 'admin-access-' + user.id)
+    field(form, 'Subscription plan', tier, 'admin-tier-' + user.id)
     field(form, 'New password (optional)', password, 'admin-password-' + user.id)
     const hidePassword = addPasswordVisibility(password, 'new password for ' + user.username)
     const help = document.createElement('p')
@@ -64,24 +96,41 @@ export function setupAdmin(currentUserId) {
     save.type = 'submit'
     save.className = 'primary'
     save.textContent = 'Save changes'
-    form.append(save)
+    const deleteButton = document.createElement('button')
+    deleteButton.type = 'button'
+    deleteButton.className = 'danger-outline'
+    deleteButton.textContent = 'Delete account'
+    deleteButton.setAttribute('aria-label', 'Delete account ' + user.username)
+    deleteButton.addEventListener('click', () => {
+      target = user
+      warning.textContent = 'Permanently delete ' + user.username + ', their drills and practice plans? This also ends their sessions and removes their shares. This action cannot be undone.'
+      deleteStatus.textContent = ''
+      dialog.showModal()
+    })
+    form.append(save, deleteButton)
 
     form.addEventListener('submit', async event => {
       event.preventDefault()
       if (save.disabled || (password.value && !checkNewPassword(password))) return
       const changes = { role: role.value, enabled: access.value === 'enabled' }
+      if (tier.value !== savedTier && tier.value !== 'pending') changes.tier = tier.value
       if (password.value) changes.password = password.value
       for (const control of form.elements) control.disabled = true
-      status.textContent = 'Saving changes…'
       try {
         const { user: updated } = await updateAccount(user.id, changes)
         role.value = updated.role
         access.value = updated.enabled ? 'enabled' : 'disabled'
+        savedTier = updated.tier
+        if (savedTier === 'pending' && !tier.querySelector('[value="pending"]')) {
+          tier.add(new Option(plans.get('pending'), 'pending'))
+        }
+        tier.value = savedTier
+        if (savedTier !== 'pending') tier.querySelector('[value="pending"]')?.remove()
         password.value = ''
         hidePassword()
-        status.textContent = 'Changes saved for ' + updated.username + '.'
+        showActionMessage('Changes saved for ' + updated.username + '.')
       } catch (error) {
-        status.textContent = error.message
+        showActionMessage(error.message)
       } finally {
         for (const control of form.elements) control.disabled = false
       }
@@ -90,7 +139,7 @@ export function setupAdmin(currentUserId) {
     return card
   }
 
-  return async function refreshAdmin() {
+  async function refreshAdmin() {
     const requested = ++version
     status.textContent = 'Loading accounts…'
     list.replaceChildren()
@@ -103,4 +152,6 @@ export function setupAdmin(currentUserId) {
       if (version === requested) status.textContent = error.message
     }
   }
+
+  return refreshAdmin
 }

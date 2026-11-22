@@ -1,0 +1,43 @@
+const dialog = document.getElementById('action-message')
+const body = document.getElementById('action-message-body')
+const countdown = document.getElementById('action-message-countdown')
+const messageDuration = 10000
+const timers = new WeakMap()
+
+export function openTimedDialog(target) {
+  if (!target.open) target.showModal()
+  clearTimeout(timers.get(target))
+  timers.set(target, setTimeout(() => target.close(), messageDuration))
+}
+
+function stopCountdown() {
+  for (const animation of countdown.getAnimations()) animation.cancel()
+}
+
+dialog.addEventListener('close', () => {
+  if (!dialog.open) stopCountdown()
+})
+
+export function showActionMessage(message) {
+  if (!message) return
+  body.textContent = message
+  openTimedDialog(dialog)
+  stopCountdown()
+  if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    countdown.animate([{ transform: 'scaleX(1)' }, { transform: 'scaleX(0)' }], {
+      duration: messageDuration, fill: 'forwards',
+    })
+  }
+}
+
+export function showActionMessageAfterReload(message) {
+  history.replaceState({ ...history.state, actionMessage: message }, '')
+  location.reload()
+}
+
+export function restoreActionMessage() {
+  const { actionMessage, ...state } = history.state ?? {}
+  if (!actionMessage) return
+  history.replaceState(state, '')
+  showActionMessage(actionMessage)
+}

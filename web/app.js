@@ -1,5 +1,8 @@
+import { showActionMessage } from './action-message.js'
+import { setupPlanInvite } from './plan-invite.js'
+import { showPlanLimit } from './plan-limit.js'
 import { setupAdmin } from './admin.js'
-import { claimPlanLink, deleteRecord, importLegacyLibrary, previewPlanLink, readLibrary, saveRecord } from './library.js'
+import { claimPlanLink, deleteRecord, importLegacyLibrary, readLibrary, saveRecord } from './library.js'
 import { newRecordId } from './record-id.js'
 import { width, height, rinkWidth, rinkHeight, markers, movements, drawRink, drawItem, hitsItem, itemPoints, activityThumbnail, playerTeamColors } from './drawing.js'
 import { drillSearch, renderMarkdown, setupMarkdown } from './markdown.js'
@@ -30,6 +33,7 @@ const pages = {
   editor: get('editor-page'),
   drills: get('library-page'),
   plans: get('plans-page'),
+  membership: get('membership-page'),
   invite: get('plan-invite-page'),
 }
 const fresh = () => ({ id: null, title: '', description: '', layout: 'full', items: [] })
@@ -408,7 +412,7 @@ fullscreen.addEventListener('click', async () => {
     if (document.fullscreenElement === rinkCard) await document.exitFullscreen()
     else await rinkCard.requestFullscreen()
   } catch {
-    status('Could not open the rink in fullscreen.')
+    showActionMessage('Could not open the rink in fullscreen.')
   }
 })
 document.addEventListener('fullscreenchange', () => {
@@ -491,17 +495,8 @@ get('new').addEventListener('click', () => {
   if (gesture || savingDrill || !canLeave()) return
   load(fresh())
   title.focus()
-  status('New drill.')
+  showActionMessage('New drill.')
 })
-
-let saveConfirmationTimeout
-function showSaveFeedback(message, error = false) {
-  const confirmation = get('save-confirmation')
-  clearTimeout(saveConfirmationTimeout)
-  confirmation.classList.toggle('save-error', error)
-  confirmation.textContent = message
-  if (!error) saveConfirmationTimeout = setTimeout(() => { confirmation.textContent = '' }, 4500)
-}
 
 get('save').addEventListener('click', async () => {
   if (gesture || savingDrill) return
@@ -519,9 +514,9 @@ get('save').addEventListener('click', async () => {
     baseline = JSON.stringify(saved)
     refreshLibrary()
     status('')
-    showSaveFeedback('Drill saved to the library.')
-  } catch {
-    showSaveFeedback('Could not save the drill on the application server. Try again.', true)
+    showActionMessage('Drill saved to the library.')
+  } catch (error) {
+    if (!showPlanLimit(error)) showActionMessage(error.message || 'Could not save the drill. Try again.')
   } finally {
     savingDrill = false
     get('save').disabled = false
@@ -567,12 +562,11 @@ function refreshLibrary() {
     remove.setAttribute('aria-label', 'Delete ' + entry.title)
     remove.addEventListener('click', async () => {
       if (savingDrill || !confirm('Delete this drill from the library?')) return
-      const feedback = get('library-status')
       remove.disabled = true
       try {
         await deleteRecord('drills', entry.id)
       } catch {
-        feedback.textContent = 'Could not delete the drill.'
+        showActionMessage('Could not delete the drill.')
         remove.disabled = false
         return
       }
@@ -583,7 +577,7 @@ function refreshLibrary() {
         activity.id = null
         baseline = JSON.stringify(fresh())
       }
-      feedback.textContent = 'Drill deleted from the library.'
+      showActionMessage('Drill deleted from the library.')
     })
     actions.append(open, remove)
     row.append(activityThumbnail(entry), details, actions)
@@ -596,9 +590,9 @@ for (const format of ['png', 'pdf']) {
     if (gesture) return
     try {
       await exportActivity(structuredClone(activity), format)
-      status(format.toUpperCase() + ' file ready.')
+      showActionMessage(format.toUpperCase() + ' file ready.')
     } catch {
-      status('Could not generate the ' + format.toUpperCase() + ' file' + '.')
+      showActionMessage('Could not generate the ' + format.toUpperCase() + ' file' + '.')
     }
   })
 }
@@ -607,7 +601,7 @@ function openActivity(entry) {
   if (savingDrill || !canLeave()) return
   load(entry)
   location.hash = 'editor'
-  status('Drill opened.')
+  showActionMessage('Drill opened.')
 }
 
 const { refresh: refreshPlans, refreshShared } = setupPlans({
@@ -637,63 +631,15 @@ async function refreshServerLibrary() {
   }
 }
 
-const invitePreview = get('plan-invite-preview')
-const inviteStatus = get('plan-invite-status')
-let previewRequest = 0
-
-async function showInvitePreview(invitation) {
-  const version = ++previewRequest
-  invitePreview.hidden = true
-  acceptPlanLink.disabled = true
-  inviteStatus.textContent = 'Loading plan preview…'
-  try {
-    const { owner, plan } = await previewPlanLink(invitation.slice('#share/'.length))
-    if (version !== previewRequest || location.hash !== invitation) return
-    get('plan-preview-name').textContent = plan.name
-    get('plan-preview-owner').textContent = 'Shared by ' + owner
-    const drills = get('plan-preview-drills')
-    drills.replaceChildren()
-    for (const drill of plan.activities) {
-      const row = document.createElement('li')
-      const details = document.createElement('div')
-      const title = document.createElement('h3')
-      title.textContent = drill.title
-      details.append(title)
-      if (drill.description?.trim()) {
-        const description = document.createElement('div')
-        description.className = 'formatted-description'
-        renderMarkdown(drill.description, description)
-        details.append(description)
-      }
-      const content = document.createElement('div')
-      content.className = 'plan-preview-drill'
-      content.append(activityThumbnail(drill), details)
-      row.append(content)
-      drills.append(row)
-    }
-    invitePreview.hidden = false
-    acceptPlanLink.disabled = false
-    inviteStatus.textContent = ''
-  } catch (error) {
-    if (version === previewRequest && location.hash === invitation) inviteStatus.textContent = error.message
-  }
-}
-
-const acceptPlanLink = get('accept-plan-link')
-acceptPlanLink.addEventListener('click', async () => {
-  const invitation = location.hash
-  if (!invitation.startsWith('#share/') || acceptPlanLink.disabled) return
-  const feedback = get('plan-invite-status')
-  acceptPlanLink.disabled = true
-  feedback.textContent = ''
-  try {
+const showInvitePreview = setupPlanInvite({
+  signedIn: true,
+  async accept(invitation) {
     await claimPlanLink(invitation.slice('#share/'.length))
-    if (location.hash === invitation) location.replace('#plans')
-  } catch (error) {
-    if (location.hash === invitation) feedback.textContent = error.message
-  } finally {
-    if (location.hash === invitation) acceptPlanLink.disabled = false
-  }
+    if (location.hash === invitation) {
+      location.replace('#plans')
+      showActionMessage('Shared plan added to Shared with me.')
+    }
+  },
 })
 
 function showPage(focus = false) {
@@ -701,7 +647,7 @@ function showPage(focus = false) {
   const requested = hash.startsWith('share/') ? 'invite' : hash === 'atividades' ? 'drills' : hash === 'planos' ? 'plans' : hash
   const route = Object.hasOwn(pages, requested) && (requested !== 'invite' || hash.startsWith('share/')) ? requested : 'editor'
   for (const [key, page] of Object.entries(pages)) page.hidden = key !== route
-  for (const link of document.querySelectorAll('.page-nav a')) {
+  for (const link of document.querySelectorAll('.page-nav a, #upgrade-plan')) {
     if (link.hash === '#' + route) link.setAttribute('aria-current', 'page')
     else link.removeAttribute('aria-current')
   }
@@ -723,8 +669,8 @@ window.addEventListener('hashchange', () => showPage(true))
 get('save').disabled = true
 try {
   await importLegacyLibrary()
-} catch {
-  showSaveFeedback('Could not import drills and plans from this browser. Reload to try again.', true)
+} catch (error) {
+  if (!showPlanLimit(error)) showActionMessage('Could not import drills and plans from this browser. ' + error.message)
 }
 await refreshServerLibrary()
 get('save').disabled = false

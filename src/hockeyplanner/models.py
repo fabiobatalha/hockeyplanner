@@ -8,6 +8,7 @@ from pydantic_core import PydanticCustomError
 
 
 AccountRole = Literal["user", "poweruser"]
+AccountTier = Literal["pending", "free", "full"]
 Password = Annotated[str, StringConstraints(min_length=8, max_length=128)]
 
 
@@ -49,6 +50,17 @@ class Credentials(BaseModel):
 class Registration(Credentials):
     email: EmailStr
     password: StrongPassword
+    return_to: Annotated[str, StringConstraints(pattern=r"^(#share/[A-Za-z0-9_-]{43})?$")] = ""
+
+
+class ConfirmEmail(BaseModel):
+    token: Annotated[str, StringConstraints(pattern=r"^[A-Za-z0-9_-]{43}$")]
+    code: Annotated[str, StringConstraints(pattern=r"^[0-9]{6}$")]
+
+
+class TierSelection(BaseModel):
+    tier: Literal["free", "full"]
+    confirm_downgrade: bool = False
 
 
 email_type = TypeAdapter(EmailStr)
@@ -68,9 +80,22 @@ class Login(BaseModel):
         return username_type.validate_python(identifier)
 
 
+class AccountDeletion(BaseModel):
+    password: Password
+
+
 class EmailUpdate(BaseModel):
     email: EmailStr
     password: Password
+
+
+class ForgotPassword(BaseModel):
+    email: EmailStr
+
+
+class ResetPassword(BaseModel):
+    token: Annotated[str, StringConstraints(pattern=r"^[A-Za-z0-9_-]{43}$")]
+    new_password: StrongPassword
 
 
 class PasswordChange(BaseModel):
@@ -93,9 +118,11 @@ class AccountUpdate(BaseModel):
     role: AccountRole
     enabled: bool
     password: StrongPassword | None = None
+    tier: Literal["free", "full"] | None = None
 
 
 class AccountProfile(UserProfile):
+    tier: AccountTier = "free"
     email: str | None = None
 
 
