@@ -2,7 +2,7 @@ import { showActionMessage } from './action-message.js'
 import { addPasswordVisibility, checkNewPassword, passwordRequirements } from './password-policy.js'
 import { deleteAccount, readAccounts, updateAccount } from './library.js'
 
-export function setupAdmin(currentUserId) {
+function setupAdmin(currentUserId) {
   const list = document.getElementById('admin-users')
   const status = document.getElementById('admin-status')
   const dialog = document.getElementById('delete-account-dialog')
@@ -155,3 +155,6 @@ export function setupAdmin(currentUserId) {
 
   return refreshAdmin
 }
+
+const refreshAdmin = setupAdmin(Number(document.getElementById('admin-user-id').dataset.id))
+await refreshAdmin()

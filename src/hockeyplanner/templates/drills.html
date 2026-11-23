@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <section id="library-page" aria-labelledby="library-title">
+      <div class="page-heading"><h1 id="library-title" tabindex="-1">Drill Library</h1></div>
+      <div class="library-search-field">
+        <label for="library-search">Search drills</label>
+        <input id="library-search" type="search" placeholder="Search by title or description">
+      </div>
+      <div id="activity-list"></div>
+      <p id="library-status" class="status" role="status"></p>
+    </section>
+{% endblock %}
+
+{% block dialogs %}
+{% include "plan_limit.html" %}
+{% endblock %}
+
+{% block scripts %}
+<script type="module" src="{{ url_for('static', filename='drills.js') }}"></script>
+{% endblock %}

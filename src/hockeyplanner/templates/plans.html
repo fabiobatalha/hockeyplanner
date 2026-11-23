@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <section id="plans-page" aria-labelledby="plans-title">
+      <div class="page-heading">
+        <h1 id="plans-title" tabindex="-1">Practice Plans</h1>
+        <button id="new-plan" class="primary" type="button">New Plan</button>
+      </div>
+      <div id="plan-columns">
+        <section class="plan-column" aria-labelledby="my-plans-title">
+          <h2 id="my-plans-title">My plans</h2>
+          <p class="plan-column-context">Plans in your account. You can edit and share them.</p>
+          <div id="plans-list"></div>
+        </section>
+        <section class="plan-column shared-plans" aria-labelledby="shared-plans-title">
+          <h2 id="shared-plans-title">Shared with me</h2>
+          <p class="plan-column-context">Read-only plans from other users. Copy them to edit your own version.</p>
+          <p id="shared-plans-status" class="status" role="status"></p>
+          <div id="shared-plans-list"></div>
+        </section>
+      </div>
+      <div id="plan-builder" hidden>
+        <form id="plan-form" class="card">
+          <label for="plan-name">Plan name</label>
+          <input id="plan-name" maxlength="120" required placeholder="e.g. Tuesday practice">
+          <fieldset>
+            <legend>Drills in this plan</legend>
+            <div id="plan-drop-zone">
+              <p>Drop drills here to add them. Drag within the list to reorder.</p>
+              <ol id="plan-activities"></ol>
+            </div>
+          </fieldset>
+          <div class="actions">
+            <button class="primary" type="submit">Save Plan</button>
+            <button id="cancel-plan" type="button">Cancel</button>
+          </div>
+        </form>
+        <aside class="card plan-catalog" aria-labelledby="plan-catalog-title">
+          <h2 id="plan-catalog-title">Available drills</h2>
+          <p>Drag a drill to the plan or select Add.</p>
+          <label for="plan-catalog-search">Search drills</label>
+          <input id="plan-catalog-search" type="search" placeholder="Search by title, description, or owner">
+          <div id="plan-catalog"></div>
+        </aside>
+      </div>
+      <p id="plan-status" class="status" role="status"></p>
+    </section>
+{% endblock %}
+
+{% block dialogs %}
+{% include "plan_limit.html" %}
+{% include "plan_viewer.html" %}
+{% include "plan_sharing.html" %}
+{% endblock %}
+
+{% block scripts %}
+<script type="module" src="{{ url_for('static', filename='plans.js') }}"></script>
+{% endblock %}

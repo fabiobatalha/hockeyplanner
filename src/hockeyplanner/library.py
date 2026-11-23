@@ -61,6 +61,21 @@ class Library:
     def __init__(self, sessions: sessionmaker[Session]) -> None:
         self.sessions = sessions
 
+    def drill_count(self, owner_id: int) -> int:
+        with self.sessions() as session:
+            return session.scalar(select(func.count()).select_from(LibraryRecord).where(
+                LibraryRecord.owner_id == owner_id, LibraryRecord.collection == "drills",
+                LibraryRecord.body.is_not(None),
+            ))
+
+    def get(self, owner_id: int, collection: str, record_id: str) -> dict | None:
+        with self.sessions() as session:
+            body = session.scalar(select(LibraryRecord.body).where(
+                LibraryRecord.owner_id == owner_id, LibraryRecord.collection == collection,
+                LibraryRecord.id == record_id,
+            ))
+            return json.loads(body) if body is not None else None
+
     def read(self, owner_id: int) -> dict:
         result = {collection: [] for collection in MODELS}
         with self.sessions() as session:

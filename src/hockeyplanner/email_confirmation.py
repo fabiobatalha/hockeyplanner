@@ -28,12 +28,12 @@ class ConfirmationError(Exception):
     pass
 
 
-def public_email_link(fragment: str) -> str:
+def public_email_link(path: str) -> str:
     url = os.getenv("HOCKEYPLANNER_PUBLIC_URL", "").rstrip("/")
     parsed = urlsplit(url)
     if parsed.scheme not in ("http", "https") or not parsed.hostname or parsed.username or parsed.query or parsed.fragment:
         raise EmailDeliveryError("Email delivery is not configured. Contact the site administrator.")
-    return f"{url}/#{fragment}"
+    return f"{url}/{path}"
 
 
 def smtp_confirmation(address: str, code: str, token: str) -> None:

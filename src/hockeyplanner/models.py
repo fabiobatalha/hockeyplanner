@@ -55,7 +55,7 @@ class Credentials(BaseModel):
 class Registration(Credentials):
     email: EmailStr
     password: StrongPassword
-    return_to: Annotated[str, StringConstraints(pattern=r"^(#share/[A-Za-z0-9_-]{43})?$")] = ""
+    return_to: Annotated[str, StringConstraints(pattern=r"^(/share/[A-Za-z0-9_-]{43})?$")] = ""
 
 
 class ConfirmEmail(BaseModel):

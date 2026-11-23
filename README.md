@@ -2,6 +2,8 @@
 
 Plan hockey drills with an interactive rink and a local drill library.
 
+Flask serves each screen through a Jinja template that extends `base.html`. The interactive rink, drag-and-drop, PDF exports, and fullscreen viewer run in JavaScript. Public share links and PDF QR codes use the `/share/` routes.
+
 ## Run the application
 
 From the project root, run these commands.

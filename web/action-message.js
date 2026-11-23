@@ -30,14 +30,24 @@ export function showActionMessage(message) {
   }
 }
 
-export function showActionMessageAfterReload(message) {
-  history.replaceState({ ...history.state, actionMessage: message }, '')
-  location.reload()
+const messageKey = 'hockeyplanner.action-message'
+
+export function navigateWithMessage(url, message) {
+  try {
+    sessionStorage.setItem(messageKey, message)
+  } catch {
+    // Navigation still works when browser storage is unavailable.
+  }
+  location.replace(url)
 }
 
 export function restoreActionMessage() {
-  const { actionMessage, ...state } = history.state ?? {}
-  if (!actionMessage) return
-  history.replaceState(state, '')
-  showActionMessage(actionMessage)
+  let message
+  try {
+    message = sessionStorage.getItem(messageKey)
+    sessionStorage.removeItem(messageKey)
+  } catch {
+    return
+  }
+  showActionMessage(message)
 }

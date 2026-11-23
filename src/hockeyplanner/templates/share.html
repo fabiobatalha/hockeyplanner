@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section id="plan-invite-page" aria-labelledby="plan-invite-title">
+  <div class="page-heading plan-invite-heading">
+    <h1 id="plan-invite-title">{{ title }}</h1>
+    {% if shared %}
+    <div class="actions">
+      <button id="fullscreen-plan-link" type="button">View Fullscreen</button>
+      <button id="print-plan-link" type="button">Print PDF</button>
+      {% if not shared.standalone %}
+        {% if user and user.email and user.tier != 'pending' %}
+        <button id="accept-plan-link" type="button" class="primary">Accept shared plan</button>
+        {% elif user %}
+        <a class="button-link primary" href="{{ url_for('pages.membership', next=request.path) if user.email else url_for('pages.account') }}">Complete account setup to accept</a>
+        {% else %}
+        <a class="button-link primary" href="{{ login_url }}">Sign in to accept</a>
+        {% endif %}
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+  <section class="card plan-invite">
+    {% if shared %}
+    <div id="plan-invite-preview">
+      <h2 id="plan-preview-name">{{ shared.plan.name }}</h2>
+      <p id="plan-preview-owner">Shared by {{ shared.owner }}</p>
+      <ol id="plan-preview-drills">
+        {% for drill in shared.plan.activities %}
+        <li>
+          <div class="plan-preview-drill">
+            <div>
+              <h3>{{ drill.title }}</h3>
+              {% if drill.description|trim %}
+              <div class="formatted-description">{{ drill.description }}</div>
+              {% endif %}
+            </div>
+          </div>
+        </li>
+        {% endfor %}
+      </ol>
+    </div>
+    {% endif %}
+    <p id="plan-invite-status" class="status" role="status">{{ error or "" }}</p>
+  </section>
+</section>
+{% if shared %}<script id="shared-preview" type="application/json">{{ shared|tojson }}</script>{% endif %}
+{% endblock %}
+
+{% block dialogs %}
+{% include "plan_viewer.html" %}
+{% endblock %}
+
+{% block scripts %}
+{% if shared %}<script type="module" src="{{ url_for('static', filename='plan-invite.js') }}"></script>{% endif %}
+{% endblock %}

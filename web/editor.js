@@ -1,12 +1,11 @@
 import { showActionMessage } from './action-message.js'
-import { setupPlanInvite } from './plan-invite.js'
 import { showPlanLimit } from './plan-limit.js'
-import { setupAdmin } from './admin.js'
-import { claimPlanLink, deleteRecord, drillShareLink, importLegacyLibrary, readLibrary, saveRecord } from './library.js'
+import { drillShareLink, saveRecord } from './library.js'
+import { prepareLibrary } from './library-onboarding.js'
+import { appUrl } from './urls.js'
 import { newRecordId } from './record-id.js'
-import { width, height, rinkWidth, rinkHeight, markers, movements, drawRink, drawItem, hitsItem, itemPoints, activityThumbnail, playerTeamColors } from './drawing.js'
-import { drillSearch, renderMarkdown, setupMarkdown } from './markdown.js'
-import { setupPlans } from './plans.js'
+import { width, height, rinkWidth, rinkHeight, markers, movements, drawRink, drawItem, hitsItem, itemPoints, playerTeamColors } from './drawing.js'
+import { setupMarkdown } from './markdown.js'
 import { exportActivity } from './export.js'
 
 const get = id => document.getElementById(id)
@@ -29,17 +28,10 @@ const title = get('title')
 const rinkLayout = get('rink-layout')
 const description = get('description')
 const refreshDescription = setupMarkdown(description, get('description-visual'), get('description-mode'))
-const pages = {
-  editor: get('editor-page'),
-  drills: get('library-page'),
-  plans: get('plans-page'),
-  membership: get('membership-page'),
-  invite: get('plan-invite-page'),
-}
 const fresh = () => ({ id: null, title: '', description: '', layout: 'full', items: [] })
 
-let activities = []
 let savingDrill = false
+let pendingDrillId
 let activity = fresh()
 let baseline = JSON.stringify(activity)
 let tool = 'select'
@@ -457,7 +449,7 @@ for (const button of document.querySelectorAll('[data-rotation]')) {
 }
 
 document.addEventListener('keydown', event => {
-  if (pages.editor.hidden || event.target.matches('input, textarea, [contenteditable], [contenteditable] *')) return
+  if (event.target.matches('input, textarea, [contenteditable], [contenteditable] *')) return
   if (event.key === 'Delete') removeSelected()
   if (!(event.ctrlKey || event.metaKey)) return
   if (event.key.toLowerCase() === 'z') {
@@ -479,6 +471,7 @@ function canLeave() {
 }
 
 function load(next) {
+  pendingDrillId = undefined
   activity = structuredClone(next)
   baseline = JSON.stringify(activity)
   title.value = activity.title
@@ -494,25 +487,27 @@ function load(next) {
 get('new').addEventListener('click', () => {
   if (gesture || savingDrill || !canLeave()) return
   load(fresh())
+  history.replaceState(history.state, '', appUrl('editor'))
   title.focus()
   showActionMessage('New drill.')
 })
 
 get('save').addEventListener('click', async () => {
-  if (gesture || savingDrill) return
-  activity.id ??= newRecordId()
+  if (gesture || savingDrill || get('save').disabled) return
   const saved = structuredClone(activity)
+  saved.id ??= (pendingDrillId ??= newRecordId())
   saved.title = saved.title.trim() || 'Untitled Drill'
   const originalTitle = activity.title
   savingDrill = true
   get('save').disabled = true
   try {
     await saveRecord('drills', saved)
-    libraryRequest++
-    activities = [saved, ...activities.filter(entry => entry.id !== saved.id)]
+    const count = get('activity-count')
+    if (!activity.id) count.textContent = Number(count.textContent) + 1
+    activity.id = saved.id
+    history.replaceState(history.state, '', appUrl('editor/' + saved.id))
     if (activity.title === originalTitle) activity.title = title.value = saved.title
     baseline = JSON.stringify(saved)
-    refreshLibrary()
     status('')
     showActionMessage('Drill saved to the library.')
   } catch (error) {
@@ -523,89 +518,12 @@ get('save').addEventListener('click', async () => {
   }
 })
 
-get('library-search').addEventListener('input', refreshLibrary)
-
-function refreshLibrary() {
-  const list = get('activity-list')
-  get('activity-count').textContent = activities.length
-  list.replaceChildren()
-  const query = get('library-search').value.trim()
-  const matches = drillSearch(query)
-  const visibleDrills = activities.filter(entry => matches(entry))
-  if (!visibleDrills.length) {
-    list.textContent = query ? 'No drills match your search.' : 'No saved drills.'
-    return
-  }
-  for (const entry of visibleDrills) {
-    const row = document.createElement('article')
-    row.className = 'card activity'
-    const details = document.createElement('div')
-    details.className = 'activity-details'
-    const heading = document.createElement('h2')
-    heading.textContent = entry.title
-    details.append(heading)
-    if (entry.description?.trim()) {
-      const description = document.createElement('div')
-      description.className = 'formatted-description'
-      renderMarkdown(entry.description, description)
-      details.append(description)
-    }
-    const actions = document.createElement('div')
-    actions.className = 'actions'
-    const open = document.createElement('button')
-    open.className = 'activity-name'
-    open.textContent = 'Open in Editor'
-    open.setAttribute('aria-label', 'Open ' + entry.title + ' in the editor')
-    open.addEventListener('click', () => openActivity(entry))
-    const remove = document.createElement('button')
-    remove.textContent = 'Delete'
-    remove.setAttribute('aria-label', 'Delete ' + entry.title)
-    remove.addEventListener('click', async () => {
-      if (savingDrill || !confirm('Delete this drill from the library?')) return
-      remove.disabled = true
-      try {
-        await deleteRecord('drills', entry.id)
-      } catch {
-        showActionMessage('Could not delete the drill.')
-        remove.disabled = false
-        return
-      }
-      libraryRequest++
-      activities = activities.filter(record => record.id !== entry.id)
-      refreshLibrary()
-      if (activity.id === entry.id) {
-        activity.id = null
-        baseline = JSON.stringify(fresh())
-      }
-      showActionMessage('Drill deleted from the library.')
-    })
-    const disableLink = document.createElement('button')
-    disableLink.textContent = 'Disable PDF Link'
-    disableLink.setAttribute('aria-label', 'Disable PDF link for ' + entry.title)
-    disableLink.addEventListener('click', async () => {
-      if (!confirm('Disable the public link in standalone PDFs of this drill?')) return
-      disableLink.disabled = true
-      try {
-        await drillShareLink(entry.id, 'DELETE')
-        showActionMessage('The standalone PDF link is disabled.')
-      } catch (error) {
-        showActionMessage(error.message)
-      } finally {
-        disableLink.disabled = false
-      }
-    })
-    actions.append(open, remove, disableLink)
-    row.append(activityThumbnail(entry), details, actions)
-    list.append(row)
-  }
-}
-
 for (const format of ['png', 'pdf']) {
   const button = get(format)
   button.addEventListener('click', async () => {
     if (gesture || savingDrill) return
     const snapshot = structuredClone(activity)
-    const saved = activities.some(drill => drill.id === snapshot.id) && JSON.stringify(snapshot) === baseline
+    const saved = Boolean(snapshot.id) && JSON.stringify(snapshot) === baseline
     button.disabled = true
     try {
       let token
@@ -627,80 +545,15 @@ for (const format of ['png', 'pdf']) {
   })
 }
 
-function openActivity(entry) {
-  if (savingDrill || !canLeave()) return
-  load(entry)
-  location.hash = 'editor'
-  showActionMessage('Drill opened.')
-}
+const initialDrill = JSON.parse(get('initial-drill').textContent)
+load(initialDrill ?? fresh())
+fitRink()
 
-const { refresh: refreshPlans, refreshShared } = setupPlans({
-  getActivities: () => activities, openActivity, refreshLibrary: refreshServerLibrary,
+const save = get('save')
+save.disabled = true
+await prepareLibrary()
+save.disabled = false
+
+window.addEventListener('beforeunload', event => {
+  if (JSON.stringify(activity) !== baseline) event.preventDefault()
 })
-let libraryRequest = 0
-let refreshAdmin
-if (get('planner').dataset.accountRole === 'poweruser') {
-  pages.admin = get('admin-page')
-  refreshAdmin = setupAdmin(Number(get('planner').dataset.accountId))
-}
-
-async function refreshServerLibrary() {
-  const request = ++libraryRequest
-  try {
-    const data = await readLibrary()
-    if (request !== libraryRequest) return
-    activities = data.drills
-    get('library-status').textContent = ''
-    refreshLibrary()
-    refreshPlans(data.plans)
-  } catch {
-    if (request !== libraryRequest) return
-    get('library-status').textContent = 'Could not load the application library.'
-    if (!pages.plans.hidden) get('plan-status').textContent = 'Could not load saved practice plans.'
-    if (!pages.editor.hidden) status('Could not load the application library.')
-  }
-}
-
-const showInvitePreview = setupPlanInvite({
-  signedIn: true,
-  async accept(invitation, token) {
-    await claimPlanLink(token)
-    if (location.hash === invitation) {
-      location.replace('#plans')
-      showActionMessage('Shared plan added to Shared with me.')
-    }
-  },
-})
-
-function showPage(focus = false) {
-  const hash = location.hash.slice(1)
-  const requested = hash.startsWith('share/') ? 'invite' : hash === 'atividades' ? 'drills' : hash === 'planos' ? 'plans' : hash
-  const route = Object.hasOwn(pages, requested) && (requested !== 'invite' || hash.startsWith('share/')) ? requested : 'editor'
-  for (const [key, page] of Object.entries(pages)) page.hidden = key !== route
-  for (const link of document.querySelectorAll('.page-nav a, #upgrade-plan')) {
-    if (link.hash === '#' + route) link.setAttribute('aria-current', 'page')
-    else link.removeAttribute('aria-current')
-  }
-  if (route === 'invite') showInvitePreview(location.hash)
-  if (route === 'admin') refreshAdmin()
-  if (route === 'plans') refreshShared()
-  if (focus && (route === 'drills' || route === 'plans') && !savingDrill) refreshServerLibrary()
-  if (route === 'editor') fitRink()
-  if (focus) {
-    window.scrollTo(0, 0)
-    pages[route].querySelector('h1').focus({ preventScroll: true })
-  }
-}
-
-refreshLibrary()
-render()
-showPage()
-window.addEventListener('hashchange', () => showPage(true))
-get('save').disabled = true
-try {
-  await importLegacyLibrary()
-} catch (error) {
-  if (!showPlanLimit(error)) showActionMessage('Could not import drills and plans from this browser. ' + error.message)
-}
-await refreshServerLibrary()
-get('save').disabled = false

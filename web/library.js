@@ -1,19 +1,12 @@
-async function request(path, method = 'GET', record) {
-  const options = { method, cache: 'no-store' }
-  if (record !== undefined) {
-    options.headers = { 'Content-Type': 'application/json' }
-    options.body = JSON.stringify(record)
-  }
-  const response = await fetch('./api/' + path, options)
-  if (response.status === 401) location.reload()
-  if (!response.ok) {
-    const details = await response.json().catch(() => null)
-    const error = new Error(details?.error || 'Request failed (' + response.status + ').')
-    error.code = details?.code
-    error.capacity = details?.capacity
+import { request as apiRequest } from './http.js'
+
+async function request(...args) {
+  try {
+    return await apiRequest(...args)
+  } catch (error) {
+    if (error.status === 401) location.reload()
     throw error
   }
-  if (response.status !== 204) return response.json()
 }
 
 export function readLibrary() {
@@ -123,8 +116,4 @@ export function drillShareLink(drillId, method = 'GET') {
 
 export function claimPlanLink(token) {
   return request('shared-plans/claim', 'POST', { token })
-}
-
-export function previewPlanLink(token, drillId = null) {
-  return request('shared-plans/preview', 'POST', { token, drill_id: drillId, include_plan: Boolean(drillId) })
 }

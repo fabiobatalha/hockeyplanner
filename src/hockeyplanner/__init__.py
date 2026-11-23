@@ -1,5 +1,6 @@
 import argparse
 from collections.abc import Callable
+from hashlib import sha256
 from pathlib import Path
 
 from flask import Flask
@@ -10,6 +11,7 @@ from .api import create_api
 from .database import open_database
 from .email_confirmation import EmailConfirmations, smtp_confirmation
 from .library import Library
+from .pages import create_pages
 from .password_reset import PasswordResets, smtp_password_reset
 from .sharing import Sharing
 
@@ -23,22 +25,28 @@ def create_app(
     send_password_reset: Callable[[str, str], None] = smtp_password_reset,
 ) -> Flask:
     web = PROJECT_DIR / "web"
-    if not (web / "index.html").is_file():
+    style = web / "style.css"
+    if not style.is_file():
         raise FileNotFoundError("Web directory not found. Run the editor from the project.")
 
-    app = Flask(__name__, static_folder=str(web), static_url_path="")
+    app = Flask(__name__, static_folder=str(web), static_url_path="/static")
+    version = sha256(style.read_bytes()).hexdigest()[:16]
+
+    @app.get(f"/static/{version}/style.css")
+    def stylesheet():
+        return app.send_static_file("style.css")
+
     app.config["MAX_CONTENT_LENGTH"] = 25 * 1024 * 1024
     sessions = open_database(data_file or PROJECT_DIR / "data" / "hockeyplanner.sqlite3")
     confirmations = EmailConfirmations(sessions, send_confirmation)
     confirmations.cleanup()
+    library, accounts, sharing = Library(sessions), Accounts(sessions), Sharing(sessions)
     app.register_blueprint(create_api(
-        Library(sessions), Accounts(sessions), Sharing(sessions), confirmations,
+        library, accounts, sharing, confirmations,
         PasswordResets(sessions, send_password_reset), secure_cookies,
     ))
 
-    @app.get("/")
-    def index():
-        return app.send_static_file("index.html")
+    app.register_blueprint(create_pages(accounts, library, sharing))
 
     return app
 

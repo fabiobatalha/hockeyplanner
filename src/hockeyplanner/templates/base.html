@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ title }} · Hockey Planner</title>
+  <meta name="description" content="Draw hockey drills and organize your practice plans.">
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='hockey-planner-icon.png') }}">
+  <link rel="stylesheet" href="{{ url_for('stylesheet') }}">
+</head>
+{% set auth_flow = page in ('login', 'register', 'forgot_password', 'confirm_email', 'reset_password') %}
+<body{% if auth_flow %} class="auth-flow"{% endif %} data-page="{{ page }}" data-root="{{ url_for('pages.index') }}"{% if not auth_flow and user and user.tier == 'free' %} data-free-pdf{% endif %}>
+  {% if not auth_flow %}
+  <header class="topbar">
+    <a href="{{ url_for('pages.index') }}" class="brand"><img src="{{ url_for('static', filename='hockey-planner-logo.png') }}" alt="Hockey Planner" width="2172" height="724"></a>
+    {% if user %}
+    <div id="account-nav" class="header-controls">
+      {% if user.email and user.tier != 'pending' %}
+      <nav class="page-nav" aria-label="Main navigation">
+        <a href="{{ url_for('pages.editor') }}" {% if page == 'editor' %}aria-current="page"{% endif %}>Editor</a>
+        <a href="{{ url_for('pages.drills') }}" {% if page == 'drills' %}aria-current="page"{% endif %}>Drill Library <span id="activity-count">{{ drill_count }}</span></a>
+        <a href="{{ url_for('pages.plans') }}" {% if page == 'plans' %}aria-current="page"{% endif %}>Practice Plans</a>
+        {% if user.role == 'poweruser' %}
+        <a id="admin-link" href="{{ url_for('pages.admin') }}" {% if page == 'admin' %}aria-current="page"{% endif %}>Administration</a>
+        {% endif %}
+      </nav>
+      {% endif %}
+      <div class="header-account">
+        <a id="account-name" href="{{ url_for('pages.account') }}" data-initial="{{ user.username[0]|upper }}" aria-label="Account profile for {{ user.username }}"><span id="account-name-label">{{ user.username }}</span></a>
+        <button id="sign-out" type="button">Sign out</button>
+      </div>
+    </div>
+    {% endif %}
+  </header>
+  {% endif %}
+  <main id="planner">
+    {% block content %}{% endblock %}
+    {% if not auth_flow and user and user.tier == 'free' and user.role != 'poweruser' and user.email %}
+    <a id="upgrade-plan" class="upgrade-link" href="{{ url_for('pages.membership') }}" {% if page == 'membership' %}aria-current="page"{% endif %}>Upgrade plan</a>
+    {% endif %}
+  </main>
+  <footer class="site-footer">
+    <span>© 2026 Hockey Planner</span>
+    <a href="mailto:info@hockeyplanner.ca">info@hockeyplanner.ca</a>
+  </footer>
+  <dialog id="action-message" aria-labelledby="action-message-title" aria-describedby="action-message-body">
+    <div class="action-message-header">
+      <span class="action-message-icon" aria-hidden="true">i</span>
+      <h2 id="action-message-title">Notification</h2>
+    </div>
+    <div class="action-message-content">
+      <p id="action-message-body"></p>
+      <form method="dialog"><button class="primary" type="submit" autofocus>Close</button></form>
+    </div>
+    <div class="action-message-track" aria-hidden="true"><div id="action-message-countdown"></div></div>
+  </dialog>
+  {% block dialogs %}{% endblock %}
+  <noscript>Enable JavaScript in your browser to use the editor.</noscript>
+  <script type="module" src="{{ url_for('static', filename='site.js') }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <section id="admin-page" aria-labelledby="admin-title">
+      <div class="page-heading"><h1 id="admin-title" tabindex="-1">Account Administration</h1></div>
+      <p id="admin-status" class="status" role="status"></p>
+      <div id="admin-users"></div>
+    </section>
+<span id="admin-user-id" data-id="{{ user.id }}" hidden></span>
+{% endblock %}
+
+{% block dialogs %}
+{% include "admin_delete.html" %}
+{% endblock %}
+
+{% block scripts %}
+<script type="module" src="{{ url_for('static', filename='admin.js') }}"></script>
+{% endblock %}

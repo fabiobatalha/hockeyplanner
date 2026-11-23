@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="card sign-in-card" aria-labelledby="auth-heading">
+  <img class="sign-in-logo" src="{{ url_for('static', filename='hockey-planner-logo.png') }}" alt="Hockey Planner" width="2172" height="724">
+  <h1 id="auth-heading">Create an account</h1>
+  <form method="post" id="auth-form" class="auth-form" data-next="{{ next_path }}">
+    <div class="auth-field">
+      <label for="username">Username</label>
+      <input id="username" name="username" autocomplete="username" required maxlength="32" autocapitalize="none" spellcheck="false" aria-describedby="username-help">
+      <p id="username-help" class="auth-hint">Use 3–32 letters, numbers, dots, underscores or hyphens.</p>
+    </div>
+    <div class="auth-field">
+      <label for="registration-email">Email address</label>
+      <input id="registration-email" name="email" type="email" autocomplete="email" maxlength="320" required>
+    </div>
+    <div class="auth-field">
+      <label for="password">Password</label>
+      <input id="password" name="password" type="password" autocomplete="new-password" required aria-describedby="registration-help">
+      <p id="registration-help" class="auth-hint">Use 12–128 characters, including at least one uppercase letter and one special character.</p>
+    </div>
+    <button id="auth-submit" class="primary auth-submit" type="submit" disabled>Create account</button>
+  </form>
+  <div class="auth-card-footer">
+    <a class="button-link" href="{{ url_for('pages.login', next=next_path or None) }}">Back to sign in</a>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script type="module" src="{{ url_for('static', filename='auth.js') }}"></script>
+{% endblock %}

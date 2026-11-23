@@ -1,14 +1,16 @@
+import { appUrl } from './urls.js'
+import { prepareLibrary } from './library-onboarding.js'
 import { showActionMessage } from './action-message.js'
 import { presentPlan } from './plan-viewer.js'
 import { showPlanLimit } from './plan-limit.js'
 import { setupPlanSharing } from './plan-sharing.js'
-import { copySharedPlan, createPlanLink, deleteRecord, readPlanLink, readReceivedPlanLink, readSharedPlans, removeReceivedShare, saveRecord } from './library.js'
+import { copySharedPlan, createPlanLink, deleteRecord, readLibrary, readPlanLink, readReceivedPlanLink, readSharedPlans, removeReceivedShare, saveRecord } from './library.js'
 import { newRecordId } from './record-id.js'
 import { exportTrainingPlan } from './export.js'
 import { activityThumbnail } from './drawing.js'
 import { drillSearch } from './markdown.js'
 
-export function setupPlans({ getActivities, openActivity, refreshLibrary }) {
+function setupPlans({ getActivities, refreshLibrary }) {
   const form = document.getElementById('plan-form')
   const name = document.getElementById('plan-name')
   const list = document.getElementById('plans-list')
@@ -52,11 +54,12 @@ export function setupPlans({ getActivities, openActivity, refreshLibrary }) {
     for (const saved of plan.activities) {
       const row = document.createElement('li')
       const activity = readOnly ? saved : currentActivity(saved) ?? saved
-      const open = readOnly ? document.createElement('div') : button(activity.title, () => {
-        const current = currentActivity(saved)
-        openActivity(current ?? { ...saved, id: null })
-      })
+      const open = document.createElement(readOnly ? 'div' : 'a')
       open.className = 'plan-drill'
+      if (!readOnly) {
+        open.href = appUrl('editor/plan/' + plan.id + '/' + saved.id)
+        open.classList.add('button-link')
+      }
       const thumbnail = activityThumbnail(activity)
       thumbnail.removeAttribute('aria-label')
       thumbnail.setAttribute('aria-hidden', 'true')
@@ -113,7 +116,7 @@ export function setupPlans({ getActivities, openActivity, refreshLibrary }) {
       actions.className = 'actions'
       const view = button('View Fullscreen', () => presentPlan(plan.name, planActivities(plan, false)))
       view.className = 'primary'
-      actions.append(view, button('Edit Plan', () => edit(plan)), button('Delete Plan', async () => {
+      const remove = button('Delete Plan', async () => {
         if (saving || !confirm('Delete the plan “' + plan.name + '”?')) return
         saving = true
         try {
@@ -126,8 +129,9 @@ export function setupPlans({ getActivities, openActivity, refreshLibrary }) {
         } finally {
           saving = false
         }
-      }))
-      actions.append(printButton(plan), button('Share', () => openSharing(plan)))
+      })
+      remove.className = 'danger-outline'
+      actions.append(view, button('Edit Plan', () => edit(plan)), printButton(plan), button('Share', () => openSharing(plan)), remove)
       entry.append(heading, exercises, actions)
       list.append(entry)
     }
@@ -432,3 +436,21 @@ export function setupPlans({ getActivities, openActivity, refreshLibrary }) {
 
   return { refresh, refreshShared }
 }
+
+let activities = []
+const { refresh, refreshShared } = setupPlans({ getActivities: () => activities, refreshLibrary })
+
+async function refreshLibrary() {
+  try {
+    const data = await readLibrary()
+    activities = data.drills
+    document.getElementById('activity-count').textContent = activities.length
+    refresh(data.plans)
+  } catch (error) {
+    document.getElementById('plan-status').textContent = 'Could not load the practice plans.'
+    throw error
+  }
+}
+
+await prepareLibrary()
+await Promise.allSettled([refreshLibrary(), refreshShared()])

@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <section id="membership-page" aria-labelledby="membership-title">
+      <header class="membership-heading">
+        <div>
+          <h1 id="membership-title" tabindex="-1"> {{ title }}</h1>
+          <p>Both plans include the same coaching tools. The difference is how many drills and plans you can save.</p>
+        </div>
+        <div id="membership-account-actions" class="actions" {% if user.tier != "pending" %}hidden{% endif %}>
+          <button id="membership-delete-account" class="danger-outline" type="button">Delete my account</button>
+        </div>
+      </header>
+      <div class="membership-options">
+        <article class="card membership-option">
+          <h2>Free</h2>
+          <dl class="membership-limits">
+            <div><dt>Drills</dt><dd>10</dd></div>
+            <div><dt>Practice plans</dt><dd>3</dd></div>
+          </dl>
+          <ul class="membership-features">
+            <li>Draw and edit on the rink</li>
+            <li>Present plans in fullscreen</li>
+            <li>Share, receive, and copy practice plans</li>
+            <li>Export drills and plans</li>
+          </ul>
+          <button id="choose-free-plan" data-next="{{ next_path }}" class="primary" type="button" {% if user.tier != "pending" %}hidden{% endif %}>Continue with Free</button>
+          <p id="current-free-plan" class="membership-current" {% if user.tier != "free" %}hidden{% endif %}>Current plan</p>
+        </article>
+        <article class="card membership-option membership-full">
+          <h2>Full Access</h2>
+          <dl class="membership-limits">
+            <div><dt>Drills</dt><dd>Unlimited</dd></div>
+            <div><dt>Practice plans</dt><dd>Unlimited</dd></div>
+          </dl>
+          <ul class="membership-features">
+            <li>Draw and edit on the rink</li>
+            <li>Present plans in fullscreen</li>
+            <li>Share, receive, and copy practice plans</li>
+            <li>Export drills and plans</li>
+          </ul>
+          <button id="choose-full-plan" type="button" disabled {% if user.tier == "full" %}hidden{% endif %}>Coming soon</button>
+          <p id="current-full-plan" class="membership-current" {% if user.tier != "full" %}hidden{% endif %}>Current plan</p>
+        </article>
+      </div>
+    </section>
+{% endblock %}
+
+{% block dialogs %}
+{% include "self_delete.html" %}
+{% endblock %}
+
+{% block scripts %}
+<script type="module" src="{{ url_for('static', filename='account.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,15 @@
+  <dialog id="plan-limit-dialog" aria-labelledby="plan-limit-title" aria-describedby="plan-limit-guidance">
+    <div class="plan-limit-content">
+      <h2 id="plan-limit-title"></h2>
+      <div class="plan-limit-usage">
+        <strong id="plan-limit-count"></strong>
+        <progress id="plan-limit-meter" aria-label="Free plan usage"></progress>
+      </div>
+      <p id="plan-limit-guidance"></p>
+      <p>Full Access will remove these storage limits when it becomes available.</p>
+      <div class="actions">
+        <form method="dialog"><button type="submit" autofocus>Close</button></form>
+        <a id="compare-plan-limits" class="button-link primary" href="{{ url_for('pages.membership') }}">Compare plans</a>
+      </div>
+    </div>
+  </dialog>

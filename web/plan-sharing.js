@@ -1,3 +1,4 @@
+import { appUrl } from './urls.js'
 import { showActionMessage } from './action-message.js'
 import { createPlanLink, disablePlanLink, readPlanLink, readPlanRecipients, revokePlanShare, sharePracticePlan } from './library.js'
 
@@ -17,9 +18,7 @@ export function setupPlanSharing() {
   function showLink(token) {
     create.hidden = Boolean(token)
     linkControls.hidden = !token
-    const url = new URL(location.href)
-    url.hash = token ? 'share/' + token : ''
-    linkUrl.value = token ? url.href : ''
+    linkUrl.value = token ? appUrl('share/' + token).href : ''
   }
 
   async function changeLink(button, action, message) {

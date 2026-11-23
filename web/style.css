@@ -9,8 +9,9 @@
 }
 * { box-sizing: border-box; }
 body { margin: 0; min-height: 100dvh; display: flex; flex-direction: column; }
-button, input, textarea { font: inherit; }
-button {
+:where(button, .button-link), input, textarea { font: inherit; }
+:where(button, .button-link) {
+  min-height: 2.375rem;
   cursor: pointer;
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -19,9 +20,17 @@ button {
   padding: .55rem .8rem;
   font-size: .875rem;
   font-weight: 650;
+  line-height: 1.3;
 }
-button:hover:enabled { background: #edf4ff; border-color: #a4bcec; }
-button:disabled { opacity: .42; cursor: default; }
+.button-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  text-decoration: none;
+}
+:where(button:enabled, .button-link):hover { background: #edf4ff; border-color: #a4bcec; }
+button:disabled { opacity: .62; cursor: default; }
 :focus-visible { outline: 3px solid #578bfd; outline-offset: 2px; }
 .topbar {
   position: relative;
@@ -126,7 +135,7 @@ h2 { font-size: 1.05rem; letter-spacing: -.015em; }
 .card-heading p { font-size: .875rem; }
 .actions { display: flex; flex-wrap: wrap; gap: .4rem; }
 .primary { background: var(--blue); color: white; border-color: var(--blue); }
-.primary:hover:enabled { background: #103ea4; }
+.primary:where(:enabled, .button-link):hover { background: #103ea4; border-color: #103ea4; }
 .workspace { display: grid; grid-template-columns: 245px minmax(0, 1fr); gap: 1rem; align-items: start; }
 .editor { display: grid; gap: 1rem; min-width: 0; }
 .card { background: white; border: 1px solid var(--border); border-radius: 14px; box-shadow: 0 4px 12px #233d6210; }
@@ -136,6 +145,7 @@ h2 { font-size: 1.05rem; letter-spacing: -.015em; }
 .tool-list { display: grid; gap: .3rem; }
 .markers { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .tool { display: flex; align-items: center; text-align: left; gap: .4rem; padding: .4rem; background: #f8fafd; }
+.tool:hover:enabled { background: #edf4ff; border-color: #a4bcec; }
 .tool[aria-pressed="true"] { background: #e6efff; border-color: #88adf5; color: #133f9e; }
 .tool-icon { display: grid; place-items: center; width: 1.4rem; height: 1.4rem; flex: none; font-size: 1.05rem; color: var(--icon, var(--blue)); }
 .letter-icon { background: var(--icon); color: white; border-radius: 50%; font-size: .8rem; font-weight: 750; }
@@ -377,17 +387,25 @@ textarea { resize: vertical; }
 }
 
 #account-nav[hidden] { display: none; }
-#account-name {
+#account-name, #sign-out {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  min-height: 2.375rem;
+  padding: .45rem .65rem;
+  border: 1px solid #87a9d680;
+  border-radius: 8px;
+  color: #f3f7ff;
+  background: #142f50;
+  font-size: .875rem;
+  font-weight: 650;
+  line-height: 1.3;
+  text-decoration: none;
+}
+#account-name {
   gap: .4rem;
   min-width: 0;
   max-width: min(100%, 11rem);
-  padding: .35rem .5rem;
-  border-color: #87a9d655;
-  border-radius: 999px;
-  color: #e4edfb;
-  background: #142f50;
 }
 #account-name::before {
   content: attr(data-initial);
@@ -403,29 +421,60 @@ textarea { resize: vertical; }
   font-weight: 800;
 }
 #account-name-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-#account-name:hover:enabled { color: white; background: #254771; }
-#sign-out { color: #e4edfb; background: transparent; border-color: #87a9d680; white-space: nowrap; }
-#sign-out:hover:enabled { color: white; background: #254771; }
+#sign-out { white-space: nowrap; }
+#account-name:hover, #sign-out:hover:enabled { color: white; background: #254771; }
 @media (max-width: 440px) {
   #account-name, #sign-out { padding-inline: .35rem; font-size: .8rem; }
   #account-name::before { width: 1.05rem; height: 1.05rem; }
 }
 .sign-in-card { width: min(100%, 27rem); margin: clamp(1rem, 8vh, 5rem) auto; padding: 1.35rem; }
-.sign-in-logo { display: block; width: min(100%, 18rem); height: auto; margin: 0 auto 1rem; }
-.sign-in-card h1 { margin-bottom: .85rem; }
-:is(#auth-form, #forgot-password-form, #password-reset-form):not([hidden]) { display: grid; gap: .55rem; }
-:is(#auth-form, #forgot-password-form, #password-reset-form) input {
-  width: 100%;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: .55rem;
-  color: inherit;
+.sign-in-logo { display: block; width: min(100%, 14rem); height: auto; margin: 0 auto 1.75rem; }
+.sign-in-card h1 { margin-bottom: 1.15rem; }
+.auth-flow { background: #edf2f8; }
+.auth-flow main {
+  display: grid;
+  place-items: center;
+  flex: 1;
+  width: min(calc(100% - 2rem), 29rem);
+  padding-block: clamp(1rem, 3vh, 2.5rem);
 }
-:is(#auth-form, #forgot-password-form, #password-reset-form) label { font-weight: 650; font-size: .875rem; }
-:is(#registration-help, #reset-password-help) { color: var(--muted); font-size: .875rem; }
-#forgot-password { justify-self: end; color: var(--blue); }
-#auth-form .actions { margin-top: .35rem; }
-#auth-status { margin-top: .55rem; }
+.auth-flow .sign-in-card {
+  width: 100%;
+  padding: clamp(1.25rem, 4vw, 2rem);
+  margin: 0;
+}
+.auth-intro { margin: -.5rem 0 1.25rem; color: var(--muted); line-height: 1.5; }
+.auth-form:not([hidden]) { display: grid; gap: 1rem; }
+.auth-field { display: grid; gap: .4rem; min-width: 0; }
+.auth-field label { font-weight: 650; font-size: .875rem; }
+.auth-field input {
+  width: 100%;
+  min-height: 3rem;
+  padding: .65rem .8rem;
+  border: 1px solid #a5b8d0;
+  border-radius: 8px;
+  background: white;
+  color: inherit;
+  font-size: 1rem;
+}
+.auth-field input:focus { border-color: var(--blue); }
+.auth-field .password-field { gap: .5rem; }
+.auth-field .password-visibility { min-width: 4.25rem; color: #17449c; }
+.auth-hint { color: var(--muted); font-size: .875rem; line-height: 1.4; }
+.auth-submit, .auth-recovery, .auth-card-footer .button-link { min-height: 2.75rem; }
+.auth-submit { margin-top: .25rem; }
+.auth-recovery { width: 100%; margin-top: .5rem; }
+.auth-card-footer {
+  display: grid;
+  gap: .75rem;
+  margin-top: 1.15rem;
+  padding-top: 1.15rem;
+  border-top: 1px solid var(--border);
+  text-align: center;
+}
+.auth-card-footer a, .auth-recovery { color: #17449c; }
+.auth-card-footer .button-link, .auth-recovery { border-color: #a5b8d0; }
+
 
 #admin-link[hidden] { display: none; }
 #admin-users { display: grid; gap: .65rem; }
@@ -473,7 +522,7 @@ textarea { resize: vertical; }
 .shared-plan-owner { color: var(--muted); margin-top: .3rem; font-size: .875rem; }
 .shared-plans .plan-entry h3 { overflow-wrap: anywhere; }
 .shared-plans .plan-drill { background: #f8fafd; }
-:is(#share-plan, #account-profile) {
+#share-plan {
   width: min(90%, 30rem);
   max-height: 85dvh;
   padding: 0;
@@ -482,7 +531,8 @@ textarea { resize: vertical; }
   color: inherit;
   box-shadow: 0 12px 32px #10223d45;
 }
-:is(#share-plan, #account-profile)::backdrop { background: #10223d70; }
+#share-plan::backdrop { background: #10223d70; }
+#account-profile { width: min(100%, 36rem); margin-inline: auto; }
 #share-plan-title { overflow-wrap: anywhere; }
 .share-plan-body { padding: 0 1rem 1rem; }
 #share-plan-form { display: grid; gap: .35rem; margin-block: .8rem; }
@@ -627,7 +677,6 @@ textarea { resize: vertical; }
   transform: rotate(-15deg);
 }
 .membership-heading p { max-width: 31rem; margin-top: .45rem; color: #dfebff; }
-#membership-sign-out { color: #152741; }
 .membership-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
 .membership-option { display: flex; flex-direction: column; padding: clamp(1rem, 3vw, 1.5rem); }
 .membership-option h2 { font-size: 1.5rem; }
@@ -662,11 +711,8 @@ textarea { resize: vertical; }
 .plan-limit-content h2 { font-size: 1.3rem; }
 .plan-limit-usage { display: grid; gap: .4rem; padding: .75rem; border-radius: 8px; background: #fff2e2; color: #713f0e; }
 #plan-limit-meter { width: 100%; accent-color: #a14d16; }
-#compare-plan-limits { display: inline-flex; align-items: center; border: 1px solid var(--blue); border-radius: 8px; padding: .55rem .8rem; font-size: .875rem; font-weight: 650; text-decoration: none; }
 
-#email-confirmation-form:not([hidden]) { display: grid; gap: .6rem; }
-#email-confirmation-form label { font-size: .875rem; font-weight: 650; }
-#email-confirmation-code { width: 100%; padding: .6rem; letter-spacing: .25em; border: 1px solid var(--border); border-radius: 8px; }
+#email-confirmation-code { letter-spacing: .18em; }
 
 :is(#delete-account-dialog, #self-delete-dialog) {
   width: min(calc(100% - 2rem), 28rem);
@@ -692,3 +738,19 @@ textarea { resize: vertical; }
 #self-delete-status:empty { display: none; }
 
 #membership-account-actions[hidden] { display: none; }
+
+@media (max-width: 480px) {
+  .page-nav { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .page-nav a { justify-content: center; min-height: 2.75rem; text-align: center; }
+  .page-nav a:last-child:nth-child(odd) { grid-column: 1 / -1; }
+  :is(.actions, .header-account, .password-field) > :is(button, .button-link, #account-name) { min-height: 2.75rem; }
+  :is(.sign-in-card, .activity, .plan-entry) .actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .5rem;
+  }
+  :is(.sign-in-card, .activity, .plan-entry) .actions > * { min-width: 0; }
+  :is(.activity, #plans-list .plan-entry) .actions > :first-child,
+  .sign-in-card .actions > :last-child:nth-child(odd) { grid-column: 1 / -1; }
+  .activity .actions { width: 100%; }
+}

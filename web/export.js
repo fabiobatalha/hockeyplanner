@@ -1,3 +1,4 @@
+import { appUrl } from './urls.js'
 import { markdownText } from './markdown.js'
 import { width, rinkHeight, rinkWidth, drawRink, drawItem } from './drawing.js'
 import qrcode from './vendor/qrcode-generator-2.0.4.mjs'
@@ -50,13 +51,30 @@ async function loadPdfLogo() {
   return logo
 }
 
-function shareQr(token, target) {
-  const url = new URL('./', location.href)
-  url.hash = 'share/' + token + '/' + target
+function makeQr(url) {
   const code = qrcode(0, 'M')
-  code.addData(url.href)
+  code.addData(url)
   code.make()
   return code
+}
+
+function shareQr(token, target) {
+  return makeQr(appUrl('share/' + token + '/' + target).href)
+}
+
+function drawQr(ctx, code, center, top, size) {
+  const modules = code.getModuleCount()
+  const cell = Math.floor(size / (modules + 8) * 2) / 2
+  const extent = (modules + 8) * cell
+  const left = Math.round((center - extent / 2) * 2) / 2
+  ctx.fillStyle = 'white'
+  ctx.fillRect(left, top, extent, extent)
+  ctx.fillStyle = 'black'
+  for (let row = 0; row < modules; row++) {
+    for (let col = 0; col < modules; col++) {
+      if (code.isDark(row, col)) ctx.fillRect(left + (col + 4) * cell, top + (row + 4) * cell, cell, cell)
+    }
+  }
 }
 
 function pdfDivider(codes) {
@@ -67,17 +85,8 @@ function drawPdfHeader(ctx, logo, pageWidth, margin, codes) {
   const logoWidth = 184
   ctx.drawImage(logo, margin, 18, logoWidth, logoWidth * logo.naturalHeight / logo.naturalWidth)
   for (const [index, { code, label }] of codes.entries()) {
-    const modules = code.getModuleCount()
-    const cell = Math.floor(132 / (modules + 8) * 2) / 2
     const center = pageWidth - margin - 66 - (codes.length - 1 - index) * 156
-    const left = Math.round((center - (modules + 8) * cell / 2) * 2) / 2
-    const top = 10
-    ctx.fillStyle = 'black'
-    for (let row = 0; row < modules; row++) {
-      for (let col = 0; col < modules; col++) {
-        if (code.isDark(row, col)) ctx.fillRect(left + (col + 4) * cell, top + (row + 4) * cell, cell, cell)
-      }
-    }
+    drawQr(ctx, code, center, 10, 132)
     ctx.fillStyle = '#152741'
     ctx.font = '15px system-ui'
     ctx.save()
@@ -87,6 +96,29 @@ function drawPdfHeader(ctx, logo, pageWidth, margin, codes) {
   }
   ctx.fillStyle = '#c7d5ea'
   ctx.fillRect(margin, pdfDivider(codes), pageWidth - 2 * margin, 1)
+}
+
+const freeNoticeHeight = 116
+
+function drawFreeNotice(ctx, code, pageWidth, margin, top) {
+  const w = pageWidth - 2 * margin
+  ctx.fillStyle = '#e6efff'
+  ctx.fillRect(margin, top, w, freeNoticeHeight)
+  ctx.fillStyle = '#174fc9'
+  ctx.fillRect(margin, top, 6, freeNoticeHeight)
+  const left = margin + 22
+  ctx.fillStyle = '#102346'
+  ctx.font = 'bold 23px system-ui'
+  ctx.fillText('Created with Hockey Planner Free', left, top + 17)
+  ctx.font = '18px system-ui'
+  ctx.fillText('These drills and practice plans were developed with a free Hockey Planner account.', left, top + 49)
+  ctx.font = 'bold 18px system-ui'
+  ctx.fillText('Create an account at hockeyplanner.ca or scan the QR code.', left, top + 77)
+  drawQr(ctx, code, pageWidth - margin - 64, top + 9, 98)
+}
+
+function signupQr() {
+  return document.body.hasAttribute('data-free-pdf') ? makeQr('https://hockeyplanner.ca/register') : null
 }
 
 function drawPdfFooter(ctx, pageWidth, pageHeight, margin) {
@@ -100,7 +132,7 @@ function drawPdfFooter(ctx, pageWidth, pageHeight, margin) {
   ctx.fillText('info@hockeyplanner.ca', pageWidth - margin, y + 12)
 }
 
-function* makePages(activity, paper, { logo, planName = '', codes = [] } = {}) {
+function* makePages(activity, paper, { logo, planName = '', codes = [], signup } = {}) {
   const margin = 32
   const pageWidth = width + 2 * margin
   const pageHeight = paper && Math.round(pageWidth * paper.height / paper.width)
@@ -118,7 +150,8 @@ function* makePages(activity, paper, { logo, planName = '', codes = [] } = {}) {
   let index = 0
   do {
     const pageCodes = first ? codes : []
-    const headerTop = paper ? pdfDivider(pageCodes) + 18 : margin
+    const noticeTop = paper ? pdfDivider(pageCodes) + 18 : margin
+    const headerTop = signup ? noticeTop + freeNoticeHeight + 20 : noticeTop
     const titleTop = headerTop + planHeading.length * lineHeight + (planHeading.length ? 8 : 0)
     const rinkTop = titleTop + title.length * 36 + 12
     const footerTop = pageHeight - 65
@@ -129,6 +162,7 @@ function* makePages(activity, paper, { logo, planName = '', codes = [] } = {}) {
     const requestedHeight = paper ? pageHeight : top + margin + (pageLines.length ? (pageLines.length + 1) * lineHeight : 0)
     const { canvas, ctx } = makeCanvas(pageWidth, requestedHeight)
     if (paper) drawPdfHeader(ctx, logo, pageWidth, margin, pageCodes)
+    if (signup) drawFreeNotice(ctx, signup, pageWidth, margin, noticeTop)
     ctx.fillStyle = '#152741'
     if (first) {
       ctx.font = 'bold 18px system-ui'
@@ -213,7 +247,7 @@ async function makePdf(pages, paper) {
 export async function exportActivity(activity, format, token) {
   const paper = format === 'pdf' ? landscapeA4 : null
   const codes = token && activity.id ? [{ code: shareQr(token, 'drill/' + activity.id), label: 'Scan to view drill' }] : []
-  const pages = makePages(activity, paper, paper ? { logo: await loadPdfLogo(), codes } : undefined)
+  const pages = makePages(activity, paper, paper ? { logo: await loadPdfLogo(), codes, signup: signupQr() } : undefined)
   const file = paper ? await makePdf(pages, paper) : await encodeCanvas(pages.next().value, 'image/png')
   download(file, activity.title, 'drill', format)
 }
@@ -221,11 +255,12 @@ export async function exportActivity(activity, format, token) {
 export async function exportTrainingPlan(name, activities, token) {
   const logo = await loadPdfLogo()
   const planCode = token ? { code: shareQr(token, 'present'), label: 'Scan to view full plan' } : null
+  const signup = signupQr()
   function* pages() {
     for (const activity of activities) {
       const codes = planCode ? [planCode] : []
       if (token && activity.id) codes.push({ code: shareQr(token, 'drill/' + activity.id), label: 'Scan to view drill' })
-      yield* makePages(activity, portraitLetter, { logo, planName: name, codes })
+      yield* makePages(activity, portraitLetter, { logo, planName: name, codes, signup })
     }
   }
 
