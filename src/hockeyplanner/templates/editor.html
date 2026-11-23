@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <section id="editor-page" aria-labelledby="editor-title">
+    <section id="editor-page" aria-labelledby="editor-title" data-account-id="{{ user.id }}">
       <section class="page-heading">
         <div><h1 id="editor-title" tabindex="-1">Drill Editor</h1><p>Draw drills and plan your on-ice practices.</p></div>
         <div class="actions">
@@ -40,7 +40,7 @@
               </label></div>
               <div class="actions compact"><button id="fullscreen" type="button" aria-pressed="false">Fullscreen</button><button id="undo" type="button" aria-label="Undo" title="Undo (Ctrl+Z)">↶</button><button id="redo" type="button" aria-label="Redo" title="Redo (Ctrl+Shift+Z)">↷</button><button id="remove" type="button">Delete</button></div>
             </div>
-            <div class="ice-wrap"><div class="rink-surface"><canvas id="rink" width="1000" height="460" aria-label="Interactive hockey rink"></canvas><span id="goal-rotation" role="group" aria-label="Goal rotation" hidden><button type="button" data-rotation="-15" aria-label="Rotate goal 15 degrees counterclockwise" title="Rotate goal 15° counterclockwise">⟲</button> <button type="button" data-rotation="15" aria-label="Rotate goal 15 degrees clockwise" title="Rotate goal 15° clockwise">⟳</button></span></div></div>
+            <div class="ice-wrap"><div class="rink-surface"><canvas id="rink" width="1000" height="460" aria-label="Interactive hockey rink" aria-describedby="hint" tabindex="0"></canvas><span id="goal-rotation" role="group" aria-label="Goal rotation" hidden><button type="button" data-rotation="-15" aria-label="Rotate goal 15 degrees counterclockwise" title="Rotate goal 15° counterclockwise">⟲</button> <button type="button" data-rotation="15" aria-label="Rotate goal 15 degrees clockwise" title="Rotate goal 15° clockwise">⟳</button></span></div></div>
             <p class="hint" id="hint"></p>
           </section>
           <section class="card details" aria-labelledby="details-title">
@@ -73,5 +73,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script type="module" src="{{ url_for('static', filename='editor.js') }}"></script>
+<script type="module" src="{{ url_for('web_asset', filename='editor.js') }}"></script>
 {% endblock %}

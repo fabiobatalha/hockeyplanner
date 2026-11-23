@@ -25,16 +25,20 @@ def create_app(
     send_password_reset: Callable[[str, str], None] = smtp_password_reset,
 ) -> Flask:
     web = PROJECT_DIR / "web"
-    style = web / "style.css"
-    if not style.is_file():
+    if not (web / "style.css").is_file():
         raise FileNotFoundError("Web directory not found. Run the editor from the project.")
 
     app = Flask(__name__, static_folder=str(web), static_url_path="/static")
-    version = sha256(style.read_bytes()).hexdigest()[:16]
+    asset_hash = sha256()
+    for asset in sorted(path for path in web.rglob("*") if path.is_file()):
+        asset_hash.update(asset.relative_to(web).as_posix().encode())
+        asset_hash.update(b"\0")
+        asset_hash.update(sha256(asset.read_bytes()).digest())
+    version = asset_hash.hexdigest()[:16]
 
-    @app.get(f"/static/{version}/style.css")
-    def stylesheet():
-        return app.send_static_file("style.css")
+    @app.get(f"/static/{version}/<path:filename>")
+    def web_asset(filename):
+        return app.send_static_file(filename)
 
     app.config["MAX_CONTENT_LENGTH"] = 25 * 1024 * 1024
     sessions = open_database(data_file or PROJECT_DIR / "data" / "hockeyplanner.sqlite3")

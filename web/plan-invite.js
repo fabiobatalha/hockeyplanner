@@ -38,11 +38,10 @@ print.addEventListener('click', async () => {
   try {
     if (standalone) await exportActivity(plan.activities[0], 'pdf', token)
     else await exportTrainingPlan(plan.name, plan.activities, token)
-    showActionMessage('PDF ready.')
-  } catch {
-    showActionMessage('Could not generate the PDF.')
-  } finally {
     status.textContent = ''
+  } catch {
+    status.textContent = 'Could not generate the PDF.'
+  } finally {
     print.disabled = false
   }
 })

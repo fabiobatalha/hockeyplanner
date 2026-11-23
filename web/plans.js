@@ -4,7 +4,7 @@ import { showActionMessage } from './action-message.js'
 import { presentPlan } from './plan-viewer.js'
 import { showPlanLimit } from './plan-limit.js'
 import { setupPlanSharing } from './plan-sharing.js'
-import { copySharedPlan, createPlanLink, deleteRecord, readLibrary, readPlanLink, readReceivedPlanLink, readSharedPlans, removeReceivedShare, saveRecord } from './library.js'
+import { copySharedPlan, deleteRecord, readLibrary, readPlanLink, readReceivedPlanLink, readSharedPlans, removeReceivedShare, saveRecord } from './library.js'
 import { newRecordId } from './record-id.js'
 import { exportTrainingPlan } from './export.js'
 import { activityThumbnail } from './drawing.js'
@@ -79,16 +79,12 @@ function setupPlans({ getActivities, refreshLibrary }) {
       print.disabled = true
       status.textContent = 'Generating the plan PDF…'
       try {
-        let { token } = shared ? await readReceivedPlanLink(ownerId, plan.id) : await readPlanLink(plan.id)
-        if (!shared && !token && confirm('Enable a public share link to add QR codes to this PDF? Anyone with a code can access the shared plan. Cancel to export without QR codes.')) {
-          token = (await createPlanLink(plan.id)).token
-        }
+        const { token } = shared ? await readReceivedPlanLink(ownerId, plan.id) : await readPlanLink(plan.id)
         await exportTrainingPlan(plan.name, planActivities(plan, shared), token)
-        showActionMessage(token ? 'Plan PDF ready.' : 'Plan PDF ready without QR codes because public sharing is off.')
-      } catch {
-        showActionMessage('Could not generate the plan PDF.')
-      } finally {
         status.textContent = ''
+      } catch {
+        status.textContent = 'Could not generate the plan PDF.'
+      } finally {
         print.disabled = false
       }
     })

@@ -31,6 +31,7 @@ def create_pages(accounts: Accounts, library: Library, sharing: Sharing) -> Blue
 
     def render(page, title, **context):
         user = g.account
+        context.setdefault("free_pdf", bool(user and user.tier == "free"))
         count = library.drill_count(user.id) if user and user.email and user.tier != "pending" else 0
         return render_template(
             f"{page}.html", page=page, title=title, user=user, drill_count=count, **context,
@@ -138,7 +139,12 @@ def create_pages(accounts: Accounts, library: Library, sharing: Sharing) -> Blue
             return render("share", title, shared=None, error=str(error)), 404
         if data.get("standalone"):
             title = "Shared Drill"
+        owner_free = data.pop("owner_free")
+        free_pdf = g.account.tier == "free" if g.account else owner_free
         return render("share", title, shared={**data, "token": token, "present": present or drill_id is not None},
+                      free_pdf=free_pdf,
+                      guest_free=not g.account and owner_free,
+                      signup_url=url_for("pages.register", next=None if data.get("standalone") else f"/share/{token}"),
                       login_url=url_for("pages.login", next=f"/share/{token}"))
 
     @pages.get("/share/<token>/present")

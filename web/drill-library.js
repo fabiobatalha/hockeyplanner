@@ -1,6 +1,6 @@
 import { showActionMessage } from './action-message.js'
 import { activityThumbnail } from './drawing.js'
-import { deleteRecord, drillShareLink, readLibrary } from './library.js'
+import { deleteRecord, readLibrary } from './library.js'
 import { drillSearch, renderMarkdown } from './markdown.js'
 import { prepareLibrary } from './library-onboarding.js'
 import { appUrl } from './urls.js'
@@ -60,22 +60,7 @@ function refreshLibrary() {
       refreshLibrary()
       showActionMessage('Drill deleted from the library.')
     })
-    const disableLink = document.createElement('button')
-    disableLink.textContent = 'Disable PDF Link'
-    disableLink.setAttribute('aria-label', 'Disable PDF link for ' + entry.title)
-    disableLink.addEventListener('click', async () => {
-      if (!confirm('Disable the public link in standalone PDFs of this drill?')) return
-      disableLink.disabled = true
-      try {
-        await drillShareLink(entry.id, 'DELETE')
-        showActionMessage('The standalone PDF link is disabled.')
-      } catch (error) {
-        showActionMessage(error.message)
-      } finally {
-        disableLink.disabled = false
-      }
-    })
-    actions.append(open, disableLink, remove)
+    actions.append(open, remove)
     row.append(activityThumbnail(entry), details, actions)
     list.append(row)
   }

@@ -7,6 +7,7 @@
           <button type="submit">Exit Presentation</button>
         </form>
       </header>
+      {% if guest_free %}{% include "free_preview_notice.html" %}{% endif %}
       <div id="plan-viewer-activities" role="region" aria-label="Current drill" tabindex="0"></div>
       <nav class="plan-viewer-controls" aria-label="Drill navigation">
         <button id="plan-viewer-prev" type="button">← Previous</button>

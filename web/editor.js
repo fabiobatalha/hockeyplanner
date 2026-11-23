@@ -7,6 +7,7 @@ import { newRecordId } from './record-id.js'
 import { width, height, rinkWidth, rinkHeight, markers, movements, drawRink, drawItem, hitsItem, itemPoints, playerTeamColors } from './drawing.js'
 import { setupMarkdown } from './markdown.js'
 import { exportActivity } from './export.js'
+import { itemBounds, movementEnds, resizeMovement, translateItem } from './editor-geometry.js'
 
 const get = id => document.getElementById(id)
 const rink = get('rink')
@@ -40,6 +41,9 @@ let playerTeam = 'A'
 let playerOptionsOpen = false
 let selected = new Set()
 let gesture = null
+let clipboard = []
+let pasteCount = 0
+const clipboardKey = 'hockeyplanner.rink-objects.' + get('editor-page').dataset.accountId
 const undo = []
 const redo = []
 
@@ -50,8 +54,13 @@ function status(message) {
 function addTools(container, entries) {
   for (const [id, [label, icon, color]] of Object.entries(entries)) {
     const button = document.createElement('button')
-    const symbol = document.createElement('span')
-    symbol.textContent = icon
+    const symbol = document.createElement(id === 'pivot' ? 'canvas' : 'span')
+    if (id === 'pivot') {
+      symbol.width = symbol.height = 32
+      drawItem(symbol.getContext('2d'), { type: 'pivot', x: 16, y: 16 })
+    } else {
+      symbol.textContent = icon
+    }
     symbol.className = 'tool-icon'
     if (['player', 'coach', 'goalie', 'order', 'referee'].includes(id)) symbol.classList.add('letter-icon')
     if (id === 'referee') symbol.classList.add('referee-icon')
@@ -108,8 +117,9 @@ function addTools(container, entries) {
   }
 }
 addTools('selection-tools', { select: ['Select and Move', '⌖'] })
-addTools('marker-tools', markers)
-addTools('movement-tools', movements)
+const { pivot, ...markerTools } = markers
+addTools('marker-tools', markerTools)
+addTools('movement-tools', { ...movements, pivot })
 
 const playerButton = document.querySelector('[data-tool=player]')
 const playerOptions = get('player-options')
@@ -120,6 +130,23 @@ function selectedPlayers() {
 
 function singleSelectedItem() {
   return selected.size === 1 ? activity.items[selected.values().next().value] : null
+}
+
+function selectedMovement() {
+  const item = singleSelectedItem()
+  return tool === 'select' && item && movements[item.type] ? item : null
+}
+
+function endpointRadius(pixels) {
+  return pixels * rink.width / rink.getBoundingClientRect().width
+}
+
+function hitEndpoint(item, point) {
+  const [start, end] = movementEnds(item)
+  const fromStart = distance(start, point)
+  const fromEnd = distance(end, point)
+  if (Math.min(fromStart, fromEnd) > endpointRadius(13)) return -1
+  return fromStart < fromEnd ? 0 : 1
 }
 
 function render() {
@@ -133,6 +160,20 @@ function render() {
   surface.style.setProperty('--rink-height', visibleHeight)
   drawRink(ctx)
   activity.items.forEach((item, index) => drawItem(ctx, item, selected.has(index)))
+  const resizable = selectedMovement()
+  if (resizable) {
+    ctx.save()
+    ctx.fillStyle = 'white'
+    ctx.strokeStyle = '#174fc9'
+    ctx.lineWidth = endpointRadius(2)
+    for (const end of movementEnds(resizable)) {
+      ctx.beginPath()
+      ctx.arc(end.x, end.y, endpointRadius(6), 0, Math.PI * 2)
+      ctx.fill()
+      ctx.stroke()
+    }
+    ctx.restore()
+  }
   if (gesture?.preview) drawItem(ctx, gesture.preview)
   if (gesture?.area) {
     const { left, top, right, bottom } = gesture.area
@@ -147,6 +188,7 @@ function render() {
   }
   rink.classList.toggle('select', tool === 'select')
   rink.classList.toggle('dragging', gesture?.kind === 'move')
+  if (!resizable) rink.classList.remove('resize-endpoint')
   for (const button of document.querySelectorAll('[data-tool]')) {
     button.setAttribute('aria-pressed', String(button.dataset.tool === tool))
   }
@@ -181,8 +223,11 @@ function render() {
   if (tool === 'order') hint = 'Choose a number from 1 to 9, then click the rink to mark the step.'
   if (tool === 'select') hint = 'Click to select, Shift-click to add or remove items, or drag from an empty spot to select an area.'
   if (selected.size > 1) hint = selected.size + ' items selected. Drag any selected item to move the group.'
+  if (resizable) hint = 'Drag a circular handle to change the movement length, or drag the line to move it.'
   if (players.length) hint += ' Choose blue or red in the Player tool to change the selected players.'
   if (goalSelected) hint = 'Drag to move the goal. Use the rotation buttons to change its angle.'
+  if (tool === 'pivot') hint = 'Click the rink where the player should pivot.'
+  if (selected.size) hint += ' Copy and paste with Ctrl+C / Ctrl+V (⌘ on Mac).'
   get('hint').textContent = hint
 }
 
@@ -265,6 +310,7 @@ function movement(start, end, samples) {
 rink.addEventListener('pointerdown', event => {
   if (event.button !== 0 || gesture) return
   event.preventDefault()
+  rink.focus({ preventScroll: true })
   const start = coordinates(event)
   if (markers[tool]) {
     remember()
@@ -277,8 +323,15 @@ rink.addEventListener('pointerdown', event => {
   }
   if (tool === 'select') {
     const tolerance = Math.max(8, 7 * rinkWidth(activity.layout) / rink.getBoundingClientRect().width)
-    const hit = activity.items.findLastIndex(item => hitsItem(ctx, item, start, tolerance))
-    if (hit < 0 || event.shiftKey) {
+    const resizable = selectedMovement()
+    const endpoint = resizable && !event.shiftKey ? hitEndpoint(resizable, start) : -1
+    const hit = endpoint < 0 ? activity.items.findLastIndex(item => hitsItem(ctx, item, start, tolerance)) : -1
+    if (endpoint >= 0) {
+      gesture = {
+        kind: 'resize', start, endpoint, before: structuredClone(activity.items),
+        index: selected.values().next().value, pointer: event.pointerId,
+      }
+    } else if (hit < 0 || event.shiftKey) {
       gesture = {
         kind: 'area', start, previousSelection: selected, pointer: event.pointerId,
         shift: event.shiftKey, hit,
@@ -287,13 +340,7 @@ rink.addEventListener('pointerdown', event => {
     } else {
       if (!selected.has(hit)) selected = new Set([hit])
       const before = structuredClone(activity.items)
-      const points = [...selected].flatMap(index => itemPoints(before[index]))
-      const bounds = points.reduce((box, point) => ({
-        left: Math.min(box.left, point.x),
-        right: Math.max(box.right, point.x),
-        top: Math.min(box.top, point.y),
-        bottom: Math.max(box.bottom, point.y),
-      }), { left: Infinity, right: -Infinity, top: Infinity, bottom: -Infinity })
+      const bounds = itemBounds([...selected].map(index => before[index]))
       gesture = { kind: 'move', start, before, bounds, pointer: event.pointerId }
     }
   } else {
@@ -327,6 +374,19 @@ function updateGesture(event) {
     })
     return
   }
+  if (gesture.kind === 'resize') {
+    const { before, index, endpoint } = gesture
+    const original = before[index]
+    const ends = movementEnds(original)
+    const moving = ends[endpoint]
+    const position = {
+      x: Math.max(0, Math.min(rink.width, moving.x + p.x - start.x)),
+      y: Math.max(0, Math.min(rink.height, moving.y + p.y - start.y)),
+    }
+    gesture.moved = distance(moving, position) > .5 && distance(ends[1 - endpoint], position) >= 8
+    activity.items[index] = gesture.moved ? resizeMovement(original, endpoint, position) : original
+    return
+  }
   const { left, right, top, bottom } = gesture.bounds
   const visibleWidth = rinkWidth(activity.layout)
   const visibleHeight = rinkHeight(activity.layout)
@@ -336,20 +396,18 @@ function updateGesture(event) {
   const x = Math.max(-Math.max(0, left), Math.min(maxX - right, p.x - start.x))
   const y = Math.max(-Math.max(0, top), Math.min(maxY - bottom, p.y - start.y))
   gesture.moved = x !== 0 || y !== 0
-  const offsets = { x, y, endX: x, endY: y, bendX: x, bendY: y }
   for (const index of selected) {
-    const original = gesture.before[index]
-    const item = { ...original }
-    if (original.path) item.path = original.path.map(point => ({ x: point.x + x, y: point.y + y }))
-    for (const [key, offset] of Object.entries(offsets)) {
-      if (key in original) item[key] += offset
-    }
-    activity.items[index] = item
+    activity.items[index] = translateItem(gesture.before[index], x, y)
   }
 }
 
 rink.addEventListener('pointermove', event => {
-  if (gesture?.pointer !== event.pointerId) return
+  if (!gesture) {
+    const resizable = selectedMovement()
+    rink.classList.toggle('resize-endpoint', Boolean(resizable && hitEndpoint(resizable, coordinates(event)) >= 0))
+    return
+  }
+  if (gesture.pointer !== event.pointerId) return
   updateGesture(event)
   render()
 })
@@ -448,10 +506,54 @@ for (const button of document.querySelectorAll('[data-rotation]')) {
   })
 }
 
+function copySelection() {
+  if (gesture || !selected.size) return false
+  clipboard = structuredClone(activity.items.filter((_, index) => selected.has(index)))
+  pasteCount = 0
+  try {
+    sessionStorage.setItem(clipboardKey, JSON.stringify(clipboard))
+  } catch {
+    // The in-memory clipboard still works on this page.
+  }
+  status(clipboard.length === 1 ? 'Object copied.' : clipboard.length + ' objects copied.')
+  return true
+}
+
+function pasteSelection() {
+  if (gesture || savingDrill) return false
+  if (!clipboard.length) {
+    try {
+      clipboard = JSON.parse(sessionStorage.getItem(clipboardKey)) ?? []
+    } catch {
+      return false
+    }
+  }
+  if (!Array.isArray(clipboard) || !clipboard.length) return false
+  const { left, right, top, bottom } = itemBounds(clipboard)
+  const shift = ++pasteCount * 18
+  const offset = (start, end, limit) => end + shift <= limit ? shift : -Math.min(shift, Math.max(0, start))
+  const x = offset(left, right, rink.width)
+  const y = offset(top, bottom, rink.height)
+  remember()
+  selected.clear()
+  for (const item of clipboard) {
+    selected.add(activity.items.length)
+    activity.items.push(translateItem(item, x, y))
+  }
+  tool = 'select'
+  playerOptionsOpen = false
+  status(clipboard.length === 1 ? 'Object pasted.' : clipboard.length + ' objects pasted.')
+  render()
+  return true
+}
+
 document.addEventListener('keydown', event => {
-  if (event.target.matches('input, textarea, [contenteditable], [contenteditable] *')) return
+  if (event.target.closest('input, textarea, select, [contenteditable], dialog[open]')) return
   if (event.key === 'Delete') removeSelected()
   if (!(event.ctrlKey || event.metaKey)) return
+  const key = event.key.toLowerCase()
+  if (key === 'c' && !window.getSelection()?.toString() && copySelection()) event.preventDefault()
+  if (key === 'v' && pasteSelection()) event.preventDefault()
   if (event.key.toLowerCase() === 'z') {
     event.preventDefault()
     if (event.shiftKey) restore(redo, undo)
@@ -525,20 +627,15 @@ for (const format of ['png', 'pdf']) {
     const snapshot = structuredClone(activity)
     const saved = Boolean(snapshot.id) && JSON.stringify(snapshot) === baseline
     button.disabled = true
+    if (format === 'pdf') status('Generating the PDF…')
     try {
-      let token
-      if (format === 'pdf' && saved) {
-        token = (await drillShareLink(snapshot.id)).token
-        if (!token && confirm('Enable a public link for this drill and add a QR code to the PDF? Cancel to export without a QR code.')) {
-          token = (await drillShareLink(snapshot.id, 'PUT')).token
-        }
-      }
+      const token = format === 'pdf' && saved ? (await drillShareLink(snapshot.id)).token : null
       await exportActivity(snapshot, format, token)
-      showActionMessage(format === 'pdf' && !saved
-        ? 'PDF ready. Save the drill before exporting to add a QR code.'
-        : format.toUpperCase() + ' file ready.')
+      if (format === 'pdf') status('')
+      else showActionMessage('PNG file ready.')
     } catch {
-      showActionMessage('Could not generate the ' + format.toUpperCase() + ' file' + '.')
+      if (format === 'pdf') status('Could not generate the PDF.')
+      else showActionMessage('Could not generate the PNG file.')
     } finally {
       button.disabled = false
     }
@@ -552,6 +649,7 @@ fitRink()
 const save = get('save')
 save.disabled = true
 await prepareLibrary()
+if (get('status').textContent === 'Loading the editor…') status('')
 save.disabled = false
 
 window.addEventListener('beforeunload', event => {

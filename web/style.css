@@ -204,6 +204,7 @@ legend { padding: 0; }
 #rink { display: block; width: 100%; height: auto; touch-action: none; cursor: crosshair; }
 #rink.select { cursor: grab; }
 #rink.dragging { cursor: grabbing; }
+#rink.resize-endpoint { cursor: crosshair; }
 .hint { color: var(--muted); font-size: .875rem; min-height: 2.7rem; padding: .65rem 1rem; }
 .fields { display: grid; grid-template-columns: minmax(180px, 1fr) minmax(0, 2fr); gap: .75rem; margin-top: .75rem; }
 .fields label { display: grid; align-content: start; gap: .35rem; font-size: .875rem; font-weight: 650; }
@@ -614,6 +615,43 @@ textarea { resize: vertical; }
 .plan-preview-drill { display: flex; flex-wrap: wrap; gap: .75rem; align-items: start; overflow-wrap: anywhere; }
 .plan-preview-drill > div { flex: 1 1 12rem; min-width: 0; }
 
+.free-preview-notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem 1.25rem;
+  margin-bottom: 1rem;
+  padding: 1rem clamp(1rem, 3vw, 1.5rem);
+  border: 1px solid #244d93;
+  border-inline-start: 5px solid #70afff;
+  border-radius: 12px;
+  background: linear-gradient(110deg, #102346, #174691);
+  color: #fff;
+  box-shadow: 0 6px 18px #10234626;
+}
+.free-preview-title {
+  font-size: clamp(1.05rem, 2.6vw, 1.4rem);
+  font-weight: 750;
+}
+.free-preview-detail { margin-top: .25rem; color: #dce9ff; font-size: .9rem; }
+.free-preview-notice .button-link {
+  min-height: 2.75rem;
+  border-color: white;
+  color: #17449c;
+}
+#plan-presentation > .free-preview-notice {
+  flex: none;
+  margin: .5rem 5% 0;
+  padding-block: .5rem;
+}
+#plan-presentation .free-preview-title { font-size: 1rem; }
+#plan-presentation .free-preview-detail { display: none; }
+@media (max-width: 480px) {
+  .free-preview-notice .button-link { width: 100%; }
+  #plan-presentation > .free-preview-notice { gap: .4rem; }
+}
+
 .site-footer {
   display: flex;
   flex-wrap: wrap;
@@ -750,7 +788,7 @@ textarea { resize: vertical; }
     gap: .5rem;
   }
   :is(.sign-in-card, .activity, .plan-entry) .actions > * { min-width: 0; }
-  :is(.activity, #plans-list .plan-entry) .actions > :first-child,
+  #plans-list .plan-entry .actions > :first-child,
   .sign-in-card .actions > :last-child:nth-child(odd) { grid-column: 1 / -1; }
   .activity .actions { width: 100%; }
 }

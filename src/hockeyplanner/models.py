@@ -143,7 +143,7 @@ class Point(BaseModel):
 
 
 class Marker(Point):
-    type: Literal["player", "cone", "coach", "goal", "goalie", "puck", "pucks", "shot", "order", "referee"]
+    type: Literal["player", "cone", "coach", "goal", "goalie", "puck", "pucks", "shot", "order", "referee", "pivot", "start", "end"]
     team: Literal["A", "B"] | None = None
     number: Annotated[int, Field(ge=1, le=9)] | None = None
     rotation: FiniteFloat | None = None

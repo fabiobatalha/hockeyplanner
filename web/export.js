@@ -1,7 +1,7 @@
 import { appUrl } from './urls.js'
 import { markdownText } from './markdown.js'
 import { width, rinkHeight, rinkWidth, drawRink, drawItem } from './drawing.js'
-import qrcode from './vendor/qrcode-generator-2.0.4.mjs'
+import { drawQr, makeQr, signupUrl } from './qr.js'
 
 const landscapeA4 = { width: 841.89, height: 595.28 }
 const portraitLetter = { width: 612, height: 792 }
@@ -51,30 +51,8 @@ async function loadPdfLogo() {
   return logo
 }
 
-function makeQr(url) {
-  const code = qrcode(0, 'M')
-  code.addData(url)
-  code.make()
-  return code
-}
-
 function shareQr(token, target) {
   return makeQr(appUrl('share/' + token + '/' + target).href)
-}
-
-function drawQr(ctx, code, center, top, size) {
-  const modules = code.getModuleCount()
-  const cell = Math.floor(size / (modules + 8) * 2) / 2
-  const extent = (modules + 8) * cell
-  const left = Math.round((center - extent / 2) * 2) / 2
-  ctx.fillStyle = 'white'
-  ctx.fillRect(left, top, extent, extent)
-  ctx.fillStyle = 'black'
-  for (let row = 0; row < modules; row++) {
-    for (let col = 0; col < modules; col++) {
-      if (code.isDark(row, col)) ctx.fillRect(left + (col + 4) * cell, top + (row + 4) * cell, cell, cell)
-    }
-  }
 }
 
 function pdfDivider(codes) {
@@ -118,7 +96,7 @@ function drawFreeNotice(ctx, code, pageWidth, margin, top) {
 }
 
 function signupQr() {
-  return document.body.hasAttribute('data-free-pdf') ? makeQr('https://hockeyplanner.ca/register') : null
+  return document.body.hasAttribute('data-free-pdf') ? makeQr(signupUrl) : null
 }
 
 function drawPdfFooter(ctx, pageWidth, pageHeight, margin) {

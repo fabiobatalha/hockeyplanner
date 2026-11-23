@@ -7,7 +7,7 @@ from sqlalchemy.dialects.sqlite import insert
 from sqlalchemy.orm import Session, sessionmaker
 
 from .library import check_capacity, lock_library
-from .database import DrillShareLink, LibraryRecord, PlanShare, PlanShareLink, User, UserAccess
+from .database import DrillShareLink, LibraryRecord, PlanShare, PlanShareLink, User, UserAccess, UserMembership
 
 
 class ShareNotFound(Exception):
@@ -32,6 +32,12 @@ def find_plan(session: Session, owner_id: int, plan_id: str) -> LibraryRecord:
 
 def public_drill(drill: dict) -> dict:
     return {key: drill[key] for key in ("id", "title", "description", "layout", "items") if key in drill}
+
+
+def public_owner(session: Session, owner_id: int) -> dict:
+    owner = session.get(User, owner_id)
+    membership = session.get(UserMembership, owner_id)
+    return {"owner": owner.username, "owner_free": membership is None or membership.tier == "free"}
 
 
 def find_link(session: Session, token: str) -> PlanShareLink:
@@ -147,11 +153,10 @@ class Sharing:
                 ))
                 if standalone:
                     drill = public_drill(json.loads(find_record(session, standalone.owner_id, drill_id, "drills").body))
-                    return {"owner": session.get(User, standalone.owner_id).username, "standalone": True,
+                    return {**public_owner(session, standalone.owner_id), "standalone": True,
                             "plan": {"name": drill["title"], "activities": [drill]}}
             link = find_link(session, token)
             record = find_plan(session, link.owner_id, link.plan_id)
-            owner = session.get(User, link.owner_id)
             plan = resolved_plan(session, record)
             activities = [public_drill(drill) for drill in plan["activities"]]
             start_index = 0
@@ -163,7 +168,7 @@ class Sharing:
                     start_index = match
                 else:
                     activities = [activities[match]]
-            return {"owner": owner.username, "start_index": start_index,
+            return {**public_owner(session, link.owner_id), "start_index": start_index,
                     "plan": {"name": plan["name"], "activities": activities}}
 
     def claim_link(self, recipient_id: int, token: str) -> None:

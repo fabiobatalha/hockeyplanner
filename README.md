@@ -55,9 +55,9 @@ Click **Share** on a plan and enter the recipient’s username. The plan appears
 
 You can also create a share link from **Share**. Anyone with the link can preview the plan, present it in fullscreen, and print it without signing in. Recipients must sign in to accept the share or make an editable copy. Disabling the link prevents new recipients from accepting it. In the same dialog, use **Remove access** to revoke access for someone who has already accepted.
 
-PDFs include the Hockey Planner logo and contact details. To add a QR code when exporting a saved drill or an owned practice plan, enable the public link when prompted. A plan PDF includes a QR code for the full plan and one for each drill. The drill code opens the fullscreen carousel at that drill, and the plan code starts at the first drill. A standalone drill code opens only that drill. These links work without an account. Plans shared with you include QR codes when their owner has enabled a public link. Export PDFs from a site address that recipients can reach.
+PDFs include the Hockey Planner logo and contact details. To add a QR code, enable the public link under **Share** on an owned practice plan. An existing standalone drill link is also included when exporting that saved drill. A shared plan PDF includes a QR code for the full plan and one for each drill. The drill code opens the fullscreen carousel at that drill, and the plan code starts at the first drill. A standalone drill code opens only that drill. These links work without an account. Plans shared with you include QR codes when their owner has enabled a public link. Export PDFs from a site address that recipients can reach.
 
-To deactivate printed codes, use **Disable PDF Link** in the Drill Library for a standalone drill or disable the public link in the practice plan's **Share** dialog for plan PDFs.
+To deactivate codes printed in plan PDFs, disable the public link in the practice plan's **Share** dialog.
 
 ## Configure account email
 

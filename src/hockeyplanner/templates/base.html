@@ -5,14 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{ title }} · Hockey Planner</title>
   <meta name="description" content="Draw hockey drills and organize your practice plans.">
-  <link rel="icon" type="image/png" href="{{ url_for('static', filename='hockey-planner-icon.png') }}">
-  <link rel="stylesheet" href="{{ url_for('stylesheet') }}">
+  <link rel="icon" type="image/png" href="{{ url_for('web_asset', filename='hockey-planner-icon.png') }}">
+  <link rel="stylesheet" href="{{ url_for('web_asset', filename='style.css') }}">
 </head>
 {% set auth_flow = page in ('login', 'register', 'forgot_password', 'confirm_email', 'reset_password') %}
-<body{% if auth_flow %} class="auth-flow"{% endif %} data-page="{{ page }}" data-root="{{ url_for('pages.index') }}"{% if not auth_flow and user and user.tier == 'free' %} data-free-pdf{% endif %}>
+<body{% if auth_flow %} class="auth-flow"{% endif %} data-page="{{ page }}" data-root="{{ url_for('pages.index') }}"{% if free_pdf %} data-free-pdf{% endif %}>
   {% if not auth_flow %}
   <header class="topbar">
-    <a href="{{ url_for('pages.index') }}" class="brand"><img src="{{ url_for('static', filename='hockey-planner-logo.png') }}" alt="Hockey Planner" width="2172" height="724"></a>
+    <a href="{{ url_for('pages.index') }}" class="brand"><img src="{{ url_for('web_asset', filename='hockey-planner-logo.png') }}" alt="Hockey Planner" width="2172" height="724"></a>
     {% if user %}
     <div id="account-nav" class="header-controls">
       {% if user.email and user.tier != 'pending' %}
@@ -56,7 +56,7 @@
   </dialog>
   {% block dialogs %}{% endblock %}
   <noscript>Enable JavaScript in your browser to use the editor.</noscript>
-  <script type="module" src="{{ url_for('static', filename='site.js') }}"></script>
+  <script type="module" src="{{ url_for('web_asset', filename='site.js') }}"></script>
   {% block scripts %}{% endblock %}
 </body>
 </html>

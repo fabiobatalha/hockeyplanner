@@ -20,6 +20,7 @@
     </div>
     {% endif %}
   </div>
+  {% if guest_free %}{% include "free_preview_notice.html" %}{% endif %}
   <section class="card plan-invite">
     {% if shared %}
     <div id="plan-invite-preview">
@@ -52,5 +53,5 @@
 {% endblock %}
 
 {% block scripts %}
-{% if shared %}<script type="module" src="{{ url_for('static', filename='plan-invite.js') }}"></script>{% endif %}
+{% if shared %}<script type="module" src="{{ url_for('web_asset', filename='plan-invite.js') }}"></script>{% endif %}
 {% endblock %}

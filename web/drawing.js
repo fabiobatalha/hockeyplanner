@@ -22,6 +22,9 @@ export const markers = {
   shot: ['Shot on goal', '◎', '#bb3345'],
   order: ['Step number', '1', '#223955'],
   referee: ['Referee', 'R', '#111111'],
+  start: ['Start', '▶', '#157869'],
+  end: ['End', '■', '#bb3345'],
+  pivot: ['Pivot', '', '#b45309'],
 }
 
 export const movements = {
@@ -152,6 +155,24 @@ function drawMarker(ctx, item) {
       break
     case 'puck':
       dot(ctx, 0, 0, 7, color)
+      break
+    case 'pivot':
+      ctx.lineCap = ctx.lineJoin = 'round'
+      for (const start of [-Math.PI / 2, Math.PI / 2]) {
+        const end = start + Math.PI * .8
+        ctx.beginPath()
+        ctx.arc(0, 0, 12, start, end)
+        ctx.stroke()
+        ctx.save()
+        ctx.translate(12 * Math.cos(end), 12 * Math.sin(end))
+        ctx.rotate(end + Math.PI / 2)
+        ctx.beginPath()
+        ctx.moveTo(-5, -5)
+        ctx.lineTo(0, 0)
+        ctx.lineTo(-5, 5)
+        ctx.stroke()
+        ctx.restore()
+      }
       break
     default:
       const numbered = item.type === 'order'
