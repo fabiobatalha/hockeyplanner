@@ -267,7 +267,10 @@
     </section>
     <a id="upgrade-plan" class="upgrade-link" href="#membership" hidden>Upgrade plan</a>
   </main>
-  <footer class="site-footer">© 2026 Hockey Planner</footer>
+  <footer class="site-footer">
+    <span>© 2026 Hockey Planner</span>
+    <a href="mailto:info@hockeyplanner.ca">info@hockeyplanner.ca</a>
+  </footer>
   <dialog id="action-message" aria-labelledby="action-message-title" aria-describedby="action-message-body">
     <div class="action-message-header">
       <span class="action-message-icon" aria-hidden="true">i</span>
@@ -396,7 +399,10 @@
     <div id="plan-presentation">
       <header class="plan-viewer-header">
         <h2 id="plan-viewer-title"></h2>
-        <form method="dialog"><button type="submit">Exit Presentation</button></form>
+        <form method="dialog" class="actions">
+          <button id="plan-viewer-fullscreen" type="button" hidden>Enter Fullscreen</button>
+          <button type="submit">Exit Presentation</button>
+        </form>
       </header>
       <div id="plan-viewer-activities" role="region" aria-label="Current drill" tabindex="0"></div>
       <nav class="plan-viewer-controls" aria-label="Drill navigation">

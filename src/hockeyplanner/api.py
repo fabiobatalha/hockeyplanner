@@ -11,7 +11,7 @@ from werkzeug.exceptions import HTTPException
 from .accounts import SESSION_AGE, AccountNotFound, Accounts, AdministrationDenied, EmailTaken, IncorrectPassword, UsernameTaken
 from .email_confirmation import ConfirmationError, EmailConfirmations, EmailDeliveryError
 from .library import MODELS, CapacityExceeded, Library, valid_id
-from .models import PASSWORD_REQUIREMENTS, AccountDeletion, AccountStatus, AccountUpdate, ConfirmEmail, EmailUpdate, ForgotPassword, LibraryImport, Login, PasswordChange, Registration, ResetPassword, PlanCopyRequest, PlanLinkClaim, PlanShareRequest, TierSelection
+from .models import PASSWORD_REQUIREMENTS, AccountDeletion, AccountStatus, AccountUpdate, ConfirmEmail, EmailUpdate, ForgotPassword, LibraryImport, Login, PasswordChange, Registration, ResetPassword, PlanCopyRequest, PlanLinkClaim, PlanLinkPreview, PlanShareRequest, TierSelection
 from .password_reset import InvalidPasswordReset, PasswordResets
 from .sharing import ShareNotFound, Sharing
 
@@ -282,11 +282,24 @@ def create_api(library: Library, accounts: Accounts, sharing: Sharing, confirmat
         sharing.disable_link(g.user.id, str(plan_id))
         return "", 204
 
+    @api.route("/drills/<uuid:drill_id>/link", methods=["GET", "PUT", "DELETE"])
+    def drill_link(drill_id):
+        owner_id = g.user.id
+        drill_id = str(drill_id)
+        if request.method == "DELETE":
+            sharing.disable_drill_link(owner_id, drill_id)
+            return "", 204
+        if request.method == "PUT":
+            return jsonify(token=sharing.create_drill_link(owner_id, drill_id))
+        return jsonify(token=sharing.get_drill_link(owner_id, drill_id))
+
     @api.post("/shared-plans/preview")
     def preview_plan_link():
         request.max_content_length = 4096
-        claim = PlanLinkClaim.model_validate(request.get_json())
-        return jsonify(sharing.preview_link(claim.token))
+        preview = PlanLinkPreview.model_validate(request.get_json())
+        return jsonify(sharing.preview_link(
+            preview.token, str(preview.drill_id) if preview.drill_id else None, include_plan=preview.include_plan,
+        ))
 
     @api.post("/shared-plans/claim")
     def claim_plan_link():
@@ -298,6 +311,10 @@ def create_api(library: Library, accounts: Accounts, sharing: Sharing, confirmat
     @api.get("/shared-plans")
     def shared_plans():
         return jsonify(plans=sharing.incoming(g.user.id))
+
+    @api.get("/shared-plans/<int:owner_id>/<uuid:plan_id>/link")
+    def read_received_plan_link(owner_id, plan_id):
+        return jsonify(token=sharing.received_link(g.user.id, owner_id, str(plan_id)))
 
     @api.delete("/shared-plans/<int:owner_id>/<uuid:plan_id>")
     def leave_shared_plan(owner_id, plan_id):

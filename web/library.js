@@ -105,6 +105,10 @@ export function readPlanLink(planId) {
   return request('plans/' + encodeURIComponent(planId) + '/link')
 }
 
+export function readReceivedPlanLink(ownerId, planId) {
+  return request(sharedPlanPath(ownerId, planId) + '/link')
+}
+
 export function createPlanLink(planId) {
   return request('plans/' + encodeURIComponent(planId) + '/link', 'PUT')
 }
@@ -113,10 +117,14 @@ export function disablePlanLink(planId) {
   return request('plans/' + encodeURIComponent(planId) + '/link', 'DELETE')
 }
 
+export function drillShareLink(drillId, method = 'GET') {
+  return request('drills/' + encodeURIComponent(drillId) + '/link', method)
+}
+
 export function claimPlanLink(token) {
   return request('shared-plans/claim', 'POST', { token })
 }
 
-export function previewPlanLink(token) {
-  return request('shared-plans/preview', 'POST', { token })
+export function previewPlanLink(token, drillId = null) {
+  return request('shared-plans/preview', 'POST', { token, drill_id: drillId, include_plan: Boolean(drillId) })
 }

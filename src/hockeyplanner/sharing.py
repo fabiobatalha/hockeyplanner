@@ -7,23 +7,31 @@ from sqlalchemy.dialects.sqlite import insert
 from sqlalchemy.orm import Session, sessionmaker
 
 from .library import check_capacity, lock_library
-from .database import LibraryRecord, PlanShare, PlanShareLink, User, UserAccess
+from .database import DrillShareLink, LibraryRecord, PlanShare, PlanShareLink, User, UserAccess
 
 
 class ShareNotFound(Exception):
     pass
 
 
-def find_plan(session: Session, owner_id: int, plan_id: str) -> LibraryRecord:
+def find_record(session: Session, owner_id: int, record_id: str, collection: str) -> LibraryRecord:
     record = session.scalar(select(LibraryRecord).where(
         LibraryRecord.owner_id == owner_id,
-        LibraryRecord.id == plan_id,
-        LibraryRecord.collection == "plans",
+        LibraryRecord.id == record_id,
+        LibraryRecord.collection == collection,
         LibraryRecord.body.is_not(None),
     ))
     if record is None:
-        raise ShareNotFound("Plan not found.")
+        raise ShareNotFound("Plan not found." if collection == "plans" else "Drill not found.")
     return record
+
+
+def find_plan(session: Session, owner_id: int, plan_id: str) -> LibraryRecord:
+    return find_record(session, owner_id, plan_id, "plans")
+
+
+def public_drill(drill: dict) -> dict:
+    return {key: drill[key] for key in ("id", "title", "description", "layout", "items") if key in drill}
 
 
 def find_link(session: Session, token: str) -> PlanShareLink:
@@ -102,17 +110,61 @@ class Sharing:
                 PlanShareLink.owner_id == owner_id, PlanShareLink.plan_id == plan_id,
             ))
 
-    def preview_link(self, token: str) -> dict:
+    def received_link(self, recipient_id: int, owner_id: int, plan_id: str) -> str | None:
         with self.sessions() as session:
+            if session.get(PlanShare, (owner_id, plan_id, recipient_id)) is None:
+                raise ShareNotFound("Shared plan not found.")
+            find_plan(session, owner_id, plan_id)
+            link = session.get(PlanShareLink, (owner_id, plan_id))
+            return link.token if link else None
+
+    def get_drill_link(self, owner_id: int, drill_id: str) -> str | None:
+        with self.sessions() as session:
+            find_record(session, owner_id, drill_id, "drills")
+            link = session.get(DrillShareLink, (owner_id, drill_id))
+            return link.token if link else None
+
+    def create_drill_link(self, owner_id: int, drill_id: str) -> str:
+        with self.sessions.begin() as session:
+            lock_library(session, owner_id)
+            find_record(session, owner_id, drill_id, "drills")
+            session.execute(insert(DrillShareLink).values(
+                owner_id=owner_id, drill_id=drill_id, token=secrets.token_urlsafe(32),
+            ).on_conflict_do_nothing(index_elements=["owner_id", "drill_id"]))
+            return session.get(DrillShareLink, (owner_id, drill_id)).token
+
+    def disable_drill_link(self, owner_id: int, drill_id: str) -> None:
+        with self.sessions.begin() as session:
+            session.execute(delete(DrillShareLink).where(
+                DrillShareLink.owner_id == owner_id, DrillShareLink.drill_id == drill_id,
+            ))
+
+    def preview_link(self, token: str, drill_id: str | None = None, *, include_plan: bool = False) -> dict:
+        with self.sessions() as session:
+            if drill_id is not None:
+                standalone = session.scalar(select(DrillShareLink).where(
+                    DrillShareLink.token == token, DrillShareLink.drill_id == drill_id,
+                ))
+                if standalone:
+                    drill = public_drill(json.loads(find_record(session, standalone.owner_id, drill_id, "drills").body))
+                    return {"owner": session.get(User, standalone.owner_id).username, "standalone": True,
+                            "plan": {"name": drill["title"], "activities": [drill]}}
             link = find_link(session, token)
             record = find_plan(session, link.owner_id, link.plan_id)
             owner = session.get(User, link.owner_id)
             plan = resolved_plan(session, record)
-            activities = [
-                {key: drill[key] for key in ("title", "description", "layout", "items") if key in drill}
-                for drill in plan["activities"]
-            ]
-            return {"owner": owner.username, "plan": {"name": plan["name"], "activities": activities}}
+            activities = [public_drill(drill) for drill in plan["activities"]]
+            start_index = 0
+            if drill_id is not None:
+                match = next((index for index, drill in enumerate(activities) if drill["id"] == drill_id), None)
+                if match is None:
+                    raise ShareNotFound("This drill is no longer in the shared plan.")
+                if include_plan:
+                    start_index = match
+                else:
+                    activities = [activities[match]]
+            return {"owner": owner.username, "start_index": start_index,
+                    "plan": {"name": plan["name"], "activities": activities}}
 
     def claim_link(self, recipient_id: int, token: str) -> None:
         with self.sessions.begin() as session:

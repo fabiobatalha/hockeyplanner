@@ -93,9 +93,10 @@ form.addEventListener('submit', async event => {
   feedback.textContent = ''
   try {
     const identifier = username.value.trim()
+    const invitation = location.hash.replace(/\/present$/, '')
     const details = registering
       ? { username: identifier, email: registrationEmail.value.trim(), password: password.value,
-          return_to: /^#share\/[A-Za-z0-9_-]{43}$/.test(location.hash) ? location.hash : '' }
+          return_to: /^#share\/[A-Za-z0-9_-]{43}$/.test(invitation) ? invitation : '' }
       : { identifier, password: password.value }
     await accountRequest(registering ? 'register' : 'login', 'POST', details)
     if (registering) {

@@ -1,5 +1,6 @@
 import { markdownText } from './markdown.js'
 import { width, rinkHeight, rinkWidth, drawRink, drawItem } from './drawing.js'
+import qrcode from './vendor/qrcode-generator-2.0.4.mjs'
 
 const landscapeA4 = { width: 841.89, height: 595.28 }
 const portraitLetter = { width: 612, height: 792 }
@@ -42,7 +43,64 @@ function makeCanvas(w, h) {
   return { canvas, ctx }
 }
 
-function* makePages(activity, paper, planName = '') {
+async function loadPdfLogo() {
+  const logo = new Image()
+  logo.src = new URL('./hockey-planner-logo.png', import.meta.url)
+  await logo.decode()
+  return logo
+}
+
+function shareQr(token, target) {
+  const url = new URL('./', location.href)
+  url.hash = 'share/' + token + '/' + target
+  const code = qrcode(0, 'M')
+  code.addData(url.href)
+  code.make()
+  return code
+}
+
+function pdfDivider(codes) {
+  return codes.length ? 170 : 88
+}
+
+function drawPdfHeader(ctx, logo, pageWidth, margin, codes) {
+  const logoWidth = 184
+  ctx.drawImage(logo, margin, 18, logoWidth, logoWidth * logo.naturalHeight / logo.naturalWidth)
+  for (const [index, { code, label }] of codes.entries()) {
+    const modules = code.getModuleCount()
+    const cell = Math.floor(132 / (modules + 8) * 2) / 2
+    const center = pageWidth - margin - 66 - (codes.length - 1 - index) * 156
+    const left = Math.round((center - (modules + 8) * cell / 2) * 2) / 2
+    const top = 10
+    ctx.fillStyle = 'black'
+    for (let row = 0; row < modules; row++) {
+      for (let col = 0; col < modules; col++) {
+        if (code.isDark(row, col)) ctx.fillRect(left + (col + 4) * cell, top + (row + 4) * cell, cell, cell)
+      }
+    }
+    ctx.fillStyle = '#152741'
+    ctx.font = '15px system-ui'
+    ctx.save()
+    ctx.textAlign = 'center'
+    ctx.fillText(label, center, 145)
+    ctx.restore()
+  }
+  ctx.fillStyle = '#c7d5ea'
+  ctx.fillRect(margin, pdfDivider(codes), pageWidth - 2 * margin, 1)
+}
+
+function drawPdfFooter(ctx, pageWidth, pageHeight, margin) {
+  const y = pageHeight - 45
+  ctx.fillStyle = '#c7d5ea'
+  ctx.fillRect(margin, y, pageWidth - 2 * margin, 1)
+  ctx.fillStyle = '#536783'
+  ctx.font = '16px system-ui'
+  ctx.fillText('© 2026 Hockey Planner', margin, y + 12)
+  ctx.textAlign = 'right'
+  ctx.fillText('info@hockeyplanner.ca', pageWidth - margin, y + 12)
+}
+
+function* makePages(activity, paper, { logo, planName = '', codes = [] } = {}) {
   const margin = 32
   const pageWidth = width + 2 * margin
   const pageHeight = paper && Math.round(pageWidth * paper.height / paper.width)
@@ -54,27 +112,33 @@ function* makePages(activity, paper, planName = '') {
   const title = wrap(measure, activity.title.trim() || 'Untitled Drill', width)
   measure.font = textFont
   const planHeading = planName ? wrap(measure, planName, width) : []
-  const titleTop = margin + planHeading.length * lineHeight + (planHeading.length ? 8 : 0)
   const lines = activity.description.trim() ? wrap(measure, markdownText(activity.description), width) : []
-  const rinkTop = titleTop + title.length * 36 + 12
   const visibleHeight = rinkHeight(activity.layout)
-  const descriptionTop = rinkTop + visibleHeight + 24
   let first = true
   let index = 0
   do {
-    const top = first ? descriptionTop : margin
-    const available = paper ? Math.max(0, Math.floor((pageHeight - margin - top - lineHeight) / lineHeight)) : lines.length
+    const pageCodes = first ? codes : []
+    const headerTop = paper ? pdfDivider(pageCodes) + 18 : margin
+    const titleTop = headerTop + planHeading.length * lineHeight + (planHeading.length ? 8 : 0)
+    const rinkTop = titleTop + title.length * 36 + 12
+    const footerTop = pageHeight - 65
+    const rinkScale = paper ? Math.max(.3, Math.min(1, (footerTop - rinkTop - 24) / visibleHeight)) : 1
+    const top = first ? rinkTop + visibleHeight * rinkScale + 24 : headerTop
+    const available = paper ? Math.max(0, Math.floor((footerTop - top - lineHeight) / lineHeight)) : lines.length
     const pageLines = lines.slice(index, index + available)
     const requestedHeight = paper ? pageHeight : top + margin + (pageLines.length ? (pageLines.length + 1) * lineHeight : 0)
     const { canvas, ctx } = makeCanvas(pageWidth, requestedHeight)
+    if (paper) drawPdfHeader(ctx, logo, pageWidth, margin, pageCodes)
+    ctx.fillStyle = '#152741'
     if (first) {
       ctx.font = 'bold 18px system-ui'
-      planHeading.forEach((line, i) => ctx.fillText(line, margin, margin + i * lineHeight))
+      planHeading.forEach((line, i) => ctx.fillText(line, margin, headerTop + i * lineHeight))
       ctx.font = titleFont
       title.forEach((line, i) => ctx.fillText(line, margin, titleTop + i * 36))
       ctx.save()
       const visibleWidth = rinkWidth(activity.layout)
-      ctx.translate((pageWidth - visibleWidth) / 2, rinkTop)
+      ctx.translate((pageWidth - visibleWidth * rinkScale) / 2, rinkTop)
+      ctx.scale(rinkScale, rinkScale)
       ctx.beginPath()
       ctx.rect(0, 0, visibleWidth, visibleHeight)
       ctx.clip()
@@ -88,6 +152,7 @@ function* makePages(activity, paper, planName = '') {
       ctx.font = textFont
       pageLines.forEach((line, i) => ctx.fillText(line, margin, top + (i + 1) * lineHeight))
     }
+    if (paper) drawPdfFooter(ctx, pageWidth, pageHeight, margin)
     yield canvas
     first = false
     index += pageLines.length
@@ -145,17 +210,22 @@ async function makePdf(pages, paper) {
   return new Blob(parts, { type: 'application/pdf' })
 }
 
-export async function exportActivity(activity, format) {
+export async function exportActivity(activity, format, token) {
   const paper = format === 'pdf' ? landscapeA4 : null
-  const pages = makePages(activity, paper)
+  const codes = token && activity.id ? [{ code: shareQr(token, 'drill/' + activity.id), label: 'Scan to view drill' }] : []
+  const pages = makePages(activity, paper, paper ? { logo: await loadPdfLogo(), codes } : undefined)
   const file = paper ? await makePdf(pages, paper) : await encodeCanvas(pages.next().value, 'image/png')
   download(file, activity.title, 'drill', format)
 }
 
-export async function exportTrainingPlan(name, activities) {
+export async function exportTrainingPlan(name, activities, token) {
+  const logo = await loadPdfLogo()
+  const planCode = token ? { code: shareQr(token, 'present'), label: 'Scan to view full plan' } : null
   function* pages() {
     for (const activity of activities) {
-      yield* makePages(activity, portraitLetter, name)
+      const codes = planCode ? [planCode] : []
+      if (token && activity.id) codes.push({ code: shareQr(token, 'drill/' + activity.id), label: 'Scan to view drill' })
+      yield* makePages(activity, portraitLetter, { logo, planName: name, codes })
     }
   }
 

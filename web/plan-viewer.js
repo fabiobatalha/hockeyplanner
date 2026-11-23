@@ -8,11 +8,14 @@ const viewerActivities = document.getElementById('plan-viewer-activities')
 const previous = document.getElementById('plan-viewer-prev')
 const next = document.getElementById('plan-viewer-next')
 const position = document.getElementById('plan-viewer-position')
+const fullscreen = document.getElementById('plan-viewer-fullscreen')
+const canEnterFullscreen = Boolean(document.fullscreenEnabled && presentation.requestFullscreen)
 let displayedActivities = []
 let activityIndex = 0
 let presentationWasFullscreen = false
 
 document.addEventListener('fullscreenchange', () => {
+  fullscreen.hidden = !canEnterFullscreen || document.fullscreenElement === presentation
   if (document.fullscreenElement === presentation) presentationWasFullscreen = true
   else if (presentationWasFullscreen) {
     presentationWasFullscreen = false
@@ -20,6 +23,7 @@ document.addEventListener('fullscreenchange', () => {
   }
 })
 viewer.addEventListener('close', () => {
+  if (viewer.open) return
   if (document.fullscreenElement === presentation) document.exitFullscreen().catch(() => {})
   viewerActivities.replaceChildren()
   displayedActivities = []
@@ -70,17 +74,22 @@ presentation.addEventListener('keydown', event => {
   showActivity(activityIndex + (event.key === 'ArrowRight' ? 1 : -1))
 })
 
-export async function presentPlan(name, activities) {
+async function enterFullscreen() {
+  try {
+    await presentation.requestFullscreen()
+  } catch {
+    // The open dialog still fills the browser viewport.
+  }
+}
+
+fullscreen.addEventListener('click', enterFullscreen)
+
+export function presentPlan(name, activities, { startIndex = 0, auto = false } = {}) {
   viewerTitle.textContent = name
   displayedActivities = activities
-  showActivity(0)
-  viewer.showModal()
+  showActivity(startIndex)
+  if (!viewer.open) viewer.showModal()
   viewerActivities.focus({ preventScroll: true })
-  if (document.fullscreenEnabled && presentation.requestFullscreen) {
-    try {
-      await presentation.requestFullscreen()
-    } catch {
-      // The open dialog still fills the browser viewport.
-    }
-  }
+  fullscreen.hidden = !canEnterFullscreen || document.fullscreenElement === presentation
+  if (canEnterFullscreen && !auto && !fullscreen.hidden) enterFullscreen()
 }

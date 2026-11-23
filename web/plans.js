@@ -2,7 +2,7 @@ import { showActionMessage } from './action-message.js'
 import { presentPlan } from './plan-viewer.js'
 import { showPlanLimit } from './plan-limit.js'
 import { setupPlanSharing } from './plan-sharing.js'
-import { copySharedPlan, deleteRecord, readSharedPlans, removeReceivedShare, saveRecord } from './library.js'
+import { copySharedPlan, createPlanLink, deleteRecord, readPlanLink, readReceivedPlanLink, readSharedPlans, removeReceivedShare, saveRecord } from './library.js'
 import { newRecordId } from './record-id.js'
 import { exportTrainingPlan } from './export.js'
 import { activityThumbnail } from './drawing.js'
@@ -69,14 +69,19 @@ export function setupPlans({ getActivities, openActivity, refreshLibrary }) {
     return exercises
   }
 
-  function printButton(plan, shared = false) {
+  function printButton(plan, ownerId) {
+    const shared = ownerId !== undefined
     const status = shared ? sharedStatus : feedback
     const print = button('Print PDF', async () => {
       print.disabled = true
       status.textContent = 'Generating the plan PDF…'
       try {
-        await exportTrainingPlan(plan.name, planActivities(plan, shared))
-        showActionMessage('Plan PDF ready.')
+        let { token } = shared ? await readReceivedPlanLink(ownerId, plan.id) : await readPlanLink(plan.id)
+        if (!shared && !token && confirm('Enable a public share link to add QR codes to this PDF? Anyone with a code can access the shared plan. Cancel to export without QR codes.')) {
+          token = (await createPlanLink(plan.id)).token
+        }
+        await exportTrainingPlan(plan.name, planActivities(plan, shared), token)
+        showActionMessage(token ? 'Plan PDF ready.' : 'Plan PDF ready without QR codes because public sharing is off.')
       } catch {
         showActionMessage('Could not generate the plan PDF.')
       } finally {
@@ -404,7 +409,7 @@ export function setupPlans({ getActivities, openActivity, refreshLibrary }) {
             copy.disabled = copyWasDisabled
           }
         })
-        actions.append(button('View Fullscreen', () => presentPlan(plan.name, plan.activities)), printButton(plan, true), copy, remove)
+        actions.append(button('View Fullscreen', () => presentPlan(plan.name, plan.activities)), printButton(plan, ownerId), copy, remove)
         card.append(heading, byline, exerciseList(plan, true), actions)
         sharedList.append(card)
       }

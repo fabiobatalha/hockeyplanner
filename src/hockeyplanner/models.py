@@ -38,6 +38,11 @@ class PlanLinkClaim(BaseModel):
     token: Annotated[str, StringConstraints(pattern=r"^[A-Za-z0-9_-]{43}$")]
 
 
+class PlanLinkPreview(PlanLinkClaim):
+    drill_id: UUID | None = None
+    include_plan: bool = False
+
+
 class PlanCopyRequest(BaseModel):
     id: UUID
 

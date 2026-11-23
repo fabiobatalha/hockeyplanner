@@ -7,7 +7,7 @@ from sqlalchemy.dialects.sqlite import insert
 from sqlalchemy.orm import Session, sessionmaker
 
 from .accounts import AccountNotFound
-from .database import LibraryRecord, PlanShare, PlanShareLink, User, UserMembership
+from .database import DrillShareLink, LibraryRecord, PlanShare, PlanShareLink, User, UserMembership
 from .models import Drill, LibraryImport, PracticePlan
 
 
@@ -99,6 +99,10 @@ class Library:
             if collection == "plans" and payload is None:
                 for relation in (PlanShare, PlanShareLink):
                     session.execute(delete(relation).where(relation.owner_id == owner_id, relation.plan_id == record_id))
+            if collection == "drills" and payload is None:
+                session.execute(delete(DrillShareLink).where(
+                    DrillShareLink.owner_id == owner_id, DrillShareLink.drill_id == record_id,
+                ))
 
     def import_legacy(self, owner_id: int, data: LibraryImport) -> None:
         with self.sessions.begin() as session:

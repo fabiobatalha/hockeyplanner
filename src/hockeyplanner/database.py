@@ -111,6 +111,14 @@ class PlanShareLink(Base):
     token: Mapped[str] = mapped_column(unique=True)
 
 
+class DrillShareLink(Base):
+    __tablename__ = "drill_share_links"
+
+    owner_id: Mapped[int] = mapped_column(ForeignKey("users.id"), primary_key=True)
+    drill_id: Mapped[str] = mapped_column(primary_key=True)
+    token: Mapped[str] = mapped_column(unique=True)
+
+
 def open_database(path: Path) -> sessionmaker[Session]:
     path.parent.mkdir(parents=True, exist_ok=True)
     engine = create_engine(URL.create("sqlite", database=str(path)), connect_args={"autocommit": False})

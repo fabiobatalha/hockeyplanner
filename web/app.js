@@ -2,7 +2,7 @@ import { showActionMessage } from './action-message.js'
 import { setupPlanInvite } from './plan-invite.js'
 import { showPlanLimit } from './plan-limit.js'
 import { setupAdmin } from './admin.js'
-import { claimPlanLink, deleteRecord, importLegacyLibrary, readLibrary, saveRecord } from './library.js'
+import { claimPlanLink, deleteRecord, drillShareLink, importLegacyLibrary, readLibrary, saveRecord } from './library.js'
 import { newRecordId } from './record-id.js'
 import { width, height, rinkWidth, rinkHeight, markers, movements, drawRink, drawItem, hitsItem, itemPoints, activityThumbnail, playerTeamColors } from './drawing.js'
 import { drillSearch, renderMarkdown, setupMarkdown } from './markdown.js'
@@ -579,20 +579,50 @@ function refreshLibrary() {
       }
       showActionMessage('Drill deleted from the library.')
     })
-    actions.append(open, remove)
+    const disableLink = document.createElement('button')
+    disableLink.textContent = 'Disable PDF Link'
+    disableLink.setAttribute('aria-label', 'Disable PDF link for ' + entry.title)
+    disableLink.addEventListener('click', async () => {
+      if (!confirm('Disable the public link in standalone PDFs of this drill?')) return
+      disableLink.disabled = true
+      try {
+        await drillShareLink(entry.id, 'DELETE')
+        showActionMessage('The standalone PDF link is disabled.')
+      } catch (error) {
+        showActionMessage(error.message)
+      } finally {
+        disableLink.disabled = false
+      }
+    })
+    actions.append(open, remove, disableLink)
     row.append(activityThumbnail(entry), details, actions)
     list.append(row)
   }
 }
 
 for (const format of ['png', 'pdf']) {
-  get(format).addEventListener('click', async () => {
-    if (gesture) return
+  const button = get(format)
+  button.addEventListener('click', async () => {
+    if (gesture || savingDrill) return
+    const snapshot = structuredClone(activity)
+    const saved = activities.some(drill => drill.id === snapshot.id) && JSON.stringify(snapshot) === baseline
+    button.disabled = true
     try {
-      await exportActivity(structuredClone(activity), format)
-      showActionMessage(format.toUpperCase() + ' file ready.')
+      let token
+      if (format === 'pdf' && saved) {
+        token = (await drillShareLink(snapshot.id)).token
+        if (!token && confirm('Enable a public link for this drill and add a QR code to the PDF? Cancel to export without a QR code.')) {
+          token = (await drillShareLink(snapshot.id, 'PUT')).token
+        }
+      }
+      await exportActivity(snapshot, format, token)
+      showActionMessage(format === 'pdf' && !saved
+        ? 'PDF ready. Save the drill before exporting to add a QR code.'
+        : format.toUpperCase() + ' file ready.')
     } catch {
       showActionMessage('Could not generate the ' + format.toUpperCase() + ' file' + '.')
+    } finally {
+      button.disabled = false
     }
   })
 }
@@ -633,8 +663,8 @@ async function refreshServerLibrary() {
 
 const showInvitePreview = setupPlanInvite({
   signedIn: true,
-  async accept(invitation) {
-    await claimPlanLink(invitation.slice('#share/'.length))
+  async accept(invitation, token) {
+    await claimPlanLink(token)
     if (location.hash === invitation) {
       location.replace('#plans')
       showActionMessage('Shared plan added to Shared with me.')

@@ -8,7 +8,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, sessionmaker
 
 from .database import (
-    AccountSession, EmailConfirmation, LibraryRecord, PasswordResetRequest, PlanShare, PlanShareLink,
+    AccountSession, DrillShareLink, EmailConfirmation, LibraryRecord, PasswordResetRequest, PlanShare, PlanShareLink,
     RetiredUserId, User, UserAccess, UserEmail, UserMembership,
 )
 from .models import AccountProfile, AccountTier, AccountUpdate, Credentials, Login, PasswordChange, UserProfile
@@ -263,6 +263,7 @@ class Accounts:
             PlanShare.owner_id == user_id, PlanShare.recipient_id == user_id,
         )))
         session.execute(delete(PlanShareLink).where(PlanShareLink.owner_id == user_id))
+        session.execute(delete(DrillShareLink).where(DrillShareLink.owner_id == user_id))
         session.execute(delete(LibraryRecord).where(LibraryRecord.owner_id == user_id))
         session.execute(delete(EmailConfirmation).where(or_(
             EmailConfirmation.user_id == user_id,
