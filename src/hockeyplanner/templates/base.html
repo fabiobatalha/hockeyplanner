@@ -16,6 +16,7 @@
   <title>{{ title }} · Hockey Planner</title>
   <meta name="description" content="Draw hockey drills and organize your practice plans.">
   <link rel="icon" type="image/png" href="{{ url_for('web_asset', filename='hockey-planner-icon.png') }}">
+  {% block styles %}{% endblock %}
   <link rel="stylesheet" href="{{ url_for('web_asset', filename='style.css') }}">
 </head>
 {% set auth_flow = page in ('login', 'register', 'forgot_password', 'confirm_email', 'reset_password') %}

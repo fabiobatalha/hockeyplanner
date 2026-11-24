@@ -5,7 +5,7 @@ import { prepareLibrary } from './library-onboarding.js'
 import { appUrl } from './urls.js'
 import { newRecordId } from './record-id.js'
 import { width, height, rinkWidth, rinkHeight, markers, movements, drawRink, drawItem, hitsItem, itemPoints, playerTeamColors } from './drawing.js'
-import { setupMarkdown } from './markdown.js'
+import { setupDescriptionEditor } from './description-editor.js'
 import { exportActivity } from './export.js'
 import { itemBounds, movementEnds, resizeMovement, translateItem } from './editor-geometry.js'
 
@@ -27,7 +27,7 @@ for (const element of document.querySelectorAll('.topbar, .page-heading, .rink-c
 window.addEventListener('resize', fitRink)
 const title = get('title')
 const rinkLayout = get('rink-layout')
-const description = get('description')
+const description = await setupDescriptionEditor(get('description-editor'), get('description'), get('description-mode'))
 const save = get('save')
 const publicPdfLink = get('pdf-public-link')
 const publishPlatform = get('publish-platform')
@@ -37,7 +37,6 @@ const copyDialog = get('copy-drill-dialog')
 const copyName = get('copy-drill-name')
 const copySubmit = get('confirm-copy-drill')
 const copyCancel = get('cancel-copy-drill')
-const refreshDescription = setupMarkdown(description, get('description-visual'), get('description-mode'))
 const fresh = () => ({ id: null, title: '', description: '', layout: 'full', items: [] })
 
 let savingDrill = false
@@ -588,7 +587,7 @@ function pasteSelection() {
 }
 
 document.addEventListener('keydown', event => {
-  if (event.target.closest('input, textarea, select, [contenteditable], dialog[open]')) return
+  if (event.target.closest('input, textarea, select, [contenteditable], #description-editor, dialog[open]')) return
   if (event.key === 'Delete') removeSelected()
   if (!(event.ctrlKey || event.metaKey)) return
   const key = event.key.toLowerCase()
@@ -606,9 +605,9 @@ document.addEventListener('keydown', event => {
 })
 
 title.addEventListener('input', () => { activity.title = title.value })
-description.addEventListener('input', () => { activity.description = description.value })
 
 function hasUnsavedChanges() {
+  activity.description = description.getValue()
   return JSON.stringify(activity) !== baseline
 }
 
@@ -624,8 +623,7 @@ function load(next, isPublished = false) {
   activity = structuredClone(next)
   baseline = JSON.stringify(activity)
   title.value = activity.title
-  description.value = activity.description
-  refreshDescription()
+  description.setValue(activity.description)
   undo.length = redo.length = 0
   selected.clear()
   tool = 'select'
@@ -679,6 +677,7 @@ async function persistDrill(nameForCopy) {
   if (gesture || savingDrill || publishingDrill || !libraryReady) return
   const makingCopy = nameForCopy !== undefined
   const newRecord = makingCopy || !activity.id
+  activity.description = description.getValue()
   const saved = structuredClone(activity)
   if (makingCopy) {
     saved.id = pendingCopyId ??= newRecordId()
@@ -743,6 +742,7 @@ for (const format of ['png', 'pdf']) {
   const button = get(format)
   button.addEventListener('click', async () => {
     if (gesture || savingDrill) return
+    activity.description = description.getValue()
     const snapshot = structuredClone(activity)
     const saved = Boolean(snapshot.id) && JSON.stringify(snapshot) === baseline
     const createLink = format === 'pdf' && (freePdf || publicPdfLink?.checked)

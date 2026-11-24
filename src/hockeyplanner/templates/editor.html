@@ -1,5 +1,9 @@
 {% extends "base.html" %}
 
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('web_asset', filename='vendor/milkdown-7.23.0.css') }}">
+{% endblock %}
+
 {% block content %}
     <section id="editor-page" aria-labelledby="editor-title" data-account-id="{{ user.id }}">
       <section class="page-heading editor-heading">
@@ -68,16 +72,12 @@
             <div class="fields">
               <label for="title">Drill name<input id="title" maxlength="120" placeholder="e.g. Breakout passing drill"></label>
               <div class="description-editor">
-                <div class="description-heading"><span id="description-label">Description</span><button id="description-mode" type="button">Edit Markdown</button></div>
-                <div class="actions markdown-toolbar" role="group" aria-label="Description formatting">
-                  <button type="button" data-format="heading">Heading</button>
-                  <button type="button" data-format="bold"><strong>Bold</strong></button>
-                  <button type="button" data-format="italic"><em>Italic</em></button>
-                  <button type="button" data-format="bullet">Bulleted list</button>
-                  <button type="button" data-format="ordered">Numbered list</button>
+                <div class="description-heading">
+                  <label id="description-label" for="description">Description</label>
+                  <button id="description-mode" type="button" disabled>Edit Markdown</button>
                 </div>
-                <div id="description-visual" class="markdown-output" contenteditable="true" role="textbox" aria-multiline="true" aria-labelledby="description-label" data-placeholder="Drill objectives, instructions, and variations"></div>
-                <textarea id="description" rows="6" aria-label="Markdown description" placeholder="Drill objectives, instructions, and variations" hidden></textarea>
+                <div id="description-editor" role="group" aria-labelledby="description-label"></div>
+                <textarea id="description" rows="8" placeholder="Drill objectives, instructions, and variations" hidden></textarea>
               </div>
             </div>
           </section>

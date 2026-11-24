@@ -410,15 +410,19 @@ body:has(.editor-fullscreen) { overflow: hidden; }
 #plan-status { margin-top: .55rem; }
 
 .description-editor { min-width: 0; }
-.description-heading { display: flex; align-items: center; justify-content: space-between; gap: .5rem; font-size: .875rem; font-weight: 650; }
-.markdown-toolbar { margin: .4rem 0; }
-.markdown-output { min-height: 9rem; padding: .6rem; border: 1px solid var(--border); border-radius: 8px; background: #f8fafd; overflow-wrap: anywhere; }
-.markdown-output:empty::before { content: attr(data-placeholder); color: var(--muted); pointer-events: none; }
-:is(.markdown-output, .formatted-description) > * { margin: .4rem 0; }
-:is(.markdown-output, .formatted-description) :is(ul, ol) { padding-left: 1.4rem; }
-:is(.markdown-output, .formatted-description) blockquote { border-left: 3px solid var(--border); padding-left: .6rem; }
-:is(.markdown-output, .formatted-description) pre { white-space: pre-wrap; }
-:is(.markdown-output, .formatted-description) code { background: #edf2f8; }
+.description-heading { display: flex; align-items: center; justify-content: space-between; gap: .5rem; margin-bottom: .45rem; font-size: .875rem; font-weight: 650; }
+#description-editor { border: 1px solid var(--border); border-radius: 8px; }
+#description-editor .milkdown { border-radius: inherit; --crepe-font-default: inherit; --crepe-font-title: inherit; }
+#description-editor .ProseMirror { min-height: 11rem; padding: 1rem; overflow-wrap: anywhere; }
+#description-editor .milkdown-top-bar { border-radius: 8px 8px 0 0; }
+#description { width: 100%; font-family: ui-monospace, monospace; }
+.formatted-description > * { margin: .4rem 0; }
+.formatted-description :is(ul, ol) { padding-left: 1.4rem; }
+.formatted-description blockquote { border-left: 3px solid var(--border); padding-left: .6rem; }
+.formatted-description pre { white-space: pre-wrap; }
+.formatted-description code { background: #edf2f8; }
+.formatted-description table { display: block; max-width: 100%; overflow-x: auto; border-collapse: collapse; }
+.formatted-description :is(th, td) { border: 1px solid var(--border); padding: .3rem .5rem; }
 
 .rink-heading { display: flex; align-items: center; flex-wrap: wrap; gap: .4rem .7rem; }
 .rink-layout { display: flex; align-items: center; gap: .45rem; font-size: .875rem; color: var(--muted); }
