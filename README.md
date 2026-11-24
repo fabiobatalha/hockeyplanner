@@ -15,7 +15,7 @@ uv run hockeyplanner
 
 Open [http://127.0.0.1:8000](http://127.0.0.1:8000) in a modern browser. Create an account with a username, email address, and password. Then choose **Free** on the plan selection page. **Full Access** is listed as coming soon. Free users can select **Upgrade plan** to compare plans. Power users and Full Access subscribers can manage their subscription in **Account Profile**. Switching to Free preserves saved content and applies the Free limits to new drills and plans. Sign in with either your username or your email address. If you have an older account without an email address, sign in with your username and add an email address when prompted. To change your email address later, click your name in the header. In PyCharm, you can also run `src/main.py` with the interpreter from the `.venv` folder.
 
-Free accounts can save up to 10 drills and 3 practice plans. All other features are available. Editing a saved item does not use another slot, and deleting an item frees its slot. Copies of shared plans and their drills use slots in the recipient’s library.
+Free accounts can save up to 20 drills and 3 practice plans. All other features are available. Editing a saved item does not use another slot, and deleting an item frees its slot. Copies of shared plans and their drills use slots in the recipient’s library.
 
 ## Create a drill
 
@@ -55,7 +55,7 @@ Click **Share** on a plan and enter the recipient’s username. The plan appears
 
 You can also create a share link from **Share**. Anyone with the link can preview the plan, present it in fullscreen, and print it without signing in. Recipients must sign in to accept the share or make an editable copy. Disabling the link prevents new recipients from accepting it. In the same dialog, use **Remove access** to revoke access for someone who has already accepted.
 
-PDFs include the Hockey Planner logo and contact details. To add a QR code, enable the public link under **Share** on an owned practice plan. An existing standalone drill link is also included when exporting that saved drill. A shared plan PDF includes a QR code for the full plan and one for each drill. The drill code opens the fullscreen carousel at that drill, and the plan code starts at the first drill. A standalone drill code opens only that drill. These links work without an account. Plans shared with you include QR codes when their owner has enabled a public link. Export PDFs from a site address that recipients can reach.
+Drill and plan PDFs use portrait Letter paper and include the Hockey Planner logo and contact details. Free drill PDFs always include a public QR code, so save your changes before exporting. Full Access users can enable a public QR code by selecting **Add a public QR link to the PDF** in the editor. To add plan QR codes, enable the public link under **Share** on an owned practice plan. A shared plan PDF includes a QR code for the full plan and one for each drill. The drill code opens the fullscreen carousel at that drill, and the plan code starts at the first drill. A standalone drill code opens only that drill. These links work without an account. Plans shared with you include QR codes when their owner has enabled a public link. Export PDFs from a site address that recipients can reach.
 
 To deactivate codes printed in plan PDFs, disable the public link in the practice plan's **Share** dialog.
 

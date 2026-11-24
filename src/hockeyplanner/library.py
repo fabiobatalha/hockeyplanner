@@ -1,4 +1,5 @@
 import json
+from datetime import UTC, datetime
 from uuid import UUID
 
 from pydantic import ValidationError
@@ -12,9 +13,12 @@ from .models import Drill, LibraryImport, PracticePlan
 
 
 MODELS = {"drills": Drill, "plans": PracticePlan}
+FREE_LIMITS = {"drills": 20, "plans": 3}
 
 
-FREE_LIMITS = {"drills": 10, "plans": 3}
+def plan_body(plan: dict) -> str:
+    updated_at = datetime.now(UTC).isoformat(timespec="milliseconds").replace("+00:00", "Z")
+    return json.dumps({**plan, "updated_at": updated_at})
 
 
 class CapacityExceeded(Exception):
@@ -61,12 +65,13 @@ class Library:
     def __init__(self, sessions: sessionmaker[Session]) -> None:
         self.sessions = sessions
 
-    def drill_count(self, owner_id: int) -> int:
+    def counts(self, owner_id: int) -> dict[str, int]:
         with self.sessions() as session:
-            return session.scalar(select(func.count()).select_from(LibraryRecord).where(
-                LibraryRecord.owner_id == owner_id, LibraryRecord.collection == "drills",
+            rows = session.execute(select(LibraryRecord.collection, func.count()).where(
+                LibraryRecord.owner_id == owner_id,
                 LibraryRecord.body.is_not(None),
-            ))
+            ).group_by(LibraryRecord.collection))
+            return {collection: count for collection, count in rows}
 
     def get(self, owner_id: int, collection: str, record_id: str) -> dict | None:
         with self.sessions() as session:
@@ -88,12 +93,10 @@ class Library:
                 result[record.collection].append(json.loads(record.body))
         return result
 
-    def write(self, owner_id: int, collection: str, record_id: str, payload: Drill | PracticePlan | None) -> None:
+    def write(self, owner_id: int, collection: str, record_id: str, payload: Drill | PracticePlan | None) -> str | None:
         body = None
-        if payload is not None:
-            if str(payload.id) != record_id:
-                raise ValueError("The record ID must match the requested ID.")
-            body = payload.model_dump_json(exclude_unset=True, exclude_none=True)
+        if payload is not None and str(payload.id) != record_id:
+            raise ValueError("The record ID must match the requested ID.")
         with self.sessions.begin() as session:
             lock_library(session, owner_id)
             if payload is not None:
@@ -104,6 +107,10 @@ class Library:
                     LibraryRecord.body.is_not(None),
                 ))
                 check_capacity(session, owner_id, collection, int(active is None))
+                if isinstance(payload, PracticePlan):
+                    body = plan_body(payload.model_dump(mode="json", exclude_unset=True, exclude_none=True))
+                else:
+                    body = payload.model_dump_json(exclude_unset=True, exclude_none=True)
             # A new revision controls display order. Keep a null revision for deletions.
             session.execute(delete(LibraryRecord).where(
                 LibraryRecord.owner_id == owner_id,
@@ -118,6 +125,7 @@ class Library:
                 session.execute(delete(DrillShareLink).where(
                     DrillShareLink.owner_id == owner_id, DrillShareLink.drill_id == record_id,
                 ))
+        return body
 
     def import_legacy(self, owner_id: int, data: LibraryImport) -> None:
         with self.sessions.begin() as session:

@@ -41,6 +41,35 @@ function setupPlans({ getActivities, refreshLibrary }) {
     return control
   }
 
+  function planCard(plan, expanded) {
+    const card = document.createElement('details')
+    card.className = 'card plan-entry'
+    card.open = expanded
+    const summary = document.createElement('summary')
+    const heading = document.createElement('h3')
+    heading.textContent = plan.name
+    const details = document.createElement('div')
+    details.append(heading)
+    const timestamp = typeof plan.updated_at === 'string'
+      ? plan.updated_at.replace(/(\.\d{3})\d+/, '$1') : ''
+    const updated = new Date(timestamp)
+    if (!Number.isNaN(updated.valueOf())) {
+      const date = document.createElement('time')
+      date.className = 'plan-updated'
+      date.dateTime = timestamp
+      date.textContent = 'Updated ' + updated.toLocaleDateString(undefined, { dateStyle: 'medium' })
+      details.append(date)
+    } else {
+      const missingDate = document.createElement('span')
+      missingDate.className = 'plan-updated'
+      missingDate.textContent = 'Update date not recorded'
+      details.append(missingDate)
+    }
+    summary.append(details)
+    card.append(summary)
+    return card
+  }
+
   function currentActivity(entry) {
     return getActivities().find(activity => activity.id === entry.id)
   }
@@ -74,16 +103,13 @@ function setupPlans({ getActivities, refreshLibrary }) {
 
   function printButton(plan, ownerId) {
     const shared = ownerId !== undefined
-    const status = shared ? sharedStatus : feedback
     const print = button('Print PDF', async () => {
       print.disabled = true
-      status.textContent = 'Generating the plan PDF…'
       try {
         const { token } = shared ? await readReceivedPlanLink(ownerId, plan.id) : await readPlanLink(plan.id)
         await exportTrainingPlan(plan.name, planActivities(plan, shared), token)
-        status.textContent = ''
       } catch {
-        status.textContent = 'Could not generate the plan PDF.'
+        showActionMessage('Could not generate the PDF.')
       } finally {
         print.disabled = false
       }
@@ -93,6 +119,7 @@ function setupPlans({ getActivities, refreshLibrary }) {
   }
 
   function showList() {
+    document.getElementById('plan-count').textContent = plans.length
     builder.hidden = true
     draggedKey = null
     reorderingKey = null
@@ -102,11 +129,8 @@ function setupPlans({ getActivities, refreshLibrary }) {
     feedback.textContent = ''
     if (!plans.length) list.textContent = 'No saved practice plans.'
 
-    for (const plan of plans) {
-      const entry = document.createElement('article')
-      entry.className = 'card plan-entry'
-      const heading = document.createElement('h3')
-      heading.textContent = plan.name
+    for (const [index, plan] of plans.entries()) {
+      const entry = planCard(plan, index === 0)
       const exercises = exerciseList(plan)
       const actions = document.createElement('div')
       actions.className = 'actions'
@@ -128,7 +152,7 @@ function setupPlans({ getActivities, refreshLibrary }) {
       })
       remove.className = 'danger-outline'
       actions.append(view, button('Edit Plan', () => edit(plan)), printButton(plan), button('Share', () => openSharing(plan)), remove)
-      entry.append(heading, exercises, actions)
+      entry.append(exercises, actions)
       list.append(entry)
     }
   }
@@ -337,8 +361,8 @@ function setupPlans({ getActivities, refreshLibrary }) {
     const controls = form.querySelectorAll('input, button')
     for (const control of controls) control.disabled = true
     try {
-      await saveRecord('plans', plan)
-      plans = [plan, ...plans.filter(item => item.id !== plan.id)]
+      const saved = await saveRecord('plans', plan)
+      plans = [saved, ...plans.filter(item => item.id !== plan.id)]
       newPlanId = null
       showList()
       showActionMessage('Plan saved.')
@@ -369,11 +393,8 @@ function setupPlans({ getActivities, refreshLibrary }) {
       sharedStatus.textContent = ''
       sharedList.replaceChildren()
       if (!shared.length) sharedList.textContent = 'No practice plans have been shared with you.'
-      for (const { owner, owner_id: ownerId, plan } of shared) {
-        const card = document.createElement('article')
-        card.className = 'card plan-entry'
-        const heading = document.createElement('h3')
-        heading.textContent = plan.name
+      for (const [index, { owner, owner_id: ownerId, plan }] of shared.entries()) {
+        const card = planCard(plan, index === 0)
         const byline = document.createElement('p')
         byline.className = 'shared-plan-owner'
         byline.textContent = 'Shared by ' + owner + ' · Read-only'
@@ -410,7 +431,8 @@ function setupPlans({ getActivities, refreshLibrary }) {
           }
         })
         actions.append(button('View Fullscreen', () => presentPlan(plan.name, plan.activities)), printButton(plan, ownerId), copy, remove)
-        card.append(heading, byline, exerciseList(plan, true), actions)
+        card.querySelector('summary > div').append(byline)
+        card.append(exerciseList(plan, true), actions)
         sharedList.append(card)
       }
     } catch (error) {

@@ -18,8 +18,8 @@
       {% if user.email and user.tier != 'pending' %}
       <nav class="page-nav" aria-label="Main navigation">
         <a href="{{ url_for('pages.editor') }}" {% if page == 'editor' %}aria-current="page"{% endif %}>Editor</a>
-        <a href="{{ url_for('pages.drills') }}" {% if page == 'drills' %}aria-current="page"{% endif %}>Drill Library <span id="activity-count">{{ drill_count }}</span></a>
-        <a href="{{ url_for('pages.plans') }}" {% if page == 'plans' %}aria-current="page"{% endif %}>Practice Plans</a>
+        <a href="{{ url_for('pages.drills') }}" {% if page == 'drills' %}aria-current="page"{% endif %}>Drill Library <span class="nav-count" id="activity-count">{{ counts.get('drills', 0) }}</span></a>
+        <a href="{{ url_for('pages.plans') }}" {% if page == 'plans' %}aria-current="page"{% endif %}>Practice Plans <span class="nav-count" id="plan-count">{{ counts.get('plans', 0) }}</span></a>
         {% if user.role == 'poweruser' %}
         <a id="admin-link" href="{{ url_for('pages.admin') }}" {% if page == 'admin' %}aria-current="page"{% endif %}>Administration</a>
         {% endif %}

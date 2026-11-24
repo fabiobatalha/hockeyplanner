@@ -2,14 +2,28 @@
 
 {% block content %}
     <section id="editor-page" aria-labelledby="editor-title" data-account-id="{{ user.id }}">
-      <section class="page-heading">
+      <section class="page-heading editor-heading">
         <div><h1 id="editor-title" tabindex="-1">Drill Editor</h1><p>Draw drills and plan your on-ice practices.</p></div>
+        <button id="fullscreen" class="editor-fullscreen-button" type="button" aria-pressed="false">
+          <span class="editor-fullscreen-icon" aria-hidden="true"></span>
+          <span id="fullscreen-label">Edit in fullscreen mode</span>
+        </button>
         <div class="actions">
           <button id="new" type="button">＋ New</button>
           <button id="png" type="button">↓ PNG</button>
           <button id="pdf" type="button">↓ PDF</button>
-          <button id="save" class="primary" type="button">Save Drill</button>
+          <button id="save-copy" type="button" {% if not drill or not drill.id %}hidden{% endif %} disabled>Save a Copy</button>
+          <button id="save" class="primary" type="button" disabled>{{ 'Update Drill' if drill and drill.id else 'Save Drill' }}</button>
         </div>
+        {% if not free_pdf %}
+        <div class="drill-pdf-options">
+          <label for="pdf-public-link">
+            <input id="pdf-public-link" type="checkbox" aria-describedby="pdf-link-help" disabled>
+            Add a public QR link to the PDF
+          </label>
+          <p id="pdf-link-help">Save the drill first. Anyone with the QR code can view the saved drill.</p>
+        </div>
+        {% endif %}
       </section>
       <div class="workspace">
         <aside class="card tools" aria-label="Tools">
@@ -38,7 +52,7 @@
               <div class="rink-heading"><h2 id="rink-title">Hockey Rink</h2><label class="rink-layout" for="rink-layout">Layout
                 <select id="rink-layout"><option value="full">Full rink</option><option value="half">Half rink</option><option value="quarter">Quarter rink</option></select>
               </label></div>
-              <div class="actions compact"><button id="fullscreen" type="button" aria-pressed="false">Fullscreen</button><button id="undo" type="button" aria-label="Undo" title="Undo (Ctrl+Z)">↶</button><button id="redo" type="button" aria-label="Redo" title="Redo (Ctrl+Shift+Z)">↷</button><button id="remove" type="button">Delete</button></div>
+              <div class="actions compact"><button id="undo" type="button" aria-label="Undo" title="Undo (Ctrl+Z)">↶</button><button id="redo" type="button" aria-label="Redo" title="Redo (Ctrl+Shift+Z)">↷</button><button id="remove" type="button">Delete</button></div>
             </div>
             <div class="ice-wrap"><div class="rink-surface"><canvas id="rink" width="1000" height="460" aria-label="Interactive hockey rink" aria-describedby="hint" tabindex="0"></canvas><span id="goal-rotation" role="group" aria-label="Goal rotation" hidden><button type="button" data-rotation="-15" aria-label="Rotate goal 15 degrees counterclockwise" title="Rotate goal 15° counterclockwise">⟲</button> <button type="button" data-rotation="15" aria-label="Rotate goal 15 degrees clockwise" title="Rotate goal 15° clockwise">⟳</button></span></div></div>
             <p class="hint" id="hint"></p>
@@ -64,6 +78,18 @@
           <p id="status" class="status" role="status">Loading the editor…</p>
         </div>
       </div>
+      <dialog id="copy-drill-dialog" aria-labelledby="copy-drill-title">
+        <form id="copy-drill-form" class="copy-drill-form" method="post">
+          <h2 id="copy-drill-title">Save a copy</h2>
+          <p>Save your current changes as a new drill and keep the original.</p>
+          <label for="copy-drill-name">Name for the copy</label>
+          <input id="copy-drill-name" maxlength="120" required autofocus>
+          <div class="actions">
+            <button id="cancel-copy-drill" type="button">Cancel</button>
+            <button id="confirm-copy-drill" class="primary" type="submit">Save Copy</button>
+          </div>
+        </form>
+      </dialog>
     </section>
 <script id="initial-drill" type="application/json">{{ drill|tojson }}</script>
 {% endblock %}

@@ -76,6 +76,15 @@ function setupAdmin(currentUserId) {
     const access = select([['enabled', 'Active'], ['disabled', 'Disabled']], user.enabled ? 'enabled' : 'disabled')
     let savedTier = user.tier
     const tier = select([...plans].filter(([value]) => value !== 'pending' || savedTier === 'pending'), savedTier)
+    function syncTier() {
+      tier.disabled = role.value === 'poweruser'
+      if (tier.disabled) tier.value = 'full'
+    }
+    role.addEventListener('change', () => {
+      tier.value = savedTier
+      syncTier()
+    })
+    syncTier()
     const password = document.createElement('input')
     password.type = 'password'
     password.autocomplete = 'new-password'
@@ -133,6 +142,7 @@ function setupAdmin(currentUserId) {
         showActionMessage(error.message)
       } finally {
         for (const control of form.elements) control.disabled = false
+        syncTier()
       }
     })
     card.append(form, help)

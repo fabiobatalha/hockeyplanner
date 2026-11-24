@@ -6,7 +6,7 @@ from sqlalchemy import and_, delete, or_, select
 from sqlalchemy.dialects.sqlite import insert
 from sqlalchemy.orm import Session, sessionmaker
 
-from .library import check_capacity, lock_library
+from .library import check_capacity, lock_library, plan_body
 from .database import DrillShareLink, LibraryRecord, PlanShare, PlanShareLink, User, UserAccess, UserMembership
 
 
@@ -227,5 +227,5 @@ class Sharing:
                     ))
                 activities.append(copied[source_id])
             plan = {**plan, "id": copy_id, "activities": activities}
-            session.add(LibraryRecord(owner_id=recipient_id, collection="plans", id=copy_id, body=json.dumps(plan)))
+            session.add(LibraryRecord(owner_id=recipient_id, collection="plans", id=copy_id, body=plan_body(plan)))
             return copy_id

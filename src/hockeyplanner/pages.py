@@ -4,7 +4,7 @@ from flask import Blueprint, abort, g, redirect, render_template, request, url_f
 
 from .accounts import Accounts
 from .api import session_token
-from .library import Library
+from .library import FREE_LIMITS, Library
 from .sharing import ShareNotFound, Sharing
 
 
@@ -32,9 +32,9 @@ def create_pages(accounts: Accounts, library: Library, sharing: Sharing) -> Blue
     def render(page, title, **context):
         user = g.account
         context.setdefault("free_pdf", bool(user and user.tier == "free"))
-        count = library.drill_count(user.id) if user and user.email and user.tier != "pending" else 0
+        counts = library.counts(user.id) if user and user.email and user.tier != "pending" else {}
         return render_template(
-            f"{page}.html", page=page, title=title, user=user, drill_count=count, **context,
+            f"{page}.html", page=page, title=title, user=user, counts=counts, **context,
         )
 
     def next_path():
@@ -108,7 +108,9 @@ def create_pages(accounts: Accounts, library: Library, sharing: Sharing) -> Blue
 
     @pages.get("/account")
     def account():
-        return require_user(email=False, selected_plan=False) or render("account", "Account Profile")
+        return require_user(email=False, selected_plan=False) or render(
+            "account", "Account Profile", free_limits=FREE_LIMITS,
+        )
 
     @pages.get("/membership")
     def membership():
@@ -116,7 +118,7 @@ def create_pages(accounts: Accounts, library: Library, sharing: Sharing) -> Blue
         if denied is not None:
             return denied
         return render("membership", "Choose your plan" if g.account.tier == "pending" else "Compare plans",
-                      next_path=next_path())
+                      next_path=next_path(), free_limits=FREE_LIMITS)
 
     @pages.get("/admin")
     def admin():
@@ -143,6 +145,7 @@ def create_pages(accounts: Accounts, library: Library, sharing: Sharing) -> Blue
         free_pdf = g.account.tier == "free" if g.account else owner_free
         return render("share", title, shared={**data, "token": token, "present": present or drill_id is not None},
                       free_pdf=free_pdf,
+                      print_drill=drill_id is not None,
                       guest_free=not g.account and owner_free,
                       signup_url=url_for("pages.register", next=None if data.get("standalone") else f"/share/{token}"),
                       login_url=url_for("pages.login", next=f"/share/{token}"))

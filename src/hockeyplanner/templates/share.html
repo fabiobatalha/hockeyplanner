@@ -7,7 +7,7 @@
     {% if shared %}
     <div class="actions">
       <button id="fullscreen-plan-link" type="button">View Fullscreen</button>
-      <button id="print-plan-link" type="button">Print PDF</button>
+      <button id="print-plan-link" type="button">{{ 'Print Drill PDF' if print_drill else 'Print PDF' }}</button>
       {% if not shared.standalone %}
         {% if user and user.email and user.tier != 'pending' %}
         <button id="accept-plan-link" type="button" class="primary">Accept shared plan</button>
@@ -45,7 +45,7 @@
     <p id="plan-invite-status" class="status" role="status">{{ error or "" }}</p>
   </section>
 </section>
-{% if shared %}<script id="shared-preview" type="application/json">{{ shared|tojson }}</script>{% endif %}
+{% if shared %}<script id="shared-preview" type="application/json" data-print-drill="{{ 'true' if print_drill else 'false' }}">{{ shared|tojson }}</script>{% endif %}
 {% endblock %}
 
 {% block dialogs %}

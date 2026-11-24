@@ -7,11 +7,31 @@
     </header>
     <div class="share-plan-body">
       <section id="profile-subscription" aria-labelledby="profile-subscription-title" {% if not user.email or user.tier == "pending" %}hidden{% endif %}>
-        <h2 id="profile-subscription-title">Subscription</h2>
-        <p>{{ "Full Access · Unlimited drills and practice plans" if user.tier == "full" else "Free · Up to 10 drills and 3 practice plans" }}</p>
+        <h2 id="profile-subscription-title">Current subscription</h2>
+        <p class="profile-plan-name">{{ "Full Access" if user.tier == "full" else "Free" }}</p>
+        {% if user.tier == "free" %}
+        <div class="profile-usage">
+          {% for collection, label in [("drills", "Drills"), ("plans", "Practice plans")] %}
+            {% set used = counts.get(collection, 0) %}
+            {% set limit = free_limits[collection] %}
+            <div class="profile-usage-item{% if used >= limit %} at-limit{% endif %}">
+              <div class="profile-usage-label">
+                <label for="profile-usage-{{ collection }}">{{ label }}</label>
+                <span id="profile-count-{{ collection }}">{{ used }} of {{ limit }} used</span>
+              </div>
+              <meter id="profile-usage-{{ collection }}" min="0" max="{{ limit }}" value="{{ [used, limit]|min }}" aria-describedby="profile-count-{{ collection }}"></meter>
+              {% if used >= limit %}
+                <p>{{ "Over the Free plan limit" if used > limit else "Limit reached" }}</p>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p>Unlimited drills and practice plans</p>
+        {% endif %}
         <div class="actions">
           <a class="button-link" href="{{ url_for('pages.membership') }}">Compare plans</a>
-          <button id="profile-downgrade" type="button" {% if user.tier != "full" %}hidden{% endif %}>Switch to Free</button>
+          <button id="profile-downgrade" type="button" {% if user.tier != "full" or user.role == "poweruser" %}hidden{% endif %}>Switch to Free</button>
         </div>
       </section>
       <p id="profile-email-required" {% if user.email %}hidden{% endif %}>Add an email address to continue to the planner.</p>

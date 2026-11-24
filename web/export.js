@@ -3,7 +3,6 @@ import { markdownText } from './markdown.js'
 import { width, rinkHeight, rinkWidth, drawRink, drawItem } from './drawing.js'
 import { drawQr, makeQr, signupUrl } from './qr.js'
 
-const landscapeA4 = { width: 841.89, height: 595.28 }
 const portraitLetter = { width: 612, height: 792 }
 
 function wrap(ctx, text, maxWidth) {
@@ -77,13 +76,15 @@ function drawPdfHeader(ctx, logo, pageWidth, margin, codes) {
 }
 
 const freeNoticeHeight = 116
+const publicDrillNotice = 'Free accounts include a public QR code in exported drill PDFs. Anyone with the code can view the saved drill. Upgrade to Full Access to export drill PDFs without public sharing.'
+const noticeLineHeight = 24
 
-function drawFreeNotice(ctx, code, pageWidth, margin, top) {
+function drawFreeNotice(ctx, code, pageWidth, margin, top, noticeHeight, noticeLines) {
   const w = pageWidth - 2 * margin
   ctx.fillStyle = '#e6efff'
-  ctx.fillRect(margin, top, w, freeNoticeHeight)
+  ctx.fillRect(margin, top, w, noticeHeight)
   ctx.fillStyle = '#174fc9'
-  ctx.fillRect(margin, top, 6, freeNoticeHeight)
+  ctx.fillRect(margin, top, 6, noticeHeight)
   const left = margin + 22
   ctx.fillStyle = '#102346'
   ctx.font = 'bold 23px system-ui'
@@ -92,6 +93,8 @@ function drawFreeNotice(ctx, code, pageWidth, margin, top) {
   ctx.fillText('These drills and practice plans were developed with a free Hockey Planner account.', left, top + 49)
   ctx.font = 'bold 18px system-ui'
   ctx.fillText('Create an account at hockeyplanner.ca or scan the QR code.', left, top + 77)
+  ctx.font = '18px system-ui'
+  noticeLines.forEach((line, index) => ctx.fillText(line, left, top + 105 + index * noticeLineHeight))
   drawQr(ctx, code, pageWidth - margin - 64, top + 9, 98)
 }
 
@@ -110,7 +113,7 @@ function drawPdfFooter(ctx, pageWidth, pageHeight, margin) {
   ctx.fillText('info@hockeyplanner.ca', pageWidth - margin, y + 12)
 }
 
-function* makePages(activity, paper, { logo, planName = '', codes = [], signup } = {}) {
+function* makePages(activity, paper, { logo, planName = '', codes = [], signup, notice = '' } = {}) {
   const margin = 32
   const pageWidth = width + 2 * margin
   const pageHeight = paper && Math.round(pageWidth * paper.height / paper.width)
@@ -121,6 +124,7 @@ function* makePages(activity, paper, { logo, planName = '', codes = [], signup }
   measure.font = titleFont
   const title = wrap(measure, activity.title.trim() || 'Untitled Drill', width)
   measure.font = textFont
+  const noticeLines = signup && notice ? wrap(measure, notice, width - 160) : []
   const planHeading = planName ? wrap(measure, planName, width) : []
   const lines = activity.description.trim() ? wrap(measure, markdownText(activity.description), width) : []
   const visibleHeight = rinkHeight(activity.layout)
@@ -128,8 +132,10 @@ function* makePages(activity, paper, { logo, planName = '', codes = [], signup }
   let index = 0
   do {
     const pageCodes = first ? codes : []
+    const pageNoticeLines = first ? noticeLines : []
+    const noticeHeight = freeNoticeHeight + pageNoticeLines.length * noticeLineHeight
     const noticeTop = paper ? pdfDivider(pageCodes) + 18 : margin
-    const headerTop = signup ? noticeTop + freeNoticeHeight + 20 : noticeTop
+    const headerTop = signup ? noticeTop + noticeHeight + 20 : noticeTop
     const titleTop = headerTop + planHeading.length * lineHeight + (planHeading.length ? 8 : 0)
     const rinkTop = titleTop + title.length * 36 + 12
     const footerTop = pageHeight - 65
@@ -140,7 +146,7 @@ function* makePages(activity, paper, { logo, planName = '', codes = [], signup }
     const requestedHeight = paper ? pageHeight : top + margin + (pageLines.length ? (pageLines.length + 1) * lineHeight : 0)
     const { canvas, ctx } = makeCanvas(pageWidth, requestedHeight)
     if (paper) drawPdfHeader(ctx, logo, pageWidth, margin, pageCodes)
-    if (signup) drawFreeNotice(ctx, signup, pageWidth, margin, noticeTop)
+    if (signup) drawFreeNotice(ctx, signup, pageWidth, margin, noticeTop, noticeHeight, pageNoticeLines)
     ctx.fillStyle = '#152741'
     if (first) {
       ctx.font = 'bold 18px system-ui'
@@ -223,9 +229,11 @@ async function makePdf(pages, paper) {
 }
 
 export async function exportActivity(activity, format, token) {
-  const paper = format === 'pdf' ? landscapeA4 : null
+  const paper = format === 'pdf' ? portraitLetter : null
   const codes = token && activity.id ? [{ code: shareQr(token, 'drill/' + activity.id), label: 'Scan to view drill' }] : []
-  const pages = makePages(activity, paper, paper ? { logo: await loadPdfLogo(), codes, signup: signupQr() } : undefined)
+  const pages = makePages(activity, paper, paper ? {
+    logo: await loadPdfLogo(), codes, signup: signupQr(), notice: codes.length ? publicDrillNotice : '',
+  } : undefined)
   const file = paper ? await makePdf(pages, paper) : await encodeCanvas(pages.next().value, 'image/png')
   download(file, activity.title, 'drill', format)
 }

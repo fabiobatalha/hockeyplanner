@@ -28,11 +28,21 @@ window.addEventListener('resize', fitRink)
 const title = get('title')
 const rinkLayout = get('rink-layout')
 const description = get('description')
+const save = get('save')
+const publicPdfLink = get('pdf-public-link')
+const freePdf = document.body.hasAttribute('data-free-pdf')
+const saveCopy = get('save-copy')
+const copyDialog = get('copy-drill-dialog')
+const copyName = get('copy-drill-name')
+const copySubmit = get('confirm-copy-drill')
+const copyCancel = get('cancel-copy-drill')
 const refreshDescription = setupMarkdown(description, get('description-visual'), get('description-mode'))
 const fresh = () => ({ id: null, title: '', description: '', layout: 'full', items: [] })
 
 let savingDrill = false
+let libraryReady = false
 let pendingDrillId
+let pendingCopyId
 let activity = fresh()
 let baseline = JSON.stringify(activity)
 let tool = 'select'
@@ -455,21 +465,48 @@ rinkLayout.addEventListener('change', () => {
   fitRink()
 })
 
-const rinkCard = rink.closest('.rink-card')
+const editorPage = get('editor-page')
 const fullscreen = get('fullscreen')
+const fullscreenLabel = get('fullscreen-label')
+let expandedEditor = false
+// Keep editor messages and plan-limit actions visible inside native fullscreen.
+editorPage.append(get('action-message'), get('plan-limit-dialog'))
+
+function updateFullscreen() {
+  const active = expandedEditor || document.fullscreenElement === editorPage
+  editorPage.classList.toggle('editor-fullscreen', active)
+  fullscreenLabel.textContent = active ? 'Exit Fullscreen' : 'Edit in fullscreen mode'
+  fullscreen.setAttribute('aria-pressed', String(active))
+  for (const control of document.querySelectorAll('.topbar, .site-footer, #upgrade-plan')) {
+    control.inert = expandedEditor
+  }
+  fitRink()
+}
+
 fullscreen.addEventListener('click', async () => {
+  if (expandedEditor) {
+    expandedEditor = false
+    updateFullscreen()
+    return
+  }
+  if (document.fullscreenElement === editorPage) {
+    await document.exitFullscreen()
+    return
+  }
   try {
-    if (document.fullscreenElement === rinkCard) await document.exitFullscreen()
-    else await rinkCard.requestFullscreen()
+    await editorPage.requestFullscreen()
   } catch {
-    showActionMessage('Could not open the rink in fullscreen.')
+    expandedEditor = true
+    updateFullscreen()
   }
 })
-document.addEventListener('fullscreenchange', () => {
-  const active = document.fullscreenElement === rinkCard
-  fullscreen.textContent = active ? 'Exit Fullscreen' : 'Fullscreen'
-  fullscreen.setAttribute('aria-pressed', String(active))
-  fitRink()
+document.addEventListener('fullscreenchange', updateFullscreen)
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape' && expandedEditor && !editorPage.querySelector('dialog[open]')) {
+    expandedEditor = false
+    updateFullscreen()
+    fullscreen.focus()
+  }
 })
 
 for (const button of teamButtons) {
@@ -574,6 +611,8 @@ function canLeave() {
 
 function load(next) {
   pendingDrillId = undefined
+  pendingCopyId = undefined
+  if (publicPdfLink) publicPdfLink.checked = false
   activity = structuredClone(next)
   baseline = JSON.stringify(activity)
   title.value = activity.title
@@ -583,6 +622,7 @@ function load(next) {
   selected.clear()
   tool = 'select'
   playerOptionsOpen = false
+  updateSaveControls()
   render()
 }
 
@@ -594,30 +634,75 @@ get('new').addEventListener('click', () => {
   showActionMessage('New drill.')
 })
 
-get('save').addEventListener('click', async () => {
-  if (gesture || savingDrill || get('save').disabled) return
+function updateSaveControls() {
+  save.textContent = activity.id ? 'Update Drill' : 'Save Drill'
+  save.disabled = saveCopy.disabled = !libraryReady || savingDrill
+  saveCopy.hidden = !activity.id
+  if (publicPdfLink) publicPdfLink.disabled = !activity.id || savingDrill
+}
+
+async function persistDrill(nameForCopy) {
+  if (gesture || savingDrill || !libraryReady) return
+  const makingCopy = nameForCopy !== undefined
+  const newRecord = makingCopy || !activity.id
   const saved = structuredClone(activity)
-  saved.id ??= (pendingDrillId ??= newRecordId())
-  saved.title = saved.title.trim() || 'Untitled Drill'
+  if (makingCopy) {
+    saved.id = pendingCopyId ??= newRecordId()
+    saved.title = nameForCopy
+  } else {
+    saved.id ??= (pendingDrillId ??= newRecordId())
+    saved.title = saved.title.trim() || 'Untitled Drill'
+  }
   const originalTitle = activity.title
   savingDrill = true
-  get('save').disabled = true
+  updateSaveControls()
+  copySubmit.disabled = copyCancel.disabled = copyName.disabled = true
   try {
     await saveRecord('drills', saved)
     const count = get('activity-count')
-    if (!activity.id) count.textContent = Number(count.textContent) + 1
-    activity.id = saved.id
+    if (newRecord) count.textContent = Number(count.textContent) + 1
+    if (makingCopy) {
+      load(saved)
+      copyDialog.close()
+    } else {
+      activity.id = saved.id
+      if (activity.title === originalTitle) activity.title = title.value = saved.title
+      baseline = JSON.stringify(saved)
+    }
     history.replaceState(history.state, '', appUrl('editor/' + saved.id))
-    if (activity.title === originalTitle) activity.title = title.value = saved.title
-    baseline = JSON.stringify(saved)
     status('')
-    showActionMessage('Drill saved to the library.')
+    showActionMessage(makingCopy ? 'Saved a copy as “' + saved.title + '”.' : newRecord ? 'Drill saved to the library.' : 'Drill updated.')
   } catch (error) {
     if (!showPlanLimit(error)) showActionMessage(error.message || 'Could not save the drill. Try again.')
   } finally {
     savingDrill = false
-    get('save').disabled = false
+    copySubmit.disabled = copyCancel.disabled = copyName.disabled = false
+    updateSaveControls()
   }
+}
+
+save.addEventListener('click', () => persistDrill())
+saveCopy.addEventListener('click', () => {
+  if (gesture || savingDrill || !activity.id) return
+  const currentName = activity.title.trim()
+  const savedName = JSON.parse(baseline).title.trim()
+  copyName.value = currentName && currentName.toLowerCase() !== savedName.toLowerCase()
+    ? currentName : (savedName || 'Untitled Drill').slice(0, 113).trimEnd() + ' (copy)'
+  copyName.setCustomValidity('')
+  copyDialog.showModal()
+  copyName.select()
+})
+copyName.addEventListener('input', () => copyName.setCustomValidity(''))
+copyCancel.addEventListener('click', () => copyDialog.close())
+copyDialog.addEventListener('cancel', event => {
+  if (savingDrill) event.preventDefault()
+})
+get('copy-drill-form').addEventListener('submit', event => {
+  event.preventDefault()
+  const name = copyName.value.trim()
+  const savedName = JSON.parse(baseline).title.trim().toLowerCase()
+  copyName.setCustomValidity(!name || name.toLowerCase() === savedName ? 'Enter a name different from the original drill.' : '')
+  if (copyName.reportValidity()) persistDrill(name)
 })
 
 for (const format of ['png', 'pdf']) {
@@ -626,15 +711,18 @@ for (const format of ['png', 'pdf']) {
     if (gesture || savingDrill) return
     const snapshot = structuredClone(activity)
     const saved = Boolean(snapshot.id) && JSON.stringify(snapshot) === baseline
+    const createLink = format === 'pdf' && (freePdf || publicPdfLink?.checked)
+    if (createLink && !saved) {
+      showActionMessage('Save your changes before exporting with a public QR code.')
+      return
+    }
     button.disabled = true
-    if (format === 'pdf') status('Generating the PDF…')
     try {
-      const token = format === 'pdf' && saved ? (await drillShareLink(snapshot.id)).token : null
+      const token = createLink ? (await drillShareLink(snapshot.id, 'PUT')).token : null
       await exportActivity(snapshot, format, token)
-      if (format === 'pdf') status('')
-      else showActionMessage('PNG file ready.')
+      if (format === 'png') showActionMessage('PNG file ready.')
     } catch {
-      if (format === 'pdf') status('Could not generate the PDF.')
+      if (format === 'pdf') showActionMessage('Could not generate the PDF.')
       else showActionMessage('Could not generate the PNG file.')
     } finally {
       button.disabled = false
@@ -646,11 +734,10 @@ const initialDrill = JSON.parse(get('initial-drill').textContent)
 load(initialDrill ?? fresh())
 fitRink()
 
-const save = get('save')
-save.disabled = true
 await prepareLibrary()
 if (get('status').textContent === 'Loading the editor…') status('')
-save.disabled = false
+libraryReady = true
+updateSaveControls()
 
 window.addEventListener('beforeunload', event => {
   if (JSON.stringify(activity) !== baseline) event.preventDefault()

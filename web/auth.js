@@ -54,8 +54,9 @@ function setupEmailConfirmation() {
     const result = await request('confirm-email', 'POST', { token: form.dataset.token, code: code.value })
     form.reset()
     if (result.registered) {
-      const url = appUrl('membership')
-      if (/^\/share\/[A-Za-z0-9_-]{43}$/.test(result.return_to)) url.searchParams.set('next', result.return_to)
+      const sharePath = /^\/share\/[A-Za-z0-9_-]{43}$/.test(result.return_to) ? result.return_to : ''
+      const url = appUrl(result.tier === 'full' ? sharePath || 'editor' : 'membership')
+      if (result.tier !== 'full' && sharePath) url.searchParams.set('next', sharePath)
       navigateWithMessage(url, 'Email confirmed. Your account is ready.')
     } else {
       form.hidden = true

@@ -174,6 +174,8 @@ def create_api(library: Library, accounts: Accounts, sharing: Sharing, confirmat
     def select_tier():
         request.max_content_length = 4096
         choice = TierSelection.model_validate(request.get_json())
+        if g.user.role == "poweruser":
+            abort(403, "Poweruser accounts always have Full Access.")
         if choice.tier == "full":
             abort(400, "Full Access is not available yet.")
         if not accounts.select_free_tier(g.user.id, allow_downgrade=choice.confirm_downgrade):
@@ -198,7 +200,8 @@ def create_api(library: Library, accounts: Accounts, sharing: Sharing, confirmat
         if new_user is None:
             return jsonify(registered=False)
         token = accounts.start_session(new_user, session_token())
-        return session_response(token, {"registered": True, "return_to": return_to})
+        user = accounts.get_user(token)
+        return session_response(token, {"registered": True, "return_to": return_to, "tier": user.tier if user else "pending"})
 
     @api.post("/forgot-password")
     def forgot_password():
@@ -333,7 +336,9 @@ def create_api(library: Library, accounts: Accounts, sharing: Sharing, confirmat
         if model is None or not valid_id(record_id):
             abort(404, "Unknown record.")
         payload = model.model_validate(request.get_json()) if request.method == "PUT" else None
-        library.write(g.user.id, collection, record_id, payload)
+        body = library.write(g.user.id, collection, record_id, payload)
+        if collection == "plans" and body is not None:
+            return Response(body, mimetype="application/json")
         return "", 204
 
     return api

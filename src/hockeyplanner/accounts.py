@@ -82,7 +82,7 @@ class Accounts:
         if email:
             cls.save_email(session, user.id, email)
         first_account = session.scalar(select(User.id).where(User.id != user.id).limit(1)) is None
-        session.add(UserMembership(user_id=user.id, tier=tier))
+        session.add(UserMembership(user_id=user.id, tier="full" if first_account else tier))
         session.add(UserAccess(user_id=user.id, role="poweruser" if first_account else "user", enabled=True))
         if first_account:
             session.execute(update(LibraryRecord).where(LibraryRecord.owner_id == 0).values(owner_id=user.id))
@@ -91,9 +91,13 @@ class Accounts:
     def select_free_tier(self, user_id: int, *, allow_downgrade: bool = False) -> bool:
         with self.sessions.begin() as session:
             eligible_tiers = ("pending", "full") if allow_downgrade else ("pending",)
+            poweruser = select(UserAccess.user_id).where(
+                UserAccess.user_id == user_id, UserAccess.role == "poweruser",
+            ).exists()
             changed = session.execute(update(UserMembership).where(
                 UserMembership.user_id == user_id,
                 UserMembership.tier.in_(eligible_tiers),
+                ~poweruser,
             ).values(tier="free"))
             if changed.rowcount:
                 return True
@@ -218,11 +222,12 @@ class Accounts:
             access.role = changes.role
             access.enabled = changes.enabled
             membership = session.get(UserMembership, user_id)
-            if changes.tier is not None:
+            tier = "full" if changes.role == "poweruser" else changes.tier
+            if tier is not None:
                 if membership is None:
                     membership = UserMembership(user_id=user_id)
                     session.add(membership)
-                membership.tier = changes.tier
+                membership.tier = tier
             if changes.password is not None:
                 salt = secrets.token_bytes(16)
                 self.replace_password(session, user, salt, password_hash(changes.password, salt))

@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from sqlalchemy import ForeignKey, MetaData, String, Table, UniqueConstraint, create_engine, insert, inspect, literal, select
+from sqlalchemy import ForeignKey, MetaData, String, Table, UniqueConstraint, create_engine, insert, inspect, literal, select, update
 from sqlalchemy.engine import URL
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, sessionmaker
 
@@ -130,6 +130,16 @@ def open_database(path: Path) -> sessionmaker[Session]:
             connection.execute(insert(UserAccess.__table__).from_select(
                 ["user_id", "role", "enabled"], first_user,
             ))
+        powerusers = select(UserAccess.user_id).where(UserAccess.role == "poweruser")
+        connection.execute(update(UserMembership).where(
+            UserMembership.user_id.in_(powerusers), UserMembership.tier != "full",
+        ).values(tier="full"))
+        connection.execute(insert(UserMembership.__table__).from_select(
+            ["user_id", "tier"],
+            powerusers.add_columns(literal("full")).where(
+                ~select(UserMembership.user_id).where(UserMembership.user_id == UserAccess.user_id).exists(),
+            ),
+        ))
         if inspect(connection).has_table("records"):
             previous = Table("records", MetaData(), autoload_with=connection)
             columns = previous.c

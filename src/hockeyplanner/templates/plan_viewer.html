@@ -3,6 +3,7 @@
       <header class="plan-viewer-header">
         <h2 id="plan-viewer-title"></h2>
         <form method="dialog" class="actions">
+          {% if print_drill %}<button id="print-viewer-drill" type="button">Print Drill PDF</button>{% endif %}
           <button id="plan-viewer-fullscreen" type="button" hidden>Enter Fullscreen</button>
           <button type="submit">Exit Presentation</button>
         </form>

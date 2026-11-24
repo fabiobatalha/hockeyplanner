@@ -14,6 +14,10 @@ let displayedActivities = []
 let activityIndex = 0
 let presentationWasFullscreen = false
 
+export function currentPresentedDrill() {
+  return displayedActivities[activityIndex]
+}
+
 document.addEventListener('fullscreenchange', () => {
   fullscreen.hidden = !canEnterFullscreen || document.fullscreenElement === presentation
   if (document.fullscreenElement === presentation) presentationWasFullscreen = true
