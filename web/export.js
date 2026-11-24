@@ -1,6 +1,6 @@
 import { appUrl } from './urls.js'
 import { markdownText } from './markdown.js'
-import { width, rinkHeight, rinkWidth, drawRink, drawItem } from './drawing.js'
+import { width, rinkHeight, rinkWidth, drawRink, drawItem, markers, movements } from './drawing.js'
 import { drawQr, makeQr, signupUrl } from './qr.js'
 
 const portraitLetter = { width: 612, height: 792 }
@@ -113,6 +113,24 @@ function drawPdfFooter(ctx, pageWidth, pageHeight, margin) {
   ctx.fillText('info@hockeyplanner.ca', pageWidth - margin, y + 12)
 }
 
+const legendRowHeight = 32
+const legendHeadingHeight = 28
+
+function drawMovementLegend(ctx, entries, left, top) {
+  ctx.fillStyle = '#152741'
+  ctx.font = 'bold 18px system-ui'
+  ctx.fillText('Movement Legend', left, top)
+  for (const [index, { type, label, line }] of entries.entries()) {
+    const x = left + (index % 2) * width / 2
+    const y = top + legendHeadingHeight + Math.floor(index / 2) * legendRowHeight
+    drawItem(ctx, line ? { type, x: x + 16, y: y + 13, endX: x + 112, endY: y + 13 }
+      : { type, x: x + 60, y: y + 13 })
+    ctx.fillStyle = '#152741'
+    ctx.font = '17px system-ui'
+    ctx.fillText(label, x + 135, y + 3)
+  }
+}
+
 function* makePages(activity, paper, { logo, planName = '', codes = [], signup, notice = '' } = {}) {
   const margin = 32
   const pageWidth = width + 2 * margin
@@ -128,6 +146,12 @@ function* makePages(activity, paper, { logo, planName = '', codes = [], signup, 
   const planHeading = planName ? wrap(measure, planName, width) : []
   const lines = activity.description.trim() ? wrap(measure, markdownText(activity.description), width) : []
   const visibleHeight = rinkHeight(activity.layout)
+  const usedTypes = new Set(activity.items.map(item => item.type))
+  const legend = paper ? [
+    ...Object.entries(movements).map(([type, [label]]) => ({ type, label, line: true })),
+    ...['pivot', 'shot', 'start', 'end'].map(type => ({ type, label: markers[type][0] })),
+  ].filter(({ type }) => usedTypes.has(type)) : []
+  const legendHeight = legend.length ? legendHeadingHeight + Math.ceil(legend.length / 2) * legendRowHeight + 14 : 0
   let first = true
   let index = 0
   do {
@@ -139,8 +163,9 @@ function* makePages(activity, paper, { logo, planName = '', codes = [], signup, 
     const titleTop = headerTop + planHeading.length * lineHeight + (planHeading.length ? 8 : 0)
     const rinkTop = titleTop + title.length * 36 + 12
     const footerTop = pageHeight - 65
-    const rinkScale = paper ? Math.max(.3, Math.min(1, (footerTop - rinkTop - 24) / visibleHeight)) : 1
-    const top = first ? rinkTop + visibleHeight * rinkScale + 24 : headerTop
+    const rinkScale = paper ? Math.max(.3, Math.min(1, (footerTop - rinkTop - 24 - legendHeight) / visibleHeight)) : 1
+    const legendTop = rinkTop + visibleHeight * rinkScale + 24
+    const top = first ? legendTop + legendHeight : headerTop
     const available = paper ? Math.max(0, Math.floor((footerTop - top - lineHeight) / lineHeight)) : lines.length
     const pageLines = lines.slice(index, index + available)
     const requestedHeight = paper ? pageHeight : top + margin + (pageLines.length ? (pageLines.length + 1) * lineHeight : 0)
@@ -163,6 +188,7 @@ function* makePages(activity, paper, { logo, planName = '', codes = [], signup, 
       drawRink(ctx, false)
       activity.items.forEach(item => drawItem(ctx, item))
       ctx.restore()
+      if (legend.length) drawMovementLegend(ctx, legend, margin, legendTop)
     }
     if (pageLines.length) {
       ctx.font = 'bold 18px system-ui'
