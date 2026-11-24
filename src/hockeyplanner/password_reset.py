@@ -9,7 +9,8 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from .accounts import Accounts, password_hash, token_hash
 from .database import PasswordResetRequest, User, UserAccess, UserEmail
-from .email_confirmation import EmailDeliveryError, public_email_link, send_email
+from .email_confirmation import public_email_link, send_email
+from .email_tasks import EmailDeliveryError, EmailTasks
 from .models import ResetPassword
 
 
@@ -34,9 +35,10 @@ def smtp_password_reset(address: str, token: str) -> None:
 
 
 class PasswordResets:
-    def __init__(self, sessions: sessionmaker[Session], send: Callable[[str, str], None]) -> None:
+    def __init__(self, sessions: sessionmaker[Session], send: Callable[[str, str], None], tasks: EmailTasks) -> None:
         self.sessions = sessions
         self.send = send
+        self.tasks = tasks
 
     def request(self, email: str) -> None:
         token = secrets.token_urlsafe(32)
@@ -52,6 +54,7 @@ class PasswordResets:
                     UserEmail.lookup_key == email.casefold(),
                     or_(UserAccess.user_id.is_(None), UserAccess.enabled.is_(True)),
                 )
+                .with_for_update(of=User)
             ).one_or_none()
             if account is None:
                 return
@@ -66,24 +69,40 @@ class PasswordResets:
             pending.email_key = verified_email.lookup_key
             pending.password_digest = user.password_hash
             pending.expires = now + RESET_AGE
+            user_id = user.id
             address = verified_email.address
 
         try:
-            self.send(address, token)
+            self.tasks.submit(self._deliver, user_id, digest, address, token)
         except EmailDeliveryError:
-            with self.sessions.begin() as session:
-                session.execute(delete(PasswordResetRequest).where(PasswordResetRequest.token_hash == digest))
-            # Keep the HTTP response the same for unknown addresses and delivery failures.
-            logger.warning("Password reset email could not be sent.")
+            self._discard(digest)
+            logger.warning("Password reset email could not be queued.")
+
+    def _discard(self, digest: bytes) -> None:
+        with self.sessions.begin() as session:
+            session.execute(delete(PasswordResetRequest).where(PasswordResetRequest.token_hash == digest))
+
+    def _deliver(self, user_id: int, digest: bytes, address: str, token: str) -> None:
+        try:
+            with self.sessions() as session:
+                pending = session.get(PasswordResetRequest, user_id)
+                if pending is None or pending.token_hash != digest or pending.expires <= int(time.time()):
+                    return
+            self.send(address, token)
+        except Exception:
+            self._discard(digest)
+            raise
 
     def reset(self, change: ResetPassword) -> None:
         with self.sessions.begin() as session:
             session.execute(delete(PasswordResetRequest).where(PasswordResetRequest.expires <= int(time.time())))
-            pending = session.scalar(select(PasswordResetRequest).where(
-                PasswordResetRequest.token_hash == token_hash(change.token),
-            ))
+            digest = token_hash(change.token)
+            user_id = session.scalar(select(PasswordResetRequest.user_id).where(PasswordResetRequest.token_hash == digest))
+            user = session.get(User, user_id, with_for_update=True) if user_id is not None else None
+            pending = session.get(PasswordResetRequest, user_id) if user is not None else None
+            if pending is not None and pending.token_hash != digest:
+                pending = None
             if pending is not None:
-                user = session.get(User, pending.user_id)
                 access = session.get(UserAccess, pending.user_id)
                 address = session.get(UserEmail, pending.user_id)
                 if (

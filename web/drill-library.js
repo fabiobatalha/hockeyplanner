@@ -18,7 +18,7 @@ const layoutNames = { half: 'Half rink', quarter: 'Quarter rink' }
 const drillType = entry => entry.platformSource ? 'platform' : 'personal'
 const typeLabels = { personal: 'Personal Drill', platform: 'Platform Drill' }
 const freePdf = document.body.hasAttribute('data-free-pdf')
-const { accountId } = get('library-page').dataset
+const { accountId, accountRole } = get('library-page').dataset
 let activities = []
 let platforms = []
 
@@ -186,6 +186,14 @@ function refreshLibrary() {
       copy.className = 'primary'
       copy.setAttribute('aria-label', 'Copy ' + entry.title)
       actions.append(copy)
+      if (accountRole !== 'poweruser') {
+        const preview = platformAction('Preview', async () => {
+          const { token } = await platformDrillLink(platform)
+          location.assign(appUrl('share/' + token + '/drill/' + platform.drillId))
+        })
+        preview.setAttribute('aria-label', 'Preview ' + entry.title)
+        actions.append(preview)
+      }
     }
     actions.append(downloadButton(entry, 'png', feedback), downloadButton(entry, 'pdf', feedback))
     if (own) actions.append(remove)

@@ -1,0 +1,100 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: hockeyplanner-postgres-data
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hockeyplanner-postgres-init
+data:
+  pg_hba.conf: |
+    local all postgres trust
+    host all all 127.0.0.1/32 scram-sha-256
+  01-create-app-role.sh: |
+    createuser --username "$POSTGRES_USER" --no-superuser --no-createdb --no-createrole --pwprompt hockeyplanner <<PASSWORDS
+    $HOCKEYPLANNER_DB_PASSWORD
+    $HOCKEYPLANNER_DB_PASSWORD
+    PASSWORDS
+    createdb --username "$POSTGRES_USER" --owner hockeyplanner hockeyplanner
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: hockeyplanner
+spec:
+  restartPolicy: Always
+  containers:
+    - name: postgres
+      image: docker.io/library/postgres:17-alpine
+      args:
+        - postgres
+        - "-c"
+        - "listen_addresses=127.0.0.1"
+        - "-c"
+        - "hba_file=/docker-entrypoint-initdb.d/pg_hba.conf"
+      env:
+        - name: POSTGRES_USER
+          value: postgres
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: hockeyplanner-postgres-admin
+              key: password
+        - name: HOCKEYPLANNER_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: hockeyplanner-postgres-app
+              key: password
+      volumeMounts:
+        - name: database
+          mountPath: /var/lib/postgresql/data
+        - name: initialization
+          mountPath: /docker-entrypoint-initdb.d
+          readOnly: true
+      livenessProbe:
+        exec:
+          command: [pg_isready, -h, 127.0.0.1, -U, hockeyplanner, -d, hockeyplanner]
+        initialDelaySeconds: 20
+        periodSeconds: 15
+    - name: web
+      image: localhost/hockeyplanner:latest
+      imagePullPolicy: Never
+      ports:
+        - name: http
+          containerPort: 8000
+          hostIP: 0.0.0.0
+          hostPort: 8000
+      envFrom:
+        - secretRef:
+            name: hockeyplanner-app-environment
+      env:
+        - name: HOCKEYPLANNER_DB_HOST
+          value: "127.0.0.1"
+        - name: HOCKEYPLANNER_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: hockeyplanner-postgres-app
+              key: password
+      securityContext:
+        runAsUser: 10001
+        runAsGroup: 10001
+        allowPrivilegeEscalation: false
+      livenessProbe:
+        httpGet:
+          path: /api/account
+          port: 8000
+        initialDelaySeconds: 25
+        periodSeconds: 30
+  volumes:
+    - name: database
+      persistentVolumeClaim:
+        claimName: hockeyplanner-postgres-data
+    - name: initialization
+      configMap:
+        name: hockeyplanner-postgres-init

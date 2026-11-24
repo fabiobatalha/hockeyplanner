@@ -9,7 +9,8 @@ from sqlalchemy.exc import SQLAlchemyError
 from werkzeug.exceptions import HTTPException
 
 from .accounts import SESSION_AGE, AccountNotFound, Accounts, AdministrationDenied, EmailTaken, IncorrectPassword, UsernameTaken
-from .email_confirmation import ConfirmationError, EmailConfirmations, EmailDeliveryError
+from .email_confirmation import ConfirmationError, EmailConfirmations
+from .email_tasks import EmailDeliveryError
 from .library import MODELS, CapacityExceeded, Library, PlatformDrillNotFound, valid_id
 from .models import PASSWORD_REQUIREMENTS, AccountDeletion, AccountStatus, AccountUpdate, ConfirmEmail, EmailUpdate, ForgotPassword, LibraryImport, Login, PasswordChange, Registration, ResetPassword, PlanCopyRequest, PlanLinkClaim, PlanLinkPreview, PlanShareRequest, TierSelection
 from .password_reset import InvalidPasswordReset, PasswordResets

@@ -9,19 +9,16 @@ from collections.abc import Callable
 from email.message import EmailMessage
 from urllib.parse import urlsplit
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session, sessionmaker
 
 from .accounts import Accounts, EmailTaken, IncorrectPassword, UsernameTaken, password_hash, token_hash
 from .database import EmailConfirmation, PasswordResetRequest, User, UserAccess, UserEmail
+from .email_tasks import EmailDeliveryError, EmailTasks
 from .models import ConfirmEmail, EmailUpdate, Registration
 
 
 CONFIRMATION_AGE = 30 * 60
-
-
-class EmailDeliveryError(Exception):
-    pass
 
 
 class ConfirmationError(Exception):
@@ -30,7 +27,10 @@ class ConfirmationError(Exception):
 
 def public_email_link(path: str) -> str:
     url = os.getenv("HOCKEYPLANNER_PUBLIC_URL", "").rstrip("/")
-    parsed = urlsplit(url)
+    try:
+        parsed = urlsplit(url)
+    except ValueError as error:
+        raise EmailDeliveryError("Email delivery is not configured. Contact the site administrator.") from error
     if parsed.scheme not in ("http", "https") or not parsed.hostname or parsed.username or parsed.query or parsed.fragment:
         raise EmailDeliveryError("Email delivery is not configured. Contact the site administrator.")
     return f"{url}/{path}"
@@ -47,16 +47,22 @@ def smtp_confirmation(address: str, code: str, token: str) -> None:
     )
 
 
-def send_email(address: str, subject: str, body: str) -> None:
+def smtp_settings() -> tuple[str, str, str, int]:
     host = os.getenv("HOCKEYPLANNER_SMTP_HOST")
     sender = os.getenv("HOCKEYPLANNER_SMTP_FROM")
-    if not host or not sender:
-        raise EmailDeliveryError("Email delivery is not configured. Contact the site administrator.")
+    mode = os.getenv("HOCKEYPLANNER_SMTP_SECURITY", "starttls")
     try:
-        mode = os.getenv("HOCKEYPLANNER_SMTP_SECURITY", "starttls")
-        if mode not in ("starttls", "ssl"):
-            raise ValueError("Invalid SMTP security mode")
         port = int(os.getenv("HOCKEYPLANNER_SMTP_PORT", "465" if mode == "ssl" else "587"))
+    except ValueError as error:
+        raise EmailDeliveryError("Email delivery is not configured. Contact the site administrator.") from error
+    if not host or not sender or mode not in ("starttls", "ssl") or not 1 <= port <= 65535:
+        raise EmailDeliveryError("Email delivery is not configured. Contact the site administrator.")
+    return host, sender, mode, port
+
+
+def send_email(address: str, subject: str, body: str) -> None:
+    host, sender, mode, port = smtp_settings()
+    try:
         message = EmailMessage()
         message["From"] = sender
         message["To"] = address
@@ -91,9 +97,10 @@ def code_hash(code: str, salt: bytes) -> bytes:
 
 
 class EmailConfirmations:
-    def __init__(self, sessions: sessionmaker[Session], send: Callable[[str, str, str], None]) -> None:
+    def __init__(self, sessions: sessionmaker[Session], send: Callable[[str, str, str], None], tasks: EmailTasks) -> None:
         self.sessions = sessions
         self.send = send
+        self.tasks = tasks
 
     @staticmethod
     def remove_expired(session: Session) -> None:
@@ -115,13 +122,32 @@ class EmailConfirmations:
         )
         return pending, token, code
 
-    def deliver(self, pending: EmailConfirmation, token: str, code: str) -> None:
+    def _discard(self, digest: bytes) -> None:
+        with self.sessions.begin() as session:
+            session.execute(delete(EmailConfirmation).where(EmailConfirmation.token_hash == digest))
+
+    def _deliver(self, digest: bytes, address: str, token: str, code: str) -> None:
         try:
-            self.send(pending.email, code, token)
-        except EmailDeliveryError:
-            with self.sessions.begin() as session:
-                session.execute(delete(EmailConfirmation).where(EmailConfirmation.token_hash == pending.token_hash))
+            with self.sessions() as session:
+                pending = session.get(EmailConfirmation, digest)
+                if pending is None or pending.expires <= int(time.time()):
+                    return
+            self.send(address, code, token)
+        except Exception:
+            self._discard(digest)
             raise
+
+    def _queue(self, pending: EmailConfirmation, token: str, code: str) -> None:
+        try:
+            self.tasks.submit(self._deliver, pending.token_hash, pending.email, token, code)
+        except EmailDeliveryError:
+            self._discard(pending.token_hash)
+            raise
+
+    def _check_delivery_settings(self) -> None:
+        if self.send is smtp_confirmation:
+            smtp_settings()
+            public_email_link("")
 
     def start_registration(self, details: Registration) -> None:
         salt = secrets.token_bytes(16)
@@ -132,12 +158,13 @@ class EmailConfirmations:
         pending.return_to = details.return_to
         with self.sessions.begin() as session:
             self.remove_expired(session)
-            if session.scalar(select(User.id).where(User.username == details.username)) is not None:
+            if session.scalar(select(User.id).where(func.lower(User.username) == details.username.lower())) is not None:
                 raise UsernameTaken
             if session.scalar(select(UserEmail.user_id).where(UserEmail.lookup_key == details.email.casefold())) is not None:
                 raise EmailTaken
+            self._check_delivery_settings()
             session.add(pending)
-        self.deliver(pending, token, code)
+        self._queue(pending, token, code)
 
     def start_change(self, user_id: int, changes: EmailUpdate) -> None:
         with self.sessions.begin() as session:
@@ -148,16 +175,17 @@ class EmailConfirmations:
             existing = session.scalar(select(UserEmail.user_id).where(UserEmail.lookup_key == changes.email.casefold()))
             if existing is not None and existing != user_id:
                 raise EmailTaken
+            self._check_delivery_settings()
             pending, token, code = self.request(changes.email, user_id=user_id, password_digest=user.password_hash)
             session.execute(delete(EmailConfirmation).where(EmailConfirmation.user_id == user_id))
             session.add(pending)
-        self.deliver(pending, token, code)
+        self._queue(pending, token, code)
 
     def confirm(self, confirmation: ConfirmEmail) -> tuple[int | None, str]:
         failure = "This confirmation request is expired or no longer available. Start a new request."
         with self.sessions.begin() as session:
             self.remove_expired(session)
-            pending = session.get(EmailConfirmation, token_hash(confirmation.token))
+            pending = session.get(EmailConfirmation, token_hash(confirmation.token), with_for_update=True)
             if pending is not None:
                 if not hmac.compare_digest(pending.code_digest, code_hash(confirmation.code, pending.code_salt)):
                     pending.attempts_left -= 1

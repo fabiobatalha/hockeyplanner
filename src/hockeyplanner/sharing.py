@@ -2,12 +2,11 @@ import json
 import secrets
 from uuid import uuid4
 
-from sqlalchemy import and_, delete, or_, select
-from sqlalchemy.dialects.sqlite import insert
+from sqlalchemy import and_, delete, func, or_, select
 from sqlalchemy.orm import Session, sessionmaker
 
 from .library import check_capacity, lock_library, plan_body, platform_records, resolve_platform_drills
-from .database import DrillShareLink, LibraryRecord, PlatformDrill, PlanShare, PlanShareLink, User, UserAccess, UserMembership
+from .database import DrillShareLink, LibraryRecord, PlatformDrill, PlanShare, PlanShareLink, User, UserAccess, UserMembership, conflict_insert
 
 
 class ShareNotFound(Exception):
@@ -83,13 +82,13 @@ class Sharing:
             find_plan(session, owner_id, plan_id)
             recipient_id = session.scalar(
                 select(User.id).outerjoin(UserAccess, UserAccess.user_id == User.id)
-                .where(User.username == username, or_(UserAccess.enabled.is_(True), UserAccess.user_id.is_(None)))
+                .where(func.lower(User.username) == username.lower(), or_(UserAccess.enabled.is_(True), UserAccess.user_id.is_(None)))
             )
             if recipient_id is None:
                 raise ShareNotFound("No active account matches that username.")
             if recipient_id == owner_id:
                 raise ValueError("You already own this plan.")
-            session.execute(insert(PlanShare).values(
+            session.execute(conflict_insert(session, PlanShare).values(
                 owner_id=owner_id, plan_id=plan_id, recipient_id=recipient_id,
             ).on_conflict_do_nothing())
 
@@ -108,7 +107,7 @@ class Sharing:
     def create_link(self, owner_id: int, plan_id: str) -> str:
         with self.sessions.begin() as session:
             find_plan(session, owner_id, plan_id)
-            session.execute(insert(PlanShareLink).values(
+            session.execute(conflict_insert(session, PlanShareLink).values(
                 owner_id=owner_id, plan_id=plan_id, token=secrets.token_urlsafe(32),
             ).on_conflict_do_nothing(index_elements=["owner_id", "plan_id"]))
             return session.get(PlanShareLink, (owner_id, plan_id)).token
@@ -137,7 +136,7 @@ class Sharing:
         with self.sessions.begin() as session:
             lock_library(session, owner_id)
             find_record(session, owner_id, drill_id, "drills")
-            session.execute(insert(DrillShareLink).values(
+            session.execute(conflict_insert(session, DrillShareLink).values(
                 owner_id=owner_id, drill_id=drill_id, token=secrets.token_urlsafe(32),
             ).on_conflict_do_nothing(index_elements=["owner_id", "drill_id"]))
             return session.get(DrillShareLink, (owner_id, drill_id)).token
@@ -184,7 +183,7 @@ class Sharing:
             link = find_link(session, token)
             find_plan(session, link.owner_id, link.plan_id)
             if recipient_id != link.owner_id:
-                session.execute(insert(PlanShare).values(
+                session.execute(conflict_insert(session, PlanShare).values(
                     owner_id=link.owner_id, plan_id=link.plan_id, recipient_id=recipient_id,
                 ).on_conflict_do_nothing())
 

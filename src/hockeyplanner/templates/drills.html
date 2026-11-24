@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <section id="library-page" aria-labelledby="library-title" data-account-id="{{ user.id }}">
+    <section id="library-page" aria-labelledby="library-title" data-account-id="{{ user.id }}" data-account-role="{{ user.role }}">
       <div class="page-heading">
         <h1 id="library-title" tabindex="-1">Drill Library</h1>
         <a class="button-link primary" href="{{ url_for('pages.editor') }}">New Drill</a>

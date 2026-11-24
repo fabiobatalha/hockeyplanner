@@ -1,7 +1,12 @@
+from os import getenv
 from pathlib import Path
+from time import sleep
 
-from sqlalchemy import ForeignKey, MetaData, String, Table, UniqueConstraint, create_engine, insert, inspect, literal, select, update
-from sqlalchemy.engine import URL
+from sqlalchemy import ForeignKey, Index, MetaData, String, Table, UniqueConstraint, create_engine, func, insert, inspect, literal, select, update
+from sqlalchemy.dialects.postgresql import insert as postgres_insert
+from sqlalchemy.dialects.sqlite import insert as sqlite_insert
+from sqlalchemy.engine import Connection, Engine, URL
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, sessionmaker
 
 
@@ -13,9 +18,12 @@ class User(Base):
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    username: Mapped[str] = mapped_column(String(collation="NOCASE"), unique=True)
+    username: Mapped[str] = mapped_column(String().with_variant(String(collation="NOCASE"), "sqlite"), unique=True)
     salt: Mapped[bytes]
     password_hash: Mapped[bytes]
+
+
+Index("ix_users_username_lower", func.lower(User.username), unique=True).ddl_if(dialect="postgresql")
 
 
 class RetiredUserId(Base):
@@ -127,10 +135,52 @@ class PlatformDrill(Base):
     token: Mapped[str] = mapped_column(unique=True)
 
 
-def open_database(path: Path) -> sessionmaker[Session]:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    engine = create_engine(URL.create("sqlite", database=str(path)), connect_args={"autocommit": False})
-    with engine.begin() as connection:
+def configured_database() -> URL | None:
+    host = getenv("HOCKEYPLANNER_DB_HOST")
+    if not host:
+        return None
+    password = getenv("HOCKEYPLANNER_DB_PASSWORD")
+    if not password:
+        raise ValueError("HOCKEYPLANNER_DB_PASSWORD is required for PostgreSQL.")
+    return URL.create(
+        "postgresql+psycopg",
+        username=getenv("HOCKEYPLANNER_DB_USER", "hockeyplanner"),
+        password=password,
+        host=host,
+        port=int(getenv("HOCKEYPLANNER_DB_PORT", "5432")),
+        database=getenv("HOCKEYPLANNER_DB_NAME", "hockeyplanner"),
+    )
+
+
+def lock_postgres(connection: Connection, key: int) -> None:
+    if connection.dialect.name == "postgresql":
+        connection.execute(select(func.pg_advisory_xact_lock(1279345490, key)))
+
+
+def conflict_insert(session: Session, model):
+    dialect_insert = postgres_insert if session.get_bind().dialect.name == "postgresql" else sqlite_insert
+    return dialect_insert(model)
+
+
+def database_engine(target: Path | URL) -> Engine:
+    if isinstance(target, Path):
+        target.parent.mkdir(parents=True, exist_ok=True)
+        return create_engine(URL.create("sqlite", database=str(target)), connect_args={"autocommit": False})
+    return create_engine(target, pool_pre_ping=True, connect_args={"connect_timeout": 5})
+
+
+def open_database(target: Path | URL) -> sessionmaker[Session]:
+    engine = database_engine(target)
+    for attempt in range(20):
+        try:
+            connection = engine.connect()
+            break
+        except OperationalError:
+            if engine.dialect.name != "postgresql" or attempt == 19:
+                raise
+            sleep(1)
+    with connection, connection.begin():
+        lock_postgres(connection, 1)
         bootstrap_access = not inspect(connection).has_table("user_access")
         Base.metadata.create_all(connection)
         if bootstrap_access:
@@ -148,7 +198,7 @@ def open_database(path: Path) -> sessionmaker[Session]:
                 ~select(UserMembership.user_id).where(UserMembership.user_id == UserAccess.user_id).exists(),
             ),
         ))
-        if inspect(connection).has_table("records"):
+        if connection.dialect.name == "sqlite" and inspect(connection).has_table("records"):
             previous = Table("records", MetaData(), autoload_with=connection)
             columns = previous.c
             owner = columns.owner_id if "owner_id" in columns else literal(0)

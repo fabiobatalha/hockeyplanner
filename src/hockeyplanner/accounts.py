@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from .database import (
     AccountSession, DrillShareLink, EmailConfirmation, LibraryRecord, PasswordResetRequest, PlanShare, PlanShareLink,
-    PlatformDrill, RetiredUserId, User, UserAccess, UserEmail, UserMembership,
+    PlatformDrill, RetiredUserId, User, UserAccess, UserEmail, UserMembership, lock_postgres,
 )
 from .models import AccountProfile, AccountTier, AccountUpdate, Credentials, Login, PasswordChange, UserProfile
 
@@ -70,9 +70,12 @@ class Accounts:
         email: str | None = None, tier: AccountTier = "free",
     ) -> int:
         # Never reuse deleted account IDs, including on databases created before account deletion existed.
-        latest_user = select(func.max(User.id)).scalar_subquery()
-        latest_retired = select(func.max(RetiredUserId.id)).scalar_subquery()
-        next_id = func.max(func.coalesce(latest_user, 0), func.coalesce(latest_retired, 0)) + 1
+        lock_postgres(session.connection(), 2)
+        latest_user, latest_retired = session.execute(select(
+            select(func.max(User.id)).scalar_subquery(),
+            select(func.max(RetiredUserId.id)).scalar_subquery(),
+        )).one()
+        next_id = max(latest_user or 0, latest_retired or 0) + 1
         user = User(id=next_id, username=username, salt=salt, password_hash=digest)
         session.add(user)
         try:
@@ -110,7 +113,7 @@ class Accounts:
             if "@" in credentials.identifier:
                 query = query.join(UserEmail, UserEmail.user_id == User.id).where(UserEmail.lookup_key == credentials.identifier)
             else:
-                query = query.where(User.username == credentials.identifier)
+                query = query.where(func.lower(User.username) == credentials.identifier.lower())
             user = session.scalar(query)
             salt, digest = (user.salt, user.password_hash) if user else (bytes(16), bytes(32))
             matched = hmac.compare_digest(password_hash(credentials.password, salt), digest)
@@ -275,7 +278,7 @@ class Accounts:
         session.execute(delete(LibraryRecord).where(LibraryRecord.owner_id == user_id))
         session.execute(delete(EmailConfirmation).where(or_(
             EmailConfirmation.user_id == user_id,
-            EmailConfirmation.username.collate("NOCASE") == user.username,
+            func.lower(EmailConfirmation.username) == user.username.lower(),
         )))
         for record in (AccountSession, PasswordResetRequest, UserEmail, UserMembership, UserAccess):
             session.execute(delete(record).where(record.user_id == user_id))

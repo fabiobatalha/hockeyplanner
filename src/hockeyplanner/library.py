@@ -5,11 +5,10 @@ from uuid import UUID
 
 from pydantic import ValidationError
 from sqlalchemy import and_, delete, func, select, update
-from sqlalchemy.dialects.sqlite import insert
 from sqlalchemy.orm import Session, sessionmaker
 
 from .accounts import AccountNotFound, AdministrationDenied
-from .database import DrillShareLink, LibraryRecord, PlatformDrill, PlanShare, PlanShareLink, User, UserAccess, UserMembership
+from .database import DrillShareLink, LibraryRecord, PlatformDrill, PlanShare, PlanShareLink, User, UserAccess, UserMembership, conflict_insert
 from .models import Drill, LibraryImport, PracticePlan
 
 
@@ -61,7 +60,7 @@ class CapacityExceeded(Exception):
 
 
 def lock_library(session: Session, owner_id: int) -> None:
-    # Acquire SQLite's write lock before checking capacity so simultaneous creates cannot exceed it.
+    # Serialize library writes for this account before checking capacity.
     result = session.execute(update(User).where(User.id == owner_id).values(username=User.username))
     if not result.rowcount:
         raise AccountNotFound
@@ -139,7 +138,7 @@ class Library:
             if not self._drill_record(session, owner_id, drill_id):
                 raise PlatformDrillNotFound
             if enabled:
-                session.execute(insert(PlatformDrill).values(
+                session.execute(conflict_insert(session, PlatformDrill).values(
                     owner_id=owner_id, drill_id=drill_id, token=secrets.token_urlsafe(32),
                 ).on_conflict_do_nothing())
             else:
@@ -257,7 +256,7 @@ class Library:
                         LibraryRecord.owner_id == owner_id, LibraryRecord.collection == collection,
                     )))
                     check_capacity(session, owner_id, collection, len({row["id"] for row in rows} - existing))
-                    statement = insert(LibraryRecord).on_conflict_do_nothing(
+                    statement = conflict_insert(session, LibraryRecord).on_conflict_do_nothing(
                         index_elements=["owner_id", "collection", "id"],
                     )
                     session.execute(statement, rows)

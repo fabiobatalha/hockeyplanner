@@ -98,19 +98,21 @@ For the direct GA4 integration, turn off Enhanced Measurement on the stream beca
 
 ## Deploy with Podman
 
-Build the image from the project root. Stop any other instance that uses port 8000 or the same SQLite database before starting the container.
+The [deployment manifest](deploy/hockeyplanner.yaml) declares one Podman pod named `hockeyplanner` with separate web and PostgreSQL containers. The web app connects to the database over the shared pod's loopback interface. PostgreSQL stores its data in the named volume `hockeyplanner-postgres-data`, and the pod publishes application port `8000`.
+
+From the project root, create `.env` from `.env-template` if needed, and configure the public URL and SMTP settings. Then run:
 
 ```sh
+python3 deploy/configure-secrets.py
+podman network exists hockeyplanner || podman network create hockeyplanner
 podman build -t localhost/hockeyplanner:latest .
-mkdir -p data
-podman run --detach --name hockeyplanner --restart=unless-stopped \
-  --userns=keep-id --user "$(id -u):$(id -g)" \
-  --publish 127.0.0.1:8000:8000 \
-  --env-file .env \
-  --volume "$PWD/data:/app/data:Z" \
-  localhost/hockeyplanner:latest
+podman kube play --network hockeyplanner deploy/hockeyplanner.yaml
+podman pod ps
+podman logs hockeyplanner-web
 ```
 
-Open [http://127.0.0.1:8000](http://127.0.0.1:8000). The bind mount keeps your existing SQLite database in the project’s `data/` directory and preserves it when the container is replaced. The `.env` file provides environment variables at runtime and is excluded from the build context.
+Open the app at [http://127.0.0.1:8000](http://127.0.0.1:8000). For LAN access, set `HOCKEYPLANNER_PUBLIC_URL` to the address other devices can reach.
 
-Check the container with `podman ps` and `podman logs hockeyplanner`. To serve on a trusted LAN, publish with `--publish 8000:8000` and set `HOCKEYPLANNER_PUBLIC_URL` in `.env` to the host address that recipients can reach.
+After editing `.env`, run `python3 deploy/configure-secrets.py` again and recreate the pod with `podman kube play --replace --network hockeyplanner deploy/hockeyplanner.yaml`. The configuration script preserves the database passwords on subsequent runs. Keep the PostgreSQL volume when replacing the pod.
+
+For local development, launching `hockeyplanner` without `HOCKEYPLANNER_DB_HOST` still uses SQLite. To connect directly to PostgreSQL, set `HOCKEYPLANNER_DB_HOST` and `HOCKEYPLANNER_DB_PASSWORD`. The optional `HOCKEYPLANNER_DB_NAME`, `HOCKEYPLANNER_DB_USER`, and `HOCKEYPLANNER_DB_PORT` default to `hockeyplanner`, `hockeyplanner`, and `5432`.

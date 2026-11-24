@@ -9,8 +9,9 @@ from werkzeug.exceptions import HTTPException
 
 from .accounts import Accounts
 from .api import create_api
-from .database import open_database
+from .database import configured_database, open_database
 from .email_confirmation import EmailConfirmations, smtp_confirmation
+from .email_tasks import EmailTasks
 from .library import Library
 from .pages import create_pages
 from .password_reset import PasswordResets, smtp_password_reset
@@ -42,13 +43,14 @@ def create_app(
         return app.send_static_file(filename)
 
     app.config["MAX_CONTENT_LENGTH"] = 25 * 1024 * 1024
-    sessions = open_database(data_file or PROJECT_DIR / "data" / "hockeyplanner.sqlite3")
-    confirmations = EmailConfirmations(sessions, send_confirmation)
+    sessions = open_database(data_file or configured_database() or PROJECT_DIR / "data" / "hockeyplanner.sqlite3")
+    email_tasks = EmailTasks()
+    confirmations = EmailConfirmations(sessions, send_confirmation, email_tasks)
     confirmations.cleanup()
     library, accounts, sharing = Library(sessions), Accounts(sessions), Sharing(sessions)
     app.register_blueprint(create_api(
         library, accounts, sharing, confirmations,
-        PasswordResets(sessions, send_password_reset), secure_cookies,
+        PasswordResets(sessions, send_password_reset, email_tasks), secure_cookies,
     ))
 
     app.register_blueprint(create_pages(accounts, library, sharing))
@@ -97,6 +99,6 @@ def main() -> None:
 
     try:
         app = create_app(options.data_file, secure_cookies=options.secure_cookies)
-    except (OSError, SQLAlchemyError) as error:
+    except (OSError, SQLAlchemyError, ValueError) as error:
         parser.exit(1, f"Could not start the local server: {error}\n")
     app.run(host=options.host, port=options.port)
