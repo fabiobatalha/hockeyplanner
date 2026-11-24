@@ -1,4 +1,4 @@
-import { navigateWithMessage, showActionMessage } from './action-message.js'
+import { confirmAction, navigateWithMessage, showActionMessage } from './action-message.js'
 import { request } from './http.js'
 import { appUrl } from './urls.js'
 import { addPasswordVisibility, checkNewPassword, passwordRequirements } from './password-policy.js'
@@ -97,7 +97,7 @@ function setupProfile() {
 
   const downgrade = get('profile-downgrade')
   downgrade.addEventListener('click', async () => {
-    if (downgrade.disabled || !confirm('Switch to Free? You will keep your existing drills and plans.')) return
+    if (downgrade.disabled || !await confirmAction('Switch to Free? You will keep your existing drills and plans.', 'Switch to Free')) return
     downgrade.disabled = true
     try {
       await request('account/tier', 'PUT', { tier: 'free', confirm_downgrade: true })

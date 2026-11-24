@@ -475,7 +475,7 @@ body:has(.editor-fullscreen) { overflow: hidden; }
 }
 #plan-viewer-position { font-size: .875rem; white-space: nowrap; }
 
-#action-message {
+:is(#action-message, #action-confirmation) {
   width: min(calc(100% - 2rem), 29rem);
   padding: 0;
   border: 1px solid #cbd9ec;
@@ -484,7 +484,7 @@ body:has(.editor-fullscreen) { overflow: hidden; }
   color: inherit;
   box-shadow: 0 24px 70px #06142e55, 0 4px 14px #06142e29;
 }
-#action-message::backdrop { background: #0a183c85; backdrop-filter: blur(4px); }
+:is(#action-message, #action-confirmation)::backdrop { background: #0a183c85; backdrop-filter: blur(4px); }
 .action-message-header {
   display: flex;
   align-items: center;
@@ -506,7 +506,7 @@ body:has(.editor-fullscreen) { overflow: hidden; }
   font-weight: bold;
 }
 .action-message-content { padding: 1.25rem; }
-#action-message-body { overflow-wrap: anywhere; line-height: 1.55; }
+:is(#action-message-body, #action-confirmation-body) { overflow-wrap: anywhere; line-height: 1.55; }
 .action-message-content form { display: flex; justify-content: end; margin-top: 1.25rem; }
 .action-message-content button { min-width: 5rem; }
 .action-message-track { height: 5px; background: #e3edfd; }

@@ -1,4 +1,4 @@
-import { showActionMessage } from './action-message.js'
+import { confirmAction, showActionMessage } from './action-message.js'
 import { activityThumbnail } from './drawing.js'
 import { deleteRecord, drillShareLink, readLibrary } from './library.js'
 import { exportActivity } from './export.js'
@@ -109,7 +109,7 @@ function refreshLibrary() {
     remove.textContent = 'Delete'
     remove.setAttribute('aria-label', 'Delete ' + entry.title)
     remove.addEventListener('click', async () => {
-      if (!confirm('Delete “' + entry.title + '” from the library?')) return
+      if (!await confirmAction('Delete “' + entry.title + '” from the library?', 'Delete drill', true)) return
       remove.disabled = true
       try {
         await deleteRecord('drills', entry.id)

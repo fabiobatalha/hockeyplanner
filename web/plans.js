@@ -1,6 +1,6 @@
 import { appUrl } from './urls.js'
 import { prepareLibrary } from './library-onboarding.js'
-import { showActionMessage } from './action-message.js'
+import { confirmAction, showActionMessage } from './action-message.js'
 import { presentPlan } from './plan-viewer.js'
 import { showPlanLimit } from './plan-limit.js'
 import { setupPlanSharing } from './plan-sharing.js'
@@ -137,7 +137,7 @@ function setupPlans({ getActivities, refreshLibrary }) {
       const view = button('View Fullscreen', () => presentPlan(plan.name, planActivities(plan, false)))
       view.className = 'primary'
       const remove = button('Delete Plan', async () => {
-        if (saving || !confirm('Delete the plan “' + plan.name + '”?')) return
+        if (saving || !await confirmAction('Delete the plan “' + plan.name + '”?', 'Delete plan', true)) return
         saving = true
         try {
           await deleteRecord('plans', plan.id)
@@ -417,7 +417,7 @@ function setupPlans({ getActivities, refreshLibrary }) {
         })
         copy.className = 'primary'
         const remove = button('Remove from Shared with me', async () => {
-          if (!confirm('Remove “' + plan.name + '” from Shared with me? Any copies in your account will be kept.')) return
+          if (!await confirmAction('Remove “' + plan.name + '” from Shared with me? Any copies in your account will be kept.', 'Remove plan', true)) return
           const copyWasDisabled = copy.disabled
           remove.disabled = copy.disabled = true
           try {

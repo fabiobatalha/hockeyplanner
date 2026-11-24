@@ -1,6 +1,7 @@
 const dialog = document.getElementById('action-message')
 const body = document.getElementById('action-message-body')
 const countdown = document.getElementById('action-message-countdown')
+const confirmation = document.getElementById('action-confirmation')
 const messageDuration = 10000
 const timers = new WeakMap()
 
@@ -28,6 +29,19 @@ export function showActionMessage(message) {
       duration: messageDuration, fill: 'forwards',
     })
   }
+}
+
+export function confirmAction(message, label, destructive = false) {
+  if (confirmation.open) return Promise.resolve(false)
+  document.getElementById('action-confirmation-body').textContent = message
+  const accept = document.getElementById('action-confirmation-accept')
+  accept.textContent = label
+  accept.className = destructive ? 'danger' : 'primary'
+  confirmation.returnValue = ''
+  return new Promise(resolve => {
+    confirmation.addEventListener('close', () => resolve(confirmation.returnValue === 'confirm'), { once: true })
+    confirmation.showModal()
+  })
 }
 
 const messageKey = 'hockeyplanner.action-message'

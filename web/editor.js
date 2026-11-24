@@ -1,4 +1,4 @@
-import { showActionMessage } from './action-message.js'
+import { confirmAction, showActionMessage } from './action-message.js'
 import { showPlanLimit } from './plan-limit.js'
 import { drillShareLink, saveRecord } from './library.js'
 import { prepareLibrary } from './library-onboarding.js'
@@ -470,7 +470,7 @@ const fullscreen = get('fullscreen')
 const fullscreenLabel = get('fullscreen-label')
 let expandedEditor = false
 // Keep editor messages and plan-limit actions visible inside native fullscreen.
-editorPage.append(get('action-message'), get('plan-limit-dialog'))
+editorPage.append(get('action-message'), get('action-confirmation'), get('plan-limit-dialog'))
 
 function updateFullscreen() {
   const active = expandedEditor || document.fullscreenElement === editorPage
@@ -605,8 +605,12 @@ document.addEventListener('keydown', event => {
 title.addEventListener('input', () => { activity.title = title.value })
 description.addEventListener('input', () => { activity.description = description.value })
 
-function canLeave() {
-  return JSON.stringify(activity) === baseline || confirm('Discard unsaved changes?')
+function hasUnsavedChanges() {
+  return JSON.stringify(activity) !== baseline
+}
+
+function confirmDiscard() {
+  return confirmAction('Discard unsaved changes?', 'Discard changes', true)
 }
 
 function load(next) {
@@ -626,8 +630,8 @@ function load(next) {
   render()
 }
 
-get('new').addEventListener('click', () => {
-  if (gesture || savingDrill || !canLeave()) return
+get('new').addEventListener('click', async () => {
+  if (gesture || savingDrill || (hasUnsavedChanges() && !await confirmDiscard())) return
   load(fresh())
   history.replaceState(history.state, '', appUrl('editor'))
   title.focus()
@@ -739,6 +743,12 @@ if (get('status').textContent === 'Loading the editor…') status('')
 libraryReady = true
 updateSaveControls()
 
-window.addEventListener('beforeunload', event => {
-  if (JSON.stringify(activity) !== baseline) event.preventDefault()
+document.addEventListener('click', async event => {
+  const link = event.target.closest('a[href]')
+  if (!link || event.defaultPrevented || event.button || event.metaKey || event.ctrlKey || event.shiftKey ||
+      event.altKey || link.target || link.hasAttribute('download') || link.origin !== location.origin ||
+      (link.hash && link.pathname === location.pathname && link.search === location.search) ||
+      !hasUnsavedChanges()) return
+  event.preventDefault()
+  if (await confirmDiscard()) location.assign(link.href)
 })

@@ -54,6 +54,19 @@
     </div>
     <div class="action-message-track" aria-hidden="true"><div id="action-message-countdown"></div></div>
   </dialog>
+  <dialog id="action-confirmation" aria-labelledby="action-confirmation-title" aria-describedby="action-confirmation-body">
+    <div class="action-message-header">
+      <span class="action-message-icon" aria-hidden="true">!</span>
+      <h2 id="action-confirmation-title">Confirm action</h2>
+    </div>
+    <div class="action-message-content">
+      <p id="action-confirmation-body"></p>
+      <form method="dialog" class="actions">
+        <button type="submit" value="cancel" autofocus>Cancel</button>
+        <button id="action-confirmation-accept" type="submit" value="confirm"></button>
+      </form>
+    </div>
+  </dialog>
   {% block dialogs %}{% endblock %}
   <noscript>Enable JavaScript in your browser to use the editor.</noscript>
   <script type="module" src="{{ url_for('web_asset', filename='site.js') }}"></script>
