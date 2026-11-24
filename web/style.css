@@ -137,6 +137,11 @@ h2 { font-size: 1.05rem; letter-spacing: -.015em; }
 .primary { background: var(--blue); color: white; border-color: var(--blue); }
 .primary:where(:enabled, .button-link):hover { background: #103ea4; border-color: #103ea4; }
 .editor-heading > :first-child { flex: 1 1 13rem; }
+.editor-platform-toggle { gap: .45rem; }
+.editor-platform-toggle input { margin: 0; accent-color: var(--blue); }
+.editor-platform-toggle:has(input:checked) { background: #e5efff; color: #17449c; border-color: #aec8f9; }
+.editor-platform-toggle:has(input:focus-visible) { outline: 3px solid #578bfd; outline-offset: 2px; }
+.editor-platform-toggle:has(input:disabled) { opacity: .62; cursor: default; }
 .drill-pdf-options { flex: 1 0 100%; font-size: .875rem; }
 .drill-pdf-options label { display: inline-flex; align-items: center; gap: .4rem; font-weight: 650; }
 .drill-pdf-options input { accent-color: var(--blue); }
@@ -280,6 +285,17 @@ textarea { resize: vertical; }
 }
 .activity > .actions > :is(.primary, .library-download-status) { grid-column: 1 / -1; }
 .library-download-status:empty { display: none; }
+.drill-type-label {
+  display: inline-block;
+  margin-bottom: .4rem;
+  padding: .2rem .5rem;
+  border-radius: 999px;
+  background: #eef2f6;
+  color: #36465e;
+  font-size: .8rem;
+  font-weight: 700;
+}
+.drill-type-label.platform { background: #e5efff; color: #17449c; }
 .library-description { margin-top: .55rem; color: var(--muted); }
 .library-description summary { cursor: pointer; list-style: none; }
 .library-description summary::-webkit-details-marker { display: none; }
@@ -726,9 +742,11 @@ body:has(.editor-fullscreen) { overflow: hidden; }
   margin-bottom: 1rem;
 }
 .library-search-field { flex: 1 1 min(100%, 20rem); max-width: 35rem; display: grid; gap: .35rem; }
-.library-search-field label { font-size: .875rem; font-weight: 650; }
+.library-type-field { display: grid; gap: .35rem; }
+.library-toolbar label { font-size: .875rem; font-weight: 650; }
 .library-search-controls { display: flex; gap: .5rem; }
-#library-search { flex: 1; min-width: 0; min-height: 2.75rem; padding: .55rem .7rem; border: 1px solid #a5b8d0; border-radius: 8px; }
+#library-search { flex: 1; min-width: 0; }
+#library-search, #library-type { min-height: 2.75rem; padding: .55rem .7rem; border: 1px solid #a5b8d0; border-radius: 8px; background: white; color: inherit; font: inherit; }
 #library-search::-webkit-search-cancel-button { display: none; }
 #library-status { padding-block: .55rem; color: var(--muted); }
 .formatted-description { margin-top: .4rem; }

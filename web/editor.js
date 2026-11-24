@@ -1,6 +1,6 @@
 import { confirmAction, showActionMessage } from './action-message.js'
 import { showPlanLimit } from './plan-limit.js'
-import { drillShareLink, saveRecord } from './library.js'
+import { drillShareLink, flagPlatformDrill, saveRecord } from './library.js'
 import { prepareLibrary } from './library-onboarding.js'
 import { appUrl } from './urls.js'
 import { newRecordId } from './record-id.js'
@@ -30,6 +30,7 @@ const rinkLayout = get('rink-layout')
 const description = get('description')
 const save = get('save')
 const publicPdfLink = get('pdf-public-link')
+const publishPlatform = get('publish-platform')
 const freePdf = document.body.hasAttribute('data-free-pdf')
 const saveCopy = get('save-copy')
 const copyDialog = get('copy-drill-dialog')
@@ -40,6 +41,8 @@ const refreshDescription = setupMarkdown(description, get('description-visual'),
 const fresh = () => ({ id: null, title: '', description: '', layout: 'full', items: [] })
 
 let savingDrill = false
+let publishingDrill = false
+let published = false
 let libraryReady = false
 let pendingDrillId
 let pendingCopyId
@@ -613,10 +616,11 @@ function confirmDiscard() {
   return confirmAction('Discard unsaved changes?', 'Discard changes', true)
 }
 
-function load(next) {
+function load(next, isPublished = false) {
   pendingDrillId = undefined
   pendingCopyId = undefined
   if (publicPdfLink) publicPdfLink.checked = false
+  published = isPublished
   activity = structuredClone(next)
   baseline = JSON.stringify(activity)
   title.value = activity.title
@@ -631,7 +635,7 @@ function load(next) {
 }
 
 get('new').addEventListener('click', async () => {
-  if (gesture || savingDrill || (hasUnsavedChanges() && !await confirmDiscard())) return
+  if (gesture || savingDrill || publishingDrill || (hasUnsavedChanges() && !await confirmDiscard())) return
   load(fresh())
   history.replaceState(history.state, '', appUrl('editor'))
   title.focus()
@@ -640,13 +644,39 @@ get('new').addEventListener('click', async () => {
 
 function updateSaveControls() {
   save.textContent = activity.id ? 'Update Drill' : 'Save Drill'
-  save.disabled = saveCopy.disabled = !libraryReady || savingDrill
+  save.disabled = saveCopy.disabled = !libraryReady || savingDrill || publishingDrill
   saveCopy.hidden = !activity.id
   if (publicPdfLink) publicPdfLink.disabled = !activity.id || savingDrill
+  if (publishPlatform) {
+    publishPlatform.checked = published
+    publishPlatform.disabled = !libraryReady || !activity.id || savingDrill || publishingDrill
+    publishPlatform.parentElement.title = activity.id ? 'Make this drill available to all users' : 'Save the drill first'
+  }
 }
 
+publishPlatform?.addEventListener('change', async () => {
+  const enabled = publishPlatform.checked
+  publishingDrill = true
+  updateSaveControls()
+  try {
+    if (!await confirmAction(
+      enabled ? 'Make the saved drill available to all Hockey Planner users? They can copy, use, and share it.'
+        : 'Remove this drill from the platform library and disable its platform share link?',
+      enabled ? 'Publish drill' : 'Unpublish drill',
+    )) return
+    await flagPlatformDrill(activity.id, enabled)
+    published = enabled
+    showActionMessage(enabled ? 'Drill published to the platform.' : 'Drill unpublished.')
+  } catch (error) {
+    showActionMessage(error.message || 'Could not update platform visibility.')
+  } finally {
+    publishingDrill = false
+    updateSaveControls()
+  }
+})
+
 async function persistDrill(nameForCopy) {
-  if (gesture || savingDrill || !libraryReady) return
+  if (gesture || savingDrill || publishingDrill || !libraryReady) return
   const makingCopy = nameForCopy !== undefined
   const newRecord = makingCopy || !activity.id
   const saved = structuredClone(activity)
@@ -735,7 +765,7 @@ for (const format of ['png', 'pdf']) {
 }
 
 const initialDrill = JSON.parse(get('initial-drill').textContent)
-load(initialDrill ?? fresh())
+load(initialDrill ?? fresh(), publishPlatform?.defaultChecked)
 fitRink()
 
 await prepareLibrary()

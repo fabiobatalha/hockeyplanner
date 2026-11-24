@@ -13,6 +13,22 @@ export function readLibrary() {
   return request('library')
 }
 
+function platformDrillPath(source) {
+  return 'platform-drills/' + source.ownerId + '/' + encodeURIComponent(source.drillId)
+}
+
+export function platformDrillLink(source) {
+  return request(platformDrillPath(source) + '/link')
+}
+
+export function copyPlatformDrill(source, id) {
+  return request(platformDrillPath(source) + '/copy', 'POST', { id })
+}
+
+export function flagPlatformDrill(id, enabled) {
+  return request('drills/' + encodeURIComponent(id) + '/platform', enabled ? 'PUT' : 'DELETE')
+}
+
 export function saveRecord(collection, record) {
   return request(collection + '/' + encodeURIComponent(record.id), 'PUT', record)
 }

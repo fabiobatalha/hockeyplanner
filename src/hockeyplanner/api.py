@@ -10,7 +10,7 @@ from werkzeug.exceptions import HTTPException
 
 from .accounts import SESSION_AGE, AccountNotFound, Accounts, AdministrationDenied, EmailTaken, IncorrectPassword, UsernameTaken
 from .email_confirmation import ConfirmationError, EmailConfirmations, EmailDeliveryError
-from .library import MODELS, CapacityExceeded, Library, valid_id
+from .library import MODELS, CapacityExceeded, Library, PlatformDrillNotFound, valid_id
 from .models import PASSWORD_REQUIREMENTS, AccountDeletion, AccountStatus, AccountUpdate, ConfirmEmail, EmailUpdate, ForgotPassword, LibraryImport, Login, PasswordChange, Registration, ResetPassword, PlanCopyRequest, PlanLinkClaim, PlanLinkPreview, PlanShareRequest, TierSelection
 from .password_reset import InvalidPasswordReset, PasswordResets
 from .sharing import ShareNotFound, Sharing
@@ -102,6 +102,10 @@ def create_api(library: Library, accounts: Accounts, sharing: Sharing, confirmat
     @api.errorhandler(ShareNotFound)
     def share_not_found(error):
         return jsonify(error=str(error)), 404
+
+    @api.errorhandler(PlatformDrillNotFound)
+    def platform_drill_not_found(_error):
+        return jsonify(error="This platform drill is no longer available."), 404
 
     @api.errorhandler(SQLAlchemyError)
     def database_error(_error):
@@ -295,6 +299,21 @@ def create_api(library: Library, accounts: Accounts, sharing: Sharing, confirmat
         if request.method == "PUT":
             return jsonify(token=sharing.create_drill_link(owner_id, drill_id))
         return jsonify(token=sharing.get_drill_link(owner_id, drill_id))
+
+    @api.route("/drills/<uuid:drill_id>/platform", methods=["PUT", "DELETE"])
+    def platform_drill_flag(drill_id):
+        library.flag_platform_drill(g.user.id, str(drill_id), request.method == "PUT")
+        return "", 204
+
+    @api.get("/platform-drills/<int:owner_id>/<uuid:drill_id>/link")
+    def platform_drill_link(owner_id, drill_id):
+        return jsonify(token=library.platform_link(owner_id, str(drill_id)))
+
+    @api.post("/platform-drills/<int:owner_id>/<uuid:drill_id>/copy")
+    def copy_platform_drill(owner_id, drill_id):
+        request.max_content_length = 4096
+        details = PlanCopyRequest.model_validate(request.get_json())
+        return jsonify(id=library.copy_platform_drill(g.user.id, owner_id, str(drill_id), str(details.id))), 201
 
     @api.post("/shared-plans/preview")
     def preview_plan_link():

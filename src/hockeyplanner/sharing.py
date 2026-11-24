@@ -6,8 +6,8 @@ from sqlalchemy import and_, delete, or_, select
 from sqlalchemy.dialects.sqlite import insert
 from sqlalchemy.orm import Session, sessionmaker
 
-from .library import check_capacity, lock_library, plan_body
-from .database import DrillShareLink, LibraryRecord, PlanShare, PlanShareLink, User, UserAccess, UserMembership
+from .library import check_capacity, lock_library, plan_body, platform_records, resolve_platform_drills
+from .database import DrillShareLink, LibraryRecord, PlatformDrill, PlanShare, PlanShareLink, User, UserAccess, UserMembership
 
 
 class ShareNotFound(Exception):
@@ -57,7 +57,10 @@ def resolved_plan(session: Session, record: LibraryRecord) -> dict:
         LibraryRecord.body.is_not(None),
     ))
     replacements = {drill.id: json.loads(drill.body) for drill in current}
-    plan["activities"] = [replacements.get(drill["id"], drill) for drill in saved]
+    activities = [drill if drill.get("platformSource") else replacements.get(drill["id"], drill) for drill in saved]
+    if any(drill.get("platformSource") for drill in activities):
+        activities = resolve_platform_drills(activities, platform_records(session))
+    plan["activities"] = activities
     return plan
 
 
@@ -151,6 +154,10 @@ class Sharing:
                 standalone = session.scalar(select(DrillShareLink).where(
                     DrillShareLink.token == token, DrillShareLink.drill_id == drill_id,
                 ))
+                if standalone is None:
+                    standalone = session.scalar(select(PlatformDrill).where(
+                        PlatformDrill.token == token, PlatformDrill.drill_id == drill_id,
+                    ))
                 if standalone:
                     drill = public_drill(json.loads(find_record(session, standalone.owner_id, drill_id, "drills").body))
                     return {**public_owner(session, standalone.owner_id), "standalone": True,
@@ -214,10 +221,15 @@ class Sharing:
 
             plan = resolved_plan(session, original)
             check_capacity(session, recipient_id, "plans", 1)
-            check_capacity(session, recipient_id, "drills", len({drill["id"] for drill in plan["activities"]}))
+            check_capacity(session, recipient_id, "drills", len({
+                drill["id"] for drill in plan["activities"] if not drill.get("platformSource")
+            }))
             copied = {}
             activities = []
             for drill in plan["activities"]:
+                if drill.get("platformSource"):
+                    activities.append(drill)
+                    continue
                 source_id = drill["id"]
                 if source_id not in copied:
                     new_drill = {**drill, "id": str(uuid4())}

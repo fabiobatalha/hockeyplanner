@@ -10,7 +10,7 @@ import { exportTrainingPlan } from './export.js'
 import { activityThumbnail } from './drawing.js'
 import { drillSearch } from './markdown.js'
 
-function setupPlans({ getActivities, refreshLibrary }) {
+function setupPlans({ getActivities, getPlatforms, refreshLibrary }) {
   const form = document.getElementById('plan-form')
   const name = document.getElementById('plan-name')
   const list = document.getElementById('plans-list')
@@ -27,6 +27,7 @@ function setupPlans({ getActivities, refreshLibrary }) {
   const sharedList = document.getElementById('shared-plans-list')
   const sharedStatus = document.getElementById('shared-plans-status')
   const openSharing = setupPlanSharing()
+  const accountId = Number(document.getElementById('plans-page').dataset.accountId)
   let sharedVersion = 0
   let plans = []
   let editingId = null
@@ -71,6 +72,10 @@ function setupPlans({ getActivities, refreshLibrary }) {
   }
 
   function currentActivity(entry) {
+    if (entry.platformSource) {
+      const current = getPlatforms().find(drill => platformKey(drill.platformSource) === platformKey(entry.platformSource))
+      return current ? { ...current, id: entry.id } : undefined
+    }
     return getActivities().find(activity => activity.id === entry.id)
   }
 
@@ -84,9 +89,10 @@ function setupPlans({ getActivities, refreshLibrary }) {
     for (const saved of plan.activities) {
       const row = document.createElement('li')
       const activity = readOnly ? saved : currentActivity(saved) ?? saved
-      const open = document.createElement(readOnly ? 'div' : 'a')
+      const editable = !readOnly && !saved.platformSource
+      const open = document.createElement(editable ? 'a' : 'div')
       open.className = 'plan-drill'
-      if (!readOnly) {
+      if (editable) {
         open.href = appUrl('editor/plan/' + plan.id + '/' + saved.id)
         open.classList.add('button-link')
       }
@@ -94,7 +100,7 @@ function setupPlans({ getActivities, refreshLibrary }) {
       thumbnail.removeAttribute('aria-label')
       thumbnail.setAttribute('aria-hidden', 'true')
       const title = document.createElement('span')
-      title.textContent = activity.title
+      title.textContent = saved.platformSource ? activity.title + ' · Platform Drill' : activity.title
       open.replaceChildren(thumbnail, title)
       row.append(open)
       exercises.append(row)
@@ -162,8 +168,19 @@ function setupPlans({ getActivities, refreshLibrary }) {
     return 'shared:' + ownerId + ':' + drillId
   }
 
+  function platformKey({ ownerId, drillId }) {
+    return 'platform:' + ownerId + ':' + drillId
+  }
+
   function availableDrills() {
-    const entries = new Map(getActivities().map(drill => [drill.id, { drill, source: 'My drill' }]))
+    const platforms = getPlatforms()
+    const ownedPlatformIds = new Set(platforms.filter(drill => drill.platformSource.ownerId === accountId).map(drill => drill.id))
+    const entries = new Map(getActivities().map(drill => [drill.id, {
+      drill, source: ownedPlatformIds.has(drill.id) ? 'Platform Drill' : 'My drill',
+    }]))
+    for (const drill of platforms) {
+      if (drill.platformSource.ownerId !== accountId) entries.set(platformKey(drill.platformSource), { drill, source: 'Platform Drill' })
+    }
     for (const { drill, sharedSource } of sharedDrills) {
       entries.set(sharedKey(sharedSource), { drill, sharedSource, source: 'Shared by ' + sharedSource.owner })
     }
@@ -175,7 +192,8 @@ function setupPlans({ getActivities, refreshLibrary }) {
     const entry = availableDrills().get(key)
     if (!entry) return
     const { drill, sharedSource } = entry
-    selection.set(key, sharedSource ? { ...drill, id: newRecordId(), sharedSource } : drill)
+    selection.set(key, sharedSource ? { ...drill, id: newRecordId(), sharedSource }
+      : drill.platformSource ? { ...drill, id: newRecordId() } : drill)
     renderBuilder()
   }
 
@@ -235,7 +253,8 @@ function setupPlans({ getActivities, refreshLibrary }) {
       })
 
       const label = document.createElement('span')
-      label.textContent = drill.sharedSource && !currentActivity(drill) ? drill.title + ' · Shared by ' + drill.sharedSource.owner : drill.title
+      label.textContent = drill.platformSource ? drill.title + ' · Platform Drill'
+        : drill.sharedSource && !currentActivity(drill) ? drill.title + ' · Shared by ' + drill.sharedSource.owner : drill.title
       const controls = document.createElement('div')
       controls.className = 'actions'
       const up = button('↑', () => reorderDrill(key, index - 1))
@@ -325,7 +344,8 @@ function setupPlans({ getActivities, refreshLibrary }) {
     name.setCustomValidity('')
     selection = new Map((plan?.activities ?? []).map(entry => {
       const current = currentActivity(entry)
-      const key = !current && entry.sharedSource ? sharedKey(entry.sharedSource) : entry.id
+      const key = entry.platformSource ? platformKey(entry.platformSource)
+        : !current && entry.sharedSource ? sharedKey(entry.sharedSource) : entry.id
       return [key, current ?? entry]
     }))
     feedback.textContent = ''
@@ -386,7 +406,7 @@ function setupPlans({ getActivities, refreshLibrary }) {
       const { plans: shared } = await readSharedPlans()
       if (version !== sharedVersion) return
       sharedDrills = shared.flatMap(({ owner, owner_id: ownerId, plan }) =>
-        plan.activities.map(drill => ({ drill, sharedSource: { owner, ownerId, drillId: drill.id } })))
+        plan.activities.filter(drill => !drill.platformSource).map(drill => ({ drill, sharedSource: { owner, ownerId, drillId: drill.id } })))
       if (!builder.hidden) renderBuilder()
       sharedStatus.textContent = ''
       sharedList.replaceChildren()
@@ -454,12 +474,14 @@ function setupPlans({ getActivities, refreshLibrary }) {
 }
 
 let activities = []
-const { refresh, refreshShared } = setupPlans({ getActivities: () => activities, refreshLibrary })
+let platforms = []
+const { refresh, refreshShared } = setupPlans({ getActivities: () => activities, getPlatforms: () => platforms, refreshLibrary })
 
 async function refreshLibrary() {
   try {
     const data = await readLibrary()
     activities = data.drills
+    platforms = data.platform_drills ?? []
     document.getElementById('activity-count').textContent = activities.length
     refresh(data.plans)
   } catch (error) {

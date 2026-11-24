@@ -1,21 +1,29 @@
 import { confirmAction, showActionMessage } from './action-message.js'
 import { activityThumbnail } from './drawing.js'
-import { deleteRecord, drillShareLink, readLibrary } from './library.js'
+import { copyPlatformDrill, deleteRecord, drillShareLink, platformDrillLink, readLibrary } from './library.js'
 import { exportActivity } from './export.js'
+import { newRecordId } from './record-id.js'
+import { showPlanLimit } from './plan-limit.js'
 import { drillSearch, markdownText, renderMarkdown } from './markdown.js'
 import { prepareLibrary } from './library-onboarding.js'
 import { appUrl } from './urls.js'
 
 const get = id => document.getElementById(id)
 const search = get('library-search')
+const typeFilter = get('library-type')
 const clear = get('clear-library-search')
 const list = get('activity-list')
 const status = get('library-status')
 const layoutNames = { half: 'Half rink', quarter: 'Quarter rink' }
+const drillType = entry => entry.platformSource ? 'platform' : 'personal'
+const typeLabels = { personal: 'Personal Drill', platform: 'Platform Drill' }
 const freePdf = document.body.hasAttribute('data-free-pdf')
+const { accountId } = get('library-page').dataset
 let activities = []
+let platforms = []
 
 search.addEventListener('input', refreshLibrary)
+typeFilter.addEventListener('change', refreshLibrary)
 clear.addEventListener('click', () => {
   search.value = ''
   search.focus()
@@ -56,7 +64,9 @@ function downloadButton(entry, format, feedback) {
     button.disabled = true
     feedback.textContent = ''
     try {
-      const token = format === 'pdf' && freePdf ? (await drillShareLink(entry.id, 'PUT')).token : null
+      let token
+      if (format === 'pdf' && entry.platformSource) token = (await platformDrillLink(entry.platformSource)).token
+      else if (format === 'pdf' && freePdf) token = (await drillShareLink(entry.id, 'PUT')).token
       await exportActivity(entry, format, token)
     } catch {
       if (format === 'pdf') showActionMessage('Could not generate the PDF.')
@@ -68,19 +78,51 @@ function downloadButton(entry, format, feedback) {
   return button
 }
 
+function platformAction(label, handler) {
+  const button = document.createElement('button')
+  button.type = 'button'
+  button.textContent = label
+  button.addEventListener('click', async () => {
+    button.disabled = true
+    try {
+      await handler()
+    } catch (error) {
+      if (!showPlanLimit(error)) showActionMessage(error.message)
+    } finally {
+      button.disabled = false
+    }
+  })
+  return button
+}
+
+async function refreshRecords() {
+  const data = await readLibrary()
+  activities = data.drills
+  platforms = data.platform_drills ?? []
+  refreshLibrary()
+}
+
 function refreshLibrary() {
   get('activity-count').textContent = activities.length
   const query = search.value.trim()
   clear.hidden = !search.value
   const matches = drillSearch(query)
-  const visibleDrills = activities.filter(entry => matches(entry))
-  status.textContent = query
-    ? visibleDrills.length + ' of ' + activities.length + ' drills'
-    : activities.length + (activities.length === 1 ? ' drill' : ' drills')
+  const ownedPlatforms = new Map(platforms.filter(drill => String(drill.platformSource.ownerId) === accountId).map(drill => [drill.id, drill]))
+  const allDrills = [...activities.map(drill => ownedPlatforms.get(drill.id) ?? drill),
+    ...platforms.filter(drill => String(drill.platformSource.ownerId) !== accountId)]
+  const type = typeFilter.value
+  const filtering = query || type !== 'all'
+  const visibleDrills = allDrills.filter(entry => {
+    const entryType = drillType(entry)
+    return (type === 'all' || type === entryType) && matches(entry, typeLabels[entryType])
+  })
+  status.textContent = filtering
+    ? visibleDrills.length + ' of ' + allDrills.length + ' drills'
+    : allDrills.length + (allDrills.length === 1 ? ' drill' : ' drills')
   if (!visibleDrills.length) {
     const empty = document.createElement('p')
     empty.className = 'card library-empty'
-    empty.textContent = query ? 'No drills match your search.' : 'Drills you save will appear here.'
+    empty.textContent = filtering ? 'No drills match your filters.' : 'Drills you save will appear here.'
     list.replaceChildren(empty)
     return
   }
@@ -96,6 +138,12 @@ function refreshLibrary() {
     layout.className = 'library-rink-layout'
     layout.textContent = layoutNames[entry.layout] ?? 'Full rink'
     details.append(heading, layout)
+    const platform = entry.platformSource
+    const own = !platform || String(platform.ownerId) === accountId
+    const badge = document.createElement('span')
+    badge.classList.add('drill-type-label', drillType(entry))
+    badge.textContent = typeLabels[drillType(entry)]
+    details.prepend(badge)
     if (entry.description?.trim()) details.append(drillDescription(entry.description))
     const actions = document.createElement('div')
     actions.className = 'actions'
@@ -119,13 +167,29 @@ function refreshLibrary() {
         return
       }
       activities = activities.filter(record => record.id !== entry.id)
+      if (platform) platforms = platforms.filter(drill => drill.platformSource.ownerId !== platform.ownerId || drill.id !== platform.drillId)
       refreshLibrary()
       search.focus()
     })
     const feedback = document.createElement('p')
     feedback.className = 'status library-download-status'
     feedback.setAttribute('role', 'status')
-    actions.append(open, downloadButton(entry, 'png', feedback), downloadButton(entry, 'pdf', feedback), remove, feedback)
+    if (own) actions.append(open)
+    else {
+      const copyId = newRecordId()
+      const copy = platformAction('Copy', async () => {
+        await copyPlatformDrill(platform, copyId)
+        await refreshRecords()
+        search.focus()
+        showActionMessage('Drill copied to your library.')
+      })
+      copy.className = 'primary'
+      copy.setAttribute('aria-label', 'Copy ' + entry.title)
+      actions.append(copy)
+    }
+    actions.append(downloadButton(entry, 'png', feedback), downloadButton(entry, 'pdf', feedback))
+    if (own) actions.append(remove)
+    actions.append(feedback)
     row.append(activityThumbnail(entry), details, actions)
     cards.append(row)
   }
@@ -134,10 +198,8 @@ function refreshLibrary() {
 
 try {
   await prepareLibrary()
-  const data = await readLibrary()
-  activities = data.drills
-  search.disabled = false
-  refreshLibrary()
+  await refreshRecords()
+  search.disabled = typeFilter.disabled = false
 } catch {
   status.textContent = 'Could not load the drill library. Reload the page to try again.'
 } finally {

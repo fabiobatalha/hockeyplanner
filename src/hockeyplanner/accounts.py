@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from .database import (
     AccountSession, DrillShareLink, EmailConfirmation, LibraryRecord, PasswordResetRequest, PlanShare, PlanShareLink,
-    RetiredUserId, User, UserAccess, UserEmail, UserMembership,
+    PlatformDrill, RetiredUserId, User, UserAccess, UserEmail, UserMembership,
 )
 from .models import AccountProfile, AccountTier, AccountUpdate, Credentials, Login, PasswordChange, UserProfile
 
@@ -221,6 +221,8 @@ class Accounts:
                 session.add(access)
             access.role = changes.role
             access.enabled = changes.enabled
+            if changes.role != "poweruser" or not changes.enabled:
+                session.execute(delete(PlatformDrill).where(PlatformDrill.owner_id == user_id))
             membership = session.get(UserMembership, user_id)
             tier = "full" if changes.role == "poweruser" else changes.tier
             if tier is not None:
@@ -264,6 +266,7 @@ class Accounts:
     @staticmethod
     def purge_user(session: Session, user: User) -> None:
         user_id = user.id
+        session.execute(delete(PlatformDrill).where(PlatformDrill.owner_id == user_id))
         session.execute(delete(PlanShare).where(or_(
             PlanShare.owner_id == user_id, PlanShare.recipient_id == user_id,
         )))

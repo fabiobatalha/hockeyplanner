@@ -1,19 +1,48 @@
 import json
+import secrets
 from datetime import UTC, datetime
 from uuid import UUID
 
 from pydantic import ValidationError
-from sqlalchemy import delete, func, select, update
+from sqlalchemy import and_, delete, func, select, update
 from sqlalchemy.dialects.sqlite import insert
 from sqlalchemy.orm import Session, sessionmaker
 
-from .accounts import AccountNotFound
-from .database import DrillShareLink, LibraryRecord, PlanShare, PlanShareLink, User, UserMembership
+from .accounts import AccountNotFound, AdministrationDenied
+from .database import DrillShareLink, LibraryRecord, PlatformDrill, PlanShare, PlanShareLink, User, UserAccess, UserMembership
 from .models import Drill, LibraryImport, PracticePlan
 
 
 MODELS = {"drills": Drill, "plans": PracticePlan}
 FREE_LIMITS = {"drills": 20, "plans": 3}
+
+
+class PlatformDrillNotFound(Exception):
+    pass
+
+
+def platform_records(session: Session):
+    rows = session.execute(
+        select(PlatformDrill, LibraryRecord)
+        .join(LibraryRecord, and_(LibraryRecord.owner_id == PlatformDrill.owner_id,
+                                  LibraryRecord.id == PlatformDrill.drill_id))
+        .where(LibraryRecord.collection == "drills", LibraryRecord.body.is_not(None))
+        .order_by(LibraryRecord.revision.desc())
+    )
+    return {(flag.owner_id, flag.drill_id): json.loads(record.body) for flag, record in rows}
+
+
+def resolve_platform_drills(drills: list[dict], platforms: dict) -> list[dict]:
+    resolved = []
+    for drill in drills:
+        source = drill.get("platformSource")
+        current = None
+        if isinstance(source, dict):
+            key = (source.get("ownerId"), source.get("drillId"))
+            if isinstance(key[0], int) and isinstance(key[1], str):
+                current = platforms.get(key)
+        resolved.append({**current, "id": drill["id"], "platformSource": source} if current else drill)
+    return resolved
 
 
 def plan_body(plan: dict) -> str:
@@ -89,9 +118,74 @@ class Library:
                 .where(LibraryRecord.owner_id == owner_id, LibraryRecord.body.is_not(None))
                 .order_by(LibraryRecord.revision.desc())
             )
+            platforms = platform_records(session)
+            result["platform_drills"] = [
+                {**drill, "platformSource": {"ownerId": platform_owner, "drillId": drill_id}}
+                for (platform_owner, drill_id), drill in platforms.items()
+            ]
             for record in records:
-                result[record.collection].append(json.loads(record.body))
+                item = json.loads(record.body)
+                if record.collection == "plans":
+                    item["activities"] = resolve_platform_drills(item["activities"], platforms)
+                result[record.collection].append(item)
         return result
+
+    def flag_platform_drill(self, owner_id: int, drill_id: str, enabled: bool) -> None:
+        with self.sessions.begin() as session:
+            lock_library(session, owner_id)
+            access = session.get(UserAccess, owner_id)
+            if not access or access.role != "poweruser" or not access.enabled:
+                raise AdministrationDenied("Poweruser access is required.")
+            if not self._drill_record(session, owner_id, drill_id):
+                raise PlatformDrillNotFound
+            if enabled:
+                session.execute(insert(PlatformDrill).values(
+                    owner_id=owner_id, drill_id=drill_id, token=secrets.token_urlsafe(32),
+                ).on_conflict_do_nothing())
+            else:
+                session.execute(delete(PlatformDrill).where(
+                    PlatformDrill.owner_id == owner_id, PlatformDrill.drill_id == drill_id,
+                ))
+
+    def is_platform_drill(self, owner_id: int, drill_id: str) -> bool:
+        with self.sessions() as session:
+            return session.get(PlatformDrill, (owner_id, drill_id)) is not None
+
+    @staticmethod
+    def _drill_record(session: Session, owner_id: int, drill_id: str) -> LibraryRecord | None:
+        return session.scalar(select(LibraryRecord).where(
+            LibraryRecord.owner_id == owner_id, LibraryRecord.id == drill_id,
+            LibraryRecord.collection == "drills", LibraryRecord.body.is_not(None),
+        ))
+
+    def platform_link(self, owner_id: int, drill_id: str) -> str:
+        with self.sessions() as session:
+            flag = session.get(PlatformDrill, (owner_id, drill_id))
+            if not flag or not self._drill_record(session, owner_id, drill_id):
+                raise PlatformDrillNotFound
+            return flag.token
+
+    def copy_platform_drill(self, user_id: int, owner_id: int, drill_id: str, copy_id: str) -> str:
+        with self.sessions.begin() as session:
+            lock_library(session, user_id)
+            source = self._drill_record(session, owner_id, drill_id)
+            if not source or session.get(PlatformDrill, (owner_id, drill_id)) is None:
+                raise PlatformDrillNotFound
+            existing = session.scalar(select(LibraryRecord).where(
+                LibraryRecord.owner_id == user_id, LibraryRecord.collection == "drills", LibraryRecord.id == copy_id,
+            ))
+            if existing is not None:
+                if existing.body is not None and copy_id != drill_id:
+                    return copy_id
+                raise ValueError("Use a new drill ID for the copy.")
+            if copy_id == drill_id:
+                raise ValueError("Use a new drill ID for the copy.")
+            check_capacity(session, user_id, "drills", 1)
+            drill = json.loads(source.body)
+            drill.pop("platformSource", None)
+            drill["id"] = copy_id
+            session.add(LibraryRecord(owner_id=user_id, collection="drills", id=copy_id, body=json.dumps(drill)))
+            return copy_id
 
     def write(self, owner_id: int, collection: str, record_id: str, payload: Drill | PracticePlan | None) -> str | None:
         body = None
@@ -99,6 +193,12 @@ class Library:
             raise ValueError("The record ID must match the requested ID.")
         with self.sessions.begin() as session:
             lock_library(session, owner_id)
+            if collection == "drills" and not self._drill_record(session, owner_id, record_id):
+                published = session.scalar(select(PlatformDrill.owner_id).where(
+                    PlatformDrill.drill_id == record_id, PlatformDrill.owner_id != owner_id,
+                ).limit(1))
+                if published is not None:
+                    raise AdministrationDenied("Copy the platform drill before editing it.")
             if payload is not None:
                 active = session.scalar(select(LibraryRecord.revision).where(
                     LibraryRecord.owner_id == owner_id,
@@ -108,9 +208,12 @@ class Library:
                 ))
                 check_capacity(session, owner_id, collection, int(active is None))
                 if isinstance(payload, PracticePlan):
-                    body = plan_body(payload.model_dump(mode="json", exclude_unset=True, exclude_none=True))
+                    plan = payload.model_dump(mode="json", exclude_unset=True, exclude_none=True)
+                    if any(drill.get("platformSource") for drill in plan["activities"]):
+                        plan["activities"] = resolve_platform_drills(plan["activities"], platform_records(session))
+                    body = plan_body(plan)
                 else:
-                    body = payload.model_dump_json(exclude_unset=True, exclude_none=True)
+                    body = payload.model_dump_json(exclude_unset=True, exclude_none=True, exclude={"platformSource"})
             # A new revision controls display order. Keep a null revision for deletions.
             session.execute(delete(LibraryRecord).where(
                 LibraryRecord.owner_id == owner_id,
@@ -124,6 +227,9 @@ class Library:
             if collection == "drills" and payload is None:
                 session.execute(delete(DrillShareLink).where(
                     DrillShareLink.owner_id == owner_id, DrillShareLink.drill_id == record_id,
+                ))
+                session.execute(delete(PlatformDrill).where(
+                    PlatformDrill.owner_id == owner_id, PlatformDrill.drill_id == record_id,
                 ))
         return body
 
@@ -141,7 +247,10 @@ class Library:
                         "owner_id": owner_id,
                         "collection": collection,
                         "id": str(payload.id),
-                        "body": payload.model_dump_json(exclude_unset=True, exclude_none=True),
+                        "body": payload.model_dump_json(
+                            exclude_unset=True, exclude_none=True,
+                            exclude={"platformSource"} if collection == "drills" else None,
+                        ),
                     })
                 if rows:
                     existing = set(session.scalars(select(LibraryRecord.id).where(

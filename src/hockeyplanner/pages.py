@@ -1,4 +1,5 @@
 import re
+from os import getenv
 
 from flask import Blueprint, abort, g, redirect, render_template, request, url_for
 
@@ -18,6 +19,13 @@ NEXT_PATH = re.compile(
 
 def create_pages(accounts: Accounts, library: Library, sharing: Sharing) -> Blueprint:
     pages = Blueprint("pages", __name__)
+    tag_manager_id = getenv("HOCKEYPLANNER_GTM_CONTAINER_ID", "").strip()
+    if not re.fullmatch(r"GTM-[A-Z0-9]{4,20}", tag_manager_id):
+        tag_manager_id = ""
+    measurement_id = getenv("HOCKEYPLANNER_GA_MEASUREMENT_ID", "").strip()
+    if not re.fullmatch(r"G-[A-Z0-9]{4,20}", measurement_id):
+        measurement_id = ""
+    tracked_pages = {"login", "register", "editor", "drills", "plans", "membership"}
 
     @pages.before_request
     def load_account():
@@ -33,8 +41,12 @@ def create_pages(accounts: Accounts, library: Library, sharing: Sharing) -> Blue
         user = g.account
         context.setdefault("free_pdf", bool(user and user.tier == "free"))
         counts = library.counts(user.id) if user and user.email and user.tier != "pending" else {}
+        tracked = page in tracked_pages and not request.query_string and not request.view_args
         return render_template(
-            f"{page}.html", page=page, title=title, user=user, counts=counts, **context,
+            f"{page}.html", page=page, title=title, user=user, counts=counts,
+            tag_manager_id=tag_manager_id if tracked else "",
+            analytics_id=measurement_id if tracked and not tag_manager_id else "",
+            **context,
         )
 
     def next_path():
@@ -91,12 +103,18 @@ def create_pages(accounts: Accounts, library: Library, sharing: Sharing) -> Blue
             snapshot = next((drill for drill in plan["activities"] if drill["id"] == str(drill_id)), None) if plan else None
             if snapshot is None:
                 abort(404)
+            if snapshot.get("platformSource"):
+                abort(403)
             drill = library.get(g.account.id, "drills", str(drill_id)) or {**snapshot, "id": None}
         elif drill_id is not None:
             drill = library.get(g.account.id, "drills", str(drill_id))
             if drill is None:
                 abort(404)
-        return render("editor", "Drill Editor", drill=drill)
+        published = bool(
+            g.account.role == "poweruser" and drill and drill.get("id")
+            and library.is_platform_drill(g.account.id, drill["id"])
+        )
+        return render("editor", "Drill Editor", drill=drill, published=published)
 
     @pages.get("/drills")
     def drills():

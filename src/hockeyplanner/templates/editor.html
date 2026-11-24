@@ -13,6 +13,12 @@
           <button id="png" type="button">↓ PNG</button>
           <button id="pdf" type="button">↓ PDF</button>
           <button id="save-copy" type="button" {% if not drill or not drill.id %}hidden{% endif %} disabled>Save a Copy</button>
+          {% if user.role == 'poweruser' %}
+          <label class="button-link editor-platform-toggle">
+            <input id="publish-platform" type="checkbox" {% if published %}checked{% endif %} disabled>
+            <span>Publish to Platform</span>
+          </label>
+          {% endif %}
           <button id="save" class="primary" type="button" disabled>{{ 'Update Drill' if drill and drill.id else 'Save Drill' }}</button>
         </div>
         {% if not free_pdf %}

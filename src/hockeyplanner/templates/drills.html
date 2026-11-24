@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <section id="library-page" aria-labelledby="library-title">
+    <section id="library-page" aria-labelledby="library-title" data-account-id="{{ user.id }}">
       <div class="page-heading">
         <h1 id="library-title" tabindex="-1">Drill Library</h1>
         <a class="button-link primary" href="{{ url_for('pages.editor') }}">New Drill</a>
@@ -13,6 +13,14 @@
             <input id="library-search" type="search" placeholder="Search by name or description" aria-controls="activity-list" disabled>
             <button id="clear-library-search" type="button" hidden>Clear</button>
           </div>
+        </div>
+        <div class="library-type-field">
+          <label for="library-type">Drill type</label>
+          <select id="library-type" aria-controls="activity-list" disabled>
+            <option value="all">All drills</option>
+            <option value="personal">Personal Drill</option>
+            <option value="platform">Platform Drill</option>
+          </select>
         </div>
         <p id="library-status" class="status" role="status" aria-atomic="true">Loading drills…</p>
       </div>

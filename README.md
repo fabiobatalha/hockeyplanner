@@ -88,6 +88,14 @@ Keep the `.env` file private. It is excluded from Git.
 | `HOCKEYPLANNER_SMTP_PORT` | Defaults to `587` for STARTTLS and `465` for implicit TLS. |
 | `HOCKEYPLANNER_SMTP_USERNAME`, `HOCKEYPLANNER_SMTP_PASSWORD` | Credentials for an authenticated SMTP server. |
 
+## Google Analytics 4
+
+Set `HOCKEYPLANNER_GA_MEASUREMENT_ID` in `.env` to your web stream's Measurement ID (for example, `G-XXXXXXXXXX`), then restart the app. The integration sends page views for sign-in, registration, the blank editor, the library, practice plans, and membership. It skips links with query parameters, individual drill URLs, shared previews, account settings, and email confirmation or password reset pages.
+
+For Google Tag Manager, set `HOCKEYPLANNER_GTM_CONTAINER_ID` to your `GTM-…` container ID. On the same eligible pages, the app loads that container at the top of the HTML head instead of the direct GA4 integration. Configure and publish the GA4 tag in the container.
+
+For the direct GA4 integration, turn off Enhanced Measurement on the stream because the app sends page views explicitly. After configuration, visit an eligible page and check the GA4 Realtime report.
+
 ## Deploy with Podman
 
 Build the image from the project root. Stop any other instance that uses port 8000 or the same SQLite database before starting the container.
