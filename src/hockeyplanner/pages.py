@@ -43,7 +43,7 @@ def create_pages(accounts: Accounts, library: Library, sharing: Sharing) -> Blue
 
     def require_user(*, email=True, selected_plan=True):
         if g.account is None:
-            return redirect(url_for("pages.login", next=request.path))
+            abort(401)
         if email and not g.account.email:
             return redirect(url_for("pages.account"))
         if selected_plan and g.account.tier == "pending":
@@ -126,7 +126,7 @@ def create_pages(accounts: Accounts, library: Library, sharing: Sharing) -> Blue
         if denied is not None:
             return denied
         if g.account.role != "poweruser":
-            return render("error", "Access denied", error="Poweruser access is required."), 403
+            return render("error", "Access denied", error="Poweruser access is required.", status_code=403), 403
         return render("admin", "Account Administration")
 
     @pages.get("/share/<token>")
@@ -138,7 +138,7 @@ def create_pages(accounts: Accounts, library: Library, sharing: Sharing) -> Blue
         try:
             data = sharing.preview_link(token, str(drill_id) if drill_id else None, include_plan=True)
         except ShareNotFound as error:
-            return render("share", title, shared=None, error=str(error)), 404
+            abort(404, str(error))
         if data.get("standalone"):
             title = "Shared Drill"
         owner_free = data.pop("owner_free")
@@ -153,9 +153,5 @@ def create_pages(accounts: Accounts, library: Library, sharing: Sharing) -> Blue
     @pages.get("/share/<token>/present")
     def share_presentation(token):
         return share(token, present=True)
-
-    @pages.errorhandler(404)
-    def missing_page(_error):
-        return render("error", "Page not found", error="This page is no longer available."), 404
 
     return pages

@@ -121,7 +121,6 @@ function refreshLibrary() {
       activities = activities.filter(record => record.id !== entry.id)
       refreshLibrary()
       search.focus()
-      showActionMessage('Drill deleted from the library.')
     })
     const feedback = document.createElement('p')
     feedback.className = 'status library-download-status'

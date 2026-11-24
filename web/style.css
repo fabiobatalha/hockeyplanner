@@ -563,6 +563,11 @@ body:has(.editor-fullscreen) { overflow: hidden; }
 .sign-in-card { width: min(100%, 27rem); margin: clamp(1rem, 8vh, 5rem) auto; padding: 1.35rem; }
 .sign-in-logo { display: block; width: min(100%, 14rem); height: auto; margin: 0 auto 1.75rem; }
 .sign-in-card h1 { margin-bottom: 1.15rem; }
+.error-page { width: min(100%, 34rem); margin: clamp(1rem, 7vh, 4rem) auto; overflow: hidden; }
+.error-heading { padding: clamp(1.15rem, 4vw, 1.85rem); background: linear-gradient(110deg, #102346, #174691); color: #fff; }
+.error-code { margin-bottom: .3rem; color: #dce9ff; font-size: .875rem; font-weight: 750; }
+.error-details { display: grid; gap: 1rem; padding: clamp(1.15rem, 4vw, 1.85rem); color: var(--muted); }
+.error-illustration { display: block; width: 100%; height: auto; border-top: 1px solid var(--border); }
 .auth-flow { background: #edf2f8; }
 .auth-flow main {
   display: grid;

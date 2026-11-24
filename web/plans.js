@@ -175,7 +175,6 @@ function setupPlans({ getActivities, refreshLibrary }) {
     if (!entry) return
     const { drill, sharedSource } = entry
     selection.set(key, sharedSource ? { ...drill, id: newRecordId(), sharedSource } : drill)
-    showActionMessage(drill.title + ' added to the plan.')
     renderBuilder()
   }
 
@@ -248,7 +247,6 @@ function setupPlans({ getActivities, refreshLibrary }) {
       const remove = button('Remove', () => {
         if (saving) return
         selection.delete(key)
-        showActionMessage(drill.title + ' removed from the plan.')
         renderBuilder()
       })
       controls.append(up, down, remove)

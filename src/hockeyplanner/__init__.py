@@ -3,8 +3,9 @@ from collections.abc import Callable
 from hashlib import sha256
 from pathlib import Path
 
-from flask import Flask
+from flask import Flask, render_template, request, url_for
 from sqlalchemy.exc import SQLAlchemyError
+from werkzeug.exceptions import HTTPException
 
 from .accounts import Accounts
 from .api import create_api
@@ -51,6 +52,37 @@ def create_app(
     ))
 
     app.register_blueprint(create_pages(accounts, library, sharing))
+
+    @app.errorhandler(HTTPException)
+    def http_error(error):
+        code = error.code
+        server_error = code is not None and 500 <= code < 600
+        response = error.get_response()
+        if request.path == "/api" or request.path.startswith("/api/"):
+            response.set_data(app.json.dumps({
+                "error": "The server could not complete the request." if server_error else error.description,
+            }))
+            response.mimetype = "application/json"
+        elif not request.path.startswith("/static/") and (server_error or code in (401, 404)):
+            if code == 401:
+                title = "Sign in required"
+                message = "Sign in to open this page."
+                action = ("Sign in", url_for("pages.login", next=request.path))
+            elif code == 404:
+                title = "Page not found"
+                message = error.description if error.description != type(error).description else "This page or shared link may have moved or expired."
+                action = ("Back to Hockey Planner", url_for("pages.index"))
+            else:
+                title = "Something went wrong"
+                message = "Hockey Planner couldn’t load this page. Try again in a moment."
+                action = ("Try again", "") if request.method == "GET" else ("Back to Hockey Planner", url_for("pages.index"))
+            response.set_data(render_template(
+                "error.html", page="error", title=title, error=message, status_code=code, action=action,
+            ))
+            response.mimetype = "text/html"
+        response.cache_control.no_store = True
+        response.headers["Referrer-Policy"] = "no-referrer"
+        return response
 
     return app
 
