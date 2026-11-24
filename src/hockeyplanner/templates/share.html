@@ -26,7 +26,7 @@
     <div id="plan-invite-preview">
       <h2 id="plan-preview-name">{{ shared.plan.name }}</h2>
       <p id="plan-preview-owner">Shared by {{ shared.owner }}</p>
-      <ol id="plan-preview-drills">
+      <ol id="plan-preview-drills" role="list">
         {% for drill in shared.plan.activities %}
         <li>
           <div class="plan-preview-drill">

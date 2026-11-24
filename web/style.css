@@ -373,8 +373,10 @@ body:has(.editor-fullscreen) { overflow: hidden; }
 .plan-updated { display: block; margin-top: .25rem; color: var(--muted); font-size: .8rem; }
 .plan-entry h3 { overflow-wrap: anywhere; }
 .plan-entry ol { margin: .5rem 0; }
-:is(.plan-entry ol, #plan-activities, #plan-preview-drills) { padding-inline-start: 0; }
-:is(.plan-entry ol, #plan-activities, #plan-preview-drills) > li::marker { content: ''; }
+:is(.plan-entry ol, #plan-activities, #plan-preview-drills) {
+  list-style: none;
+  padding-inline-start: 0;
+}
 .plan-entry li { margin-block: .25rem; }
 .plan-drill {
   display: grid;

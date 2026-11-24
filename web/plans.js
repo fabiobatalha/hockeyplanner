@@ -80,6 +80,7 @@ function setupPlans({ getActivities, refreshLibrary }) {
 
   function exerciseList(plan, readOnly = false) {
     const exercises = document.createElement('ol')
+    exercises.setAttribute('role', 'list')
     for (const saved of plan.activities) {
       const row = document.createElement('li')
       const activity = readOnly ? saved : currentActivity(saved) ?? saved
@@ -186,7 +187,6 @@ function setupPlans({ getActivities, refreshLibrary }) {
     const [entry] = entries.splice(current, 1)
     entries.splice(index, 0, entry)
     selection = new Map(entries)
-    showActionMessage(entry[1].title + ' moved to position ' + (index + 1) + '.')
     renderBuilder()
   }
 

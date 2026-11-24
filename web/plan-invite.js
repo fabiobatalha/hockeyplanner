@@ -8,7 +8,7 @@ import { appUrl } from './urls.js'
 
 const get = id => document.getElementById(id)
 const preview = get('shared-preview')
-const { plan, token, present, start_index: startIndex = 0 } = JSON.parse(preview.textContent)
+const { plan, token, start_index: startIndex = 0 } = JSON.parse(preview.textContent)
 const printDrill = preview.dataset.printDrill === 'true'
 const accept = get('accept-plan-link')
 const print = get('print-plan-link')
@@ -52,4 +52,4 @@ viewerPrint?.addEventListener('click', () => {
   printPdf(viewerPrint, currentPresentedDrill())
 })
 
-if (present) presentPlan(plan.name, plan.activities, { startIndex, auto: true })
+presentPlan(plan.name, plan.activities, { startIndex, auto: true })

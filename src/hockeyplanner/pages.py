@@ -131,7 +131,7 @@ def create_pages(accounts: Accounts, library: Library, sharing: Sharing) -> Blue
 
     @pages.get("/share/<token>")
     @pages.get("/share/<token>/drill/<uuid:drill_id>")
-    def share(token, present=False, drill_id=None):
+    def share(token, drill_id=None):
         if not re.fullmatch(TOKEN, token):
             abort(404)
         title = "Shared Practice Plan"
@@ -143,7 +143,7 @@ def create_pages(accounts: Accounts, library: Library, sharing: Sharing) -> Blue
             title = "Shared Drill"
         owner_free = data.pop("owner_free")
         free_pdf = g.account.tier == "free" if g.account else owner_free
-        return render("share", title, shared={**data, "token": token, "present": present or drill_id is not None},
+        return render("share", title, shared={**data, "token": token},
                       free_pdf=free_pdf,
                       print_drill=drill_id is not None,
                       guest_free=not g.account and owner_free,
@@ -152,6 +152,6 @@ def create_pages(accounts: Accounts, library: Library, sharing: Sharing) -> Blue
 
     @pages.get("/share/<token>/present")
     def share_presentation(token):
-        return share(token, present=True)
+        return share(token)
 
     return pages
