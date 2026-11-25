@@ -1,3 +1,4 @@
+import { gettext } from './i18n.js'
 import { confirmAction, navigateWithMessage, showActionMessage } from './action-message.js'
 import { request } from './http.js'
 import { appUrl } from './urls.js'
@@ -10,8 +11,8 @@ function setupPasswordChange() {
   const current = get('change-current-password')
   const next = get('change-new-password')
   const save = form.querySelector('button[type=submit]')
-  const hideCurrent = addPasswordVisibility(current, 'current password')
-  const hideNew = addPasswordVisibility(next, 'new password')
+  const hideCurrent = addPasswordVisibility(current, gettext('current password'))
+  const hideNew = addPasswordVisibility(next, gettext('new password'))
   function resetPasswords() {
     form.reset()
     next.setCustomValidity('')
@@ -29,7 +30,7 @@ function setupPasswordChange() {
         current_password: current.value, new_password: next.value,
       })
       resetPasswords()
-      showActionMessage('Password changed. Other sessions have been signed out.')
+      showActionMessage(gettext('Password changed. Other sessions have been signed out.'))
     } catch (error) {
       showActionMessage(error.message)
     } finally {
@@ -61,11 +62,11 @@ function setupAccountDeletion() {
     event.preventDefault()
     if (submit.disabled) return
     submit.disabled = cancel.disabled = true
-    status.textContent = 'Deleting your account…'
+    status.textContent = gettext('Deleting your account…')
     try {
       await request('account', 'DELETE', { password: password.value })
       form.reset()
-      navigateWithMessage(appUrl('login'), 'Your account was permanently deleted.')
+      navigateWithMessage(appUrl('login'), gettext('Your account was permanently deleted.'))
     } catch (error) {
       status.textContent = ''
       showActionMessage(error.message)
@@ -87,7 +88,7 @@ function setupProfile() {
     try {
       await request('account/email', 'PUT', { email: email.value.trim(), password: password.value })
       profileForm.reset()
-      showActionMessage('Check your new address for a confirmation link and code. You have 30 minutes to confirm.')
+      showActionMessage(gettext('Check your new address for a confirmation link and code. You have 30 minutes to confirm.'))
     } catch (error) {
       showActionMessage(error.message)
     } finally {
@@ -97,11 +98,11 @@ function setupProfile() {
 
   const downgrade = get('profile-downgrade')
   downgrade.addEventListener('click', async () => {
-    if (downgrade.disabled || !await confirmAction('Switch to Free? You will keep your existing drills and plans.', 'Switch to Free')) return
+    if (downgrade.disabled || !await confirmAction(gettext('Switch to Free? You will keep your existing drills and plans.'), gettext('Switch to Free'))) return
     downgrade.disabled = true
     try {
       await request('account/tier', 'PUT', { tier: 'free', confirm_downgrade: true })
-      navigateWithMessage(appUrl('account'), 'Your subscription was switched to Free. Your saved drills and plans were kept.')
+      navigateWithMessage(appUrl('account'), gettext('Your subscription was switched to Free. Your saved drills and plans were kept.'))
     } catch (error) {
       downgrade.disabled = false
       showActionMessage(error.message)
@@ -116,7 +117,7 @@ function setupMembership() {
     free.disabled = true
     try {
       await request('account/tier', 'PUT', { tier: 'free' })
-      navigateWithMessage(appUrl(free.dataset.next || 'editor'), 'Free plan selected.')
+      navigateWithMessage(appUrl(free.dataset.next || 'editor'), gettext('Free plan selected.'))
     } catch (error) {
       free.disabled = false
       showActionMessage(error.message)

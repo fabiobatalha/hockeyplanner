@@ -3,60 +3,60 @@
 {% block content %}
   <section class="card" id="account-profile" aria-labelledby="account-profile-title">
     <header class="card-heading">
-      <h1 id="account-profile-title">Account Profile</h1>
+      <h1 id="account-profile-title">{{ gettext("Account Profile") }}</h1>
     </header>
     <div class="share-plan-body">
       <section id="profile-subscription" aria-labelledby="profile-subscription-title" {% if not user.email or user.tier == "pending" %}hidden{% endif %}>
-        <h2 id="profile-subscription-title">Current subscription</h2>
-        <p class="profile-plan-name">{{ "Full Access" if user.tier == "full" else "Free" }}</p>
+        <h2 id="profile-subscription-title">{{ gettext("Current subscription") }}</h2>
+        <p class="profile-plan-name">{{ gettext("Full Access") if user.tier == "full" else gettext("Free") }}</p>
         {% if user.tier == "free" %}
         <div class="profile-usage">
-          {% for collection, label in [("drills", "Drills"), ("plans", "Practice plans")] %}
+          {% for collection, label in [("drills", gettext("Drills")), ("plans", gettext("Practice plans"))] %}
             {% set used = counts.get(collection, 0) %}
             {% set limit = free_limits[collection] %}
             <div class="profile-usage-item{% if used >= limit %} at-limit{% endif %}">
               <div class="profile-usage-label">
                 <label for="profile-usage-{{ collection }}">{{ label }}</label>
-                <span id="profile-count-{{ collection }}">{{ used }} of {{ limit }} used</span>
+                <span id="profile-count-{{ collection }}">{{ gettext("%(used)d of %(limit)d used", used=used, limit=limit) }}</span>
               </div>
               <meter id="profile-usage-{{ collection }}" min="0" max="{{ limit }}" value="{{ [used, limit]|min }}" aria-describedby="profile-count-{{ collection }}"></meter>
               {% if used >= limit %}
-                <p>{{ "Over the Free plan limit" if used > limit else "Limit reached" }}</p>
+                <p>{{ gettext("Over the Free plan limit") if used > limit else gettext("Limit reached") }}</p>
               {% endif %}
             </div>
           {% endfor %}
         </div>
         {% else %}
-        <p>Unlimited drills and practice plans</p>
+        <p>{{ gettext("Unlimited drills and practice plans") }}</p>
         {% endif %}
         <div class="actions">
-          <a class="button-link" href="{{ url_for('pages.membership') }}">Compare plans</a>
-          <button id="profile-downgrade" type="button" {% if user.tier != "full" or user.role == "poweruser" %}hidden{% endif %}>Switch to Free</button>
+          <a class="button-link" href="{{ url_for('pages.membership') }}">{{ gettext("Compare plans") }}</a>
+          <button id="profile-downgrade" type="button" {% if user.tier != "full" or user.role == "poweruser" %}hidden{% endif %}>{{ gettext("Switch to Free") }}</button>
         </div>
       </section>
-      <p id="profile-email-required" {% if user.email %}hidden{% endif %}>Add an email address to continue to the planner.</p>
+      <p id="profile-email-required" {% if user.email %}hidden{% endif %}>{{ gettext("Add an email address to continue to the planner.") }}</p>
       <form method="post" id="profile-email-form">
-        <label for="profile-email">Email</label>
+        <label for="profile-email">{{ gettext("Email") }}</label>
         <input id="profile-email" value="{{ user.email or '' }}" name="email" type="email" autocomplete="email" maxlength="320" required>
-        <label for="profile-password">Current password</label>
+        <label for="profile-password">{{ gettext("Current password") }}</label>
         <input id="profile-password" type="password" autocomplete="current-password" maxlength="128" required>
-        <div class="actions"><button type="submit" class="primary">Save email</button></div>
+        <div class="actions"><button type="submit" class="primary">{{ gettext("Save email") }}</button></div>
       </form>
       <section id="profile-password-section" aria-labelledby="change-password-title" {% if not user.email %}hidden{% endif %}>
-        <h2 id="change-password-title">Change Password</h2>
+        <h2 id="change-password-title">{{ gettext("Change Password") }}</h2>
         <form method="post" id="change-password-form">
-          <label for="change-current-password">Current password</label>
+          <label for="change-current-password">{{ gettext("Current password") }}</label>
           <input id="change-current-password" type="password" autocomplete="current-password" maxlength="128" required>
-          <label for="change-new-password">New password</label>
+          <label for="change-new-password">{{ gettext("New password") }}</label>
           <input id="change-new-password" type="password" autocomplete="new-password" maxlength="128" aria-describedby="change-password-help" required>
           <p id="change-password-help"></p>
-          <div class="actions"><button class="primary" type="submit">Change password</button></div>
+          <div class="actions"><button class="primary" type="submit">{{ gettext("Change password") }}</button></div>
         </form>
       </section>
       <section class="profile-deletion" aria-labelledby="profile-deletion-title">
-        <h2 id="profile-deletion-title">Delete account</h2>
-        <p>Permanently remove your profile, drills, and practice plans.</p>
-        <button id="profile-delete-account" class="danger-outline" type="button">Delete my account</button>
+        <h2 id="profile-deletion-title">{{ gettext("Delete account") }}</h2>
+        <p>{{ gettext("Permanently remove your profile, drills, and practice plans.") }}</p>
+        <button id="profile-delete-account" class="danger-outline" type="button">{{ gettext("Delete my account") }}</button>
       </section>
     </div>
   </section>

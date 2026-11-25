@@ -3,6 +3,8 @@ from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from threading import BoundedSemaphore
 
+from flask_babel import gettext
+
 
 logger = logging.getLogger(__name__)
 
@@ -18,12 +20,12 @@ class EmailTasks:
 
     def submit(self, task: Callable, *args) -> None:
         if not self.slots.acquire(blocking=False):
-            raise EmailDeliveryError("Email delivery is busy. Try again later.")
+            raise EmailDeliveryError(gettext("Email delivery is busy. Try again later."))
         try:
             self.executor.submit(self._run, task, args)
         except RuntimeError as error:
             self.slots.release()
-            raise EmailDeliveryError("Email delivery is unavailable. Try again later.") from error
+            raise EmailDeliveryError(gettext("Email delivery is unavailable. Try again later.")) from error
 
     def _run(self, task: Callable, args: tuple) -> None:
         try:

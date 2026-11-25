@@ -6,15 +6,15 @@
     <h1 id="plan-invite-title">{{ title }}</h1>
     {% if shared %}
     <div class="actions">
-      <button id="fullscreen-plan-link" type="button">View Fullscreen</button>
-      <button id="print-plan-link" type="button">{{ 'Print Drill PDF' if print_drill else 'Print PDF' }}</button>
+      <button id="fullscreen-plan-link" type="button">{{ gettext("View Fullscreen") }}</button>
+      <button id="print-plan-link" type="button">{{ gettext('Print Drill PDF') if print_drill else gettext('Print PDF') }}</button>
       {% if not shared.standalone %}
         {% if user and user.email and user.tier != 'pending' %}
-        <button id="accept-plan-link" type="button" class="primary">Accept shared plan</button>
+        <button id="accept-plan-link" type="button" class="primary">{{ gettext("Accept shared plan") }}</button>
         {% elif user %}
-        <a class="button-link primary" href="{{ url_for('pages.membership', next=request.path) if user.email else url_for('pages.account') }}">Complete account setup to accept</a>
+        <a class="button-link primary" href="{{ url_for('pages.membership', next=request.path) if user.email else url_for('pages.account') }}">{{ gettext("Complete account setup to accept") }}</a>
         {% else %}
-        <a class="button-link primary" href="{{ login_url }}">Sign in to accept</a>
+        <a class="button-link primary" href="{{ login_url }}">{{ gettext("Sign in to accept") }}</a>
         {% endif %}
       {% endif %}
     </div>
@@ -25,7 +25,7 @@
     {% if shared %}
     <div id="plan-invite-preview">
       <h2 id="plan-preview-name">{{ shared.plan.name }}</h2>
-      <p id="plan-preview-owner">Shared by {{ shared.owner }}</p>
+      <p id="plan-preview-owner">{{ gettext('Shared by %(owner)s', owner=shared.owner) }}</p>
       <ol id="plan-preview-drills" role="list">
         {% for drill in shared.plan.activities %}
         <li>

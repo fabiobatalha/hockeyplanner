@@ -3,17 +3,17 @@
 {% block content %}
 <section class="card sign-in-card" aria-labelledby="email-confirmation-title">
   <img class="sign-in-logo" src="{{ url_for('web_asset', filename='hockey-planner-logo.png') }}" alt="Hockey Planner" width="2172" height="724">
-  <h1 id="email-confirmation-title">Confirm your email</h1>
+  <h1 id="email-confirmation-title">{{ gettext("Confirm your email") }}</h1>
   <form method="post" data-token="{{ token }}" id="email-confirmation-form" class="auth-form">
     <div class="auth-field">
-      <label for="email-confirmation-code">Six-digit code</label>
+      <label for="email-confirmation-code">{{ gettext("Six-digit code") }}</label>
       <input id="email-confirmation-code" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" aria-describedby="confirmation-help" required>
-      <p id="confirmation-help" class="auth-hint">Enter the code from your confirmation email.</p>
+      <p id="confirmation-help" class="auth-hint">{{ gettext("Enter the code from your confirmation email.") }}</p>
     </div>
-    <button class="primary auth-submit" type="submit" disabled>Confirm email</button>
+    <button class="primary auth-submit" type="submit" disabled>{{ gettext("Confirm email") }}</button>
   </form>
   <div class="auth-card-footer">
-    <a class="button-link" href="{{ url_for('pages.index') }}">Back to Hockey Planner</a>
+    <a class="button-link" href="{{ url_for('pages.index') }}">{{ gettext("Back to Hockey Planner") }}</a>
   </div>
 </section>
 {% endblock %}

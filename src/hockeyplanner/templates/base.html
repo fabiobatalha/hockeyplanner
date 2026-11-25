@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="{{ language }}">
 <head>
 {% if tag_manager_id %}
   <script async src="https://www.googletagmanager.com/gtm.js?id={{ tag_manager_id }}" referrerpolicy="no-referrer"></script>
@@ -14,7 +14,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{ title }} · Hockey Planner</title>
-  <meta name="description" content="Draw hockey drills and organize your practice plans.">
+  <meta name="description" content="{{ gettext('Draw hockey drills and organize your practice plans.') }}">
   <link rel="icon" type="image/png" href="{{ url_for('web_asset', filename='hockey-planner-icon.png') }}">
   {% block styles %}{% endblock %}
   <link rel="stylesheet" href="{{ url_for('web_asset', filename='style.css') }}">
@@ -28,18 +28,18 @@
     {% if user %}
     <div id="account-nav" class="header-controls">
       {% if user.email and user.tier != 'pending' %}
-      <nav class="page-nav" aria-label="Main navigation">
-        <a href="{{ url_for('pages.editor') }}" {% if page == 'editor' %}aria-current="page"{% endif %}>Editor</a>
-        <a href="{{ url_for('pages.drills') }}" {% if page == 'drills' %}aria-current="page"{% endif %}>Drill Library <span class="nav-count" id="activity-count">{{ counts.get('drills', 0) }}</span></a>
-        <a href="{{ url_for('pages.plans') }}" {% if page == 'plans' %}aria-current="page"{% endif %}>Practice Plans <span class="nav-count" id="plan-count">{{ counts.get('plans', 0) }}</span></a>
+      <nav class="page-nav" aria-label="{{ gettext('Main navigation') }}">
+        <a href="{{ url_for('pages.editor') }}" {% if page == 'editor' %}aria-current="page"{% endif %}>{{ gettext("Editor") }}</a>
+        <a href="{{ url_for('pages.drills') }}" {% if page == 'drills' %}aria-current="page"{% endif %}>{{ gettext("Drill Library") }} <span class="nav-count" id="activity-count">{{ counts.get('drills', 0) }}</span></a>
+        <a href="{{ url_for('pages.plans') }}" {% if page == 'plans' %}aria-current="page"{% endif %}>{{ gettext("Practice Plans") }} <span class="nav-count" id="plan-count">{{ counts.get('plans', 0) }}</span></a>
         {% if user.role == 'poweruser' %}
-        <a id="admin-link" href="{{ url_for('pages.admin') }}" {% if page == 'admin' %}aria-current="page"{% endif %}>Administration</a>
+        <a id="admin-link" href="{{ url_for('pages.admin') }}" {% if page == 'admin' %}aria-current="page"{% endif %}>{{ gettext("Administration") }}</a>
         {% endif %}
       </nav>
       {% endif %}
       <div class="header-account">
-        <a id="account-name" href="{{ url_for('pages.account') }}" data-initial="{{ user.username[0]|upper }}" aria-label="Account profile for {{ user.username }}"><span id="account-name-label">{{ user.username }}</span></a>
-        <button id="sign-out" type="button">Sign out</button>
+        <a id="account-name" href="{{ url_for('pages.account') }}" data-initial="{{ user.username[0]|upper }}" aria-label="{{ gettext('Account profile for %(username)s', username=user.username) }}"><span id="account-name-label">{{ user.username }}</span></a>
+        <button id="sign-out" type="button">{{ gettext("Sign out") }}</button>
       </div>
     </div>
     {% endif %}
@@ -49,39 +49,50 @@
   <main id="planner">
     {% block content %}{% endblock %}
     {% if not auth_flow and user and user.tier == 'free' and user.role != 'poweruser' and user.email %}
-    <a id="upgrade-plan" class="upgrade-link" href="{{ url_for('pages.membership') }}" {% if page == 'membership' %}aria-current="page"{% endif %}>Upgrade plan</a>
+    <a id="upgrade-plan" class="upgrade-link" href="{{ url_for('pages.membership') }}" {% if page == 'membership' %}aria-current="page"{% endif %}>{{ gettext("Upgrade plan") }}</a>
     {% endif %}
   </main>
   <footer class="site-footer">
     <span>© 2026 Hockey Planner</span>
     <a href="mailto:info@hockeyplanner.ca">info@hockeyplanner.ca</a>
+    <form class="language-picker" method="post" action="{{ url_for('pages.choose_language') }}">
+      <input type="hidden" name="next" value="{{ request.full_path if request.query_string else request.path }}">
+      <label for="interface-language">{{ gettext('Language') }}</label>
+      <select id="interface-language" name="language">
+        {% for tag, label in languages.items() %}
+        <option value="{{ tag }}" lang="{{ tag }}"{% if tag == language %} selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+      <button type="submit">{{ gettext('Apply') }}</button>
+    </form>
   </footer>
   <dialog id="action-message" aria-labelledby="action-message-title" aria-describedby="action-message-body">
     <div class="action-message-header">
       <span class="action-message-icon" aria-hidden="true">i</span>
-      <h2 id="action-message-title">Notification</h2>
+      <h2 id="action-message-title">{{ gettext("Notification") }}</h2>
     </div>
     <div class="action-message-content">
       <p id="action-message-body"></p>
-      <form method="dialog"><button class="primary" type="submit" autofocus>Close</button></form>
+      <form method="dialog"><button class="primary" type="submit" autofocus>{{ gettext("Close") }}</button></form>
     </div>
     <div class="action-message-track" aria-hidden="true"><div id="action-message-countdown"></div></div>
   </dialog>
   <dialog id="action-confirmation" aria-labelledby="action-confirmation-title" aria-describedby="action-confirmation-body">
     <div class="action-message-header">
       <span class="action-message-icon" aria-hidden="true">!</span>
-      <h2 id="action-confirmation-title">Confirm action</h2>
+      <h2 id="action-confirmation-title">{{ gettext("Confirm action") }}</h2>
     </div>
     <div class="action-message-content">
       <p id="action-confirmation-body"></p>
       <form method="dialog" class="actions">
-        <button type="submit" value="cancel" autofocus>Cancel</button>
+        <button type="submit" value="cancel" autofocus>{{ gettext("Cancel") }}</button>
         <button id="action-confirmation-accept" type="submit" value="confirm"></button>
       </form>
     </div>
   </dialog>
   {% block dialogs %}{% endblock %}
-  <noscript>Enable JavaScript in your browser to use the editor.</noscript>
+  <script id="browser-translations" type="application/json">{{ browser_translations|tojson }}</script>
+  <noscript>{{ gettext("Enable JavaScript in your browser to use the editor.") }}</noscript>
   <script type="module" src="{{ url_for('web_asset', filename='site.js') }}"></script>
   {% block scripts %}{% endblock %}
 </body>

@@ -5,6 +5,8 @@ from uuid import uuid4
 from sqlalchemy import and_, delete, func, or_, select
 from sqlalchemy.orm import Session, sessionmaker
 
+from flask_babel import gettext
+
 from .library import check_capacity, lock_library, plan_body, platform_records, public_drill_sources, resolve_platform_drills
 from .database import DrillShareLink, LibraryRecord, PlatformDrill, PlanShare, PlanShareLink, User, UserAccess, UserMembership, UserPublicIdentity, conflict_insert
 
@@ -21,7 +23,7 @@ def find_record(session: Session, owner_id: int, record_id: str, collection: str
         LibraryRecord.body.is_not(None),
     ))
     if record is None:
-        raise ShareNotFound("Plan not found." if collection == "plans" else "Drill not found.")
+        raise ShareNotFound(gettext("Plan not found.") if collection == "plans" else gettext("Drill not found."))
     return record
 
 
@@ -42,7 +44,7 @@ def public_owner(session: Session, owner_id: int) -> dict:
 def find_link(session: Session, token: str) -> PlanShareLink:
     link = session.scalar(select(PlanShareLink).where(PlanShareLink.token == token))
     if link is None:
-        raise ShareNotFound("This share link is no longer available.")
+        raise ShareNotFound(gettext("This share link is no longer available."))
     return link
 
 
@@ -88,7 +90,7 @@ class Sharing:
                 .where(func.lower(User.username) == username.lower(), or_(UserAccess.enabled.is_(True), UserAccess.user_id.is_(None)))
             )
             if recipient_id is None:
-                raise ShareNotFound("No active account matches that username.")
+                raise ShareNotFound(gettext("No active account matches that username."))
             if recipient_id == owner_id:
                 raise ValueError("You already own this plan.")
             session.execute(conflict_insert(session, PlanShare).values(
@@ -124,7 +126,7 @@ class Sharing:
     def received_link(self, recipient_id: int, owner_id: int, plan_id: str) -> str | None:
         with self.sessions() as session:
             if session.get(PlanShare, (owner_id, plan_id, recipient_id)) is None:
-                raise ShareNotFound("Shared plan not found.")
+                raise ShareNotFound(gettext("Shared plan not found."))
             find_plan(session, owner_id, plan_id)
             link = session.get(PlanShareLink, (owner_id, plan_id))
             return link.token if link else None
@@ -172,7 +174,7 @@ class Sharing:
             if drill_id is not None:
                 match = next((index for index, drill in enumerate(activities) if drill["id"] == drill_id), None)
                 if match is None:
-                    raise ShareNotFound("This drill is no longer in the shared plan.")
+                    raise ShareNotFound(gettext("This drill is no longer in the shared plan."))
                 if include_plan:
                     start_index = match
                 else:
@@ -212,7 +214,7 @@ class Sharing:
             lock_library(session, recipient_id)
             share = session.get(PlanShare, (owner_id, plan_id, recipient_id))
             if share is None:
-                raise ShareNotFound("Shared plan not found.")
+                raise ShareNotFound(gettext("Shared plan not found."))
             original = find_plan(session, owner_id, plan_id)
             existing = session.scalar(select(LibraryRecord.revision).where(
                 LibraryRecord.owner_id == recipient_id,

@@ -1,28 +1,28 @@
   <dialog id="share-plan" aria-labelledby="share-plan-title">
     <header class="card-heading">
-      <h2 id="share-plan-title">Share plan</h2>
-      <form method="dialog"><button type="submit">Close</button></form>
+      <h2 id="share-plan-title">{{ gettext("Share plan") }}</h2>
+      <form method="dialog"><button type="submit">{{ gettext("Close") }}</button></form>
     </header>
     <div class="share-plan-body">
-      <p>Recipients can view this plan and copy it with all its drills into their account.</p>
+      <p>{{ gettext("Recipients can view this plan and copy it with all its drills into their account.") }}</p>
       <form id="share-plan-form">
-        <label for="share-username">Recipient username</label>
+        <label for="share-username">{{ gettext("Recipient username") }}</label>
         <div class="actions">
           <input id="share-username" required minlength="3" maxlength="32" autocapitalize="none" spellcheck="false">
-          <button type="submit" class="primary">Share</button>
+          <button type="submit" class="primary">{{ gettext("Share") }}</button>
         </div>
       </form>
-      <ul id="share-recipients" aria-label="People with access"></ul>
+      <ul id="share-recipients" aria-label="{{ gettext('People with access') }}"></ul>
       <section class="plan-link-settings" aria-labelledby="plan-link-title">
-        <h3 id="plan-link-title">Share by link</h3>
-        <p>Anyone with the link can preview and print this plan. Signing in is required to accept it. Disabling the link stops new access.</p>
-        <button id="create-plan-link" type="button">Create share link</button>
+        <h3 id="plan-link-title">{{ gettext("Share by link") }}</h3>
+        <p>{{ gettext("Anyone with the link can preview and print this plan. Signing in is required to accept it. Disabling the link stops new access.") }}</p>
+        <button id="create-plan-link" type="button">{{ gettext("Create share link") }}</button>
         <div id="plan-link-controls" hidden>
-          <label for="plan-link-url">Share link</label>
+          <label for="plan-link-url">{{ gettext("Share link") }}</label>
           <input id="plan-link-url" type="url" readonly>
           <div class="actions">
-            <button id="copy-plan-link" type="button">Copy link</button>
-            <button id="disable-plan-link" type="button">Disable link</button>
+            <button id="copy-plan-link" type="button">{{ gettext("Copy link") }}</button>
+            <button id="disable-plan-link" type="button">{{ gettext("Disable link") }}</button>
           </div>
         </div>
       </section>

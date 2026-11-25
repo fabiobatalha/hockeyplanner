@@ -1,10 +1,14 @@
 import re
 from os import getenv
 
+from flask_babel import gettext
 from flask import Blueprint, abort, g, redirect, render_template, request, url_for
+from urllib.parse import urlsplit
 
 from .accounts import Accounts
 from .api import session_token
+from .demo import sample_drill
+from .i18n import LANGUAGES, LOCALE_COOKIE
 from .library import FREE_LIMITS, Library
 from .sharing import ShareNotFound, Sharing
 
@@ -12,7 +16,7 @@ from .sharing import ShareNotFound, Sharing
 TOKEN = r"[A-Za-z0-9_-]{43}"
 UUID_PATH = r"[0-9a-fA-F-]{36}"
 NEXT_PATH = re.compile(
-    rf"/(?:editor(?:/{UUID_PATH}|/plan/{UUID_PATH}/{UUID_PATH})?|drills|plans|admin|account|membership"
+    rf"/(?:editor(?:/demo-draft|/{UUID_PATH}|/plan/{UUID_PATH}/{UUID_PATH})?|drills|plans|admin|account|membership"
     rf"|share/{TOKEN}(?:/present|/drill/{UUID_PATH})?)"
 )
 
@@ -66,31 +70,60 @@ def create_pages(accounts: Accounts, library: Library, sharing: Sharing) -> Blue
     def index():
         if g.account:
             return redirect(url_for("pages.editor"))
-        return render("welcome", "Plan your next practice")
+        return render("welcome", gettext("Plan your next practice"), sample=sample_drill())
+
+    @pages.get("/demo")
+    def demo():
+        return render("editor", gettext("Try a sample drill"), drill=sample_drill(), demo=True, free_pdf=True)
+
+    @pages.get("/editor/demo-draft")
+    def demo_draft():
+        if g.account is None:
+            return redirect(url_for("pages.login", next=request.path))
+        denied = require_user()
+        if denied is not None:
+            return denied
+        return render("editor", gettext("Drill Editor"), drill=sample_drill(), restore_demo=True)
+
+    @pages.post("/language")
+    def choose_language():
+        request.max_content_length = 4096
+        language = request.form.get("language")
+        if language not in LANGUAGES:
+            abort(400)
+        if g.account:
+            accounts.set_locale(g.account.id, language)
+        target = request.form.get("next", "")
+        if not target.startswith("/") or target.startswith("//") or "\\" in target or urlsplit(target).netloc:
+            target = url_for("pages.index")
+        response = redirect(target, code=303)
+        response.set_cookie(LOCALE_COOKIE, language, max_age=365 * 24 * 60 * 60, httponly=True,
+                            secure=request.is_secure, samesite="Lax")
+        return response
 
     @pages.get("/login")
     def login():
-        return render("login", "Sign in", next_path=next_path())
+        return render("login", gettext("Sign in"), next_path=next_path())
 
     @pages.get("/register")
     def register():
-        return render("register", "Create an account", next_path=next_path())
+        return render("register", gettext("Create an account"), next_path=next_path())
 
     @pages.get("/forgot-password")
     def forgot_password():
-        return render("forgot_password", "Forgot your password?", next_path=next_path())
+        return render("forgot_password", gettext("Forgot your password?"), next_path=next_path())
 
     @pages.get("/confirm-email/<token>")
     def confirm_email(token):
         if not re.fullmatch(TOKEN, token):
             abort(404)
-        return render("confirm_email", "Confirm your email", token=token)
+        return render("confirm_email", gettext("Confirm your email"), token=token)
 
     @pages.get("/reset-password/<token>")
     def reset_password(token):
         if not re.fullmatch(TOKEN, token):
             abort(404)
-        return render("reset_password", "Reset your password", token=token)
+        return render("reset_password", gettext("Reset your password"), token=token)
 
     @pages.get("/editor")
     @pages.get("/editor/<uuid:drill_id>")
@@ -116,15 +149,15 @@ def create_pages(accounts: Accounts, library: Library, sharing: Sharing) -> Blue
             g.account.role == "poweruser" and drill and drill.get("id")
             and library.is_platform_drill(g.account.id, drill["id"])
         )
-        return render("editor", "Drill Editor", drill=drill, published=published)
+        return render("editor", gettext("Drill Editor"), drill=drill, published=published)
 
     @pages.get("/drills")
     def drills():
-        return require_user() or render("drills", "Drill Library")
+        return require_user() or render("drills", gettext("Drill Library"))
 
     @pages.get("/plans")
     def plans():
-        return require_user() or render("plans", "Practice Plans")
+        return require_user() or render("plans", gettext("Practice Plans"))
 
     @pages.get("/account")
     def account():
@@ -137,7 +170,7 @@ def create_pages(accounts: Accounts, library: Library, sharing: Sharing) -> Blue
         denied = require_user(selected_plan=False)
         if denied is not None:
             return denied
-        return render("membership", "Choose your plan" if g.account.tier == "pending" else "Compare plans",
+        return render("membership", gettext("Choose your plan") if g.account.tier == "pending" else gettext("Compare plans"),
                       next_path=next_path(), free_limits=FREE_LIMITS)
 
     @pages.get("/admin")
@@ -146,21 +179,21 @@ def create_pages(accounts: Accounts, library: Library, sharing: Sharing) -> Blue
         if denied is not None:
             return denied
         if g.account.role != "poweruser":
-            return render("error", "Access denied", error="Poweruser access is required.", status_code=403), 403
-        return render("admin", "Account Administration")
+            return render("error", gettext("Access denied"), error=gettext("Poweruser access is required."), status_code=403), 403
+        return render("admin", gettext("Account Administration"))
 
     @pages.get("/share/<token>")
     @pages.get("/share/<token>/drill/<uuid:drill_id>")
     def share(token, drill_id=None):
         if not re.fullmatch(TOKEN, token):
             abort(404)
-        title = "Shared Practice Plan"
+        title = gettext("Shared Practice Plan")
         try:
             data = sharing.preview_link(token, str(drill_id) if drill_id else None, include_plan=True)
         except ShareNotFound as error:
             abort(404, str(error))
         if data.get("standalone"):
-            title = "Shared Drill"
+            title = gettext("Shared Drill")
         owner_free = data.pop("owner_free")
         free_pdf = g.account.tier == "free" if g.account else owner_free
         return render("share", title, shared={**data, "token": token},

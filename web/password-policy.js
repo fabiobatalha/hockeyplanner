@@ -1,4 +1,5 @@
-export const passwordRequirements = 'Use 12–128 characters, including at least one uppercase letter and one special character.'
+import { gettext } from './i18n.js'
+export const passwordRequirements = gettext('Use 12–128 characters, including at least one uppercase letter and one special character.')
 
 export function checkNewPassword(input) {
   const length = [...input.value].length
@@ -7,7 +8,7 @@ export function checkNewPassword(input) {
   return input.reportValidity()
 }
 
-export function addPasswordVisibility(input, label = 'password') {
+export function addPasswordVisibility(input, label = gettext('password')) {
   const wrapper = document.createElement('div')
   wrapper.className = 'password-field'
   const toggle = document.createElement('button')
@@ -19,8 +20,8 @@ export function addPasswordVisibility(input, label = 'password') {
 
   function setVisibility(visible) {
     input.type = visible ? 'text' : 'password'
-    toggle.textContent = visible ? 'Hide' : 'Show'
-    toggle.setAttribute('aria-label', toggle.textContent + ' ' + label)
+    toggle.textContent = visible ? gettext('Hide') : gettext('Show')
+    toggle.setAttribute('aria-label', visible ? gettext('Hide %(label)s', { label }) : gettext('Show %(label)s', { label }))
   }
 
   toggle.addEventListener('click', () => setVisibility(input.type === 'password'))

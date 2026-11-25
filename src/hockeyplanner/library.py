@@ -7,6 +7,8 @@ from pydantic import ValidationError
 from sqlalchemy import and_, delete, func, select, update
 from sqlalchemy.orm import Session, sessionmaker
 
+from flask_babel import gettext
+
 from .accounts import AccountNotFound, AdministrationDenied
 from .database import DrillShareLink, LibraryRecord, PlatformDrill, PlanShare, PlanShareLink, User, UserAccess, UserMembership, UserPublicIdentity, conflict_insert
 from .models import Drill, LibraryImport, PracticePlan
@@ -77,8 +79,11 @@ class CapacityExceeded(Exception):
         self.limit = limit
         self.used = used
         self.requested = requested
-        label = "drills" if collection == "drills" else "practice plans"
-        super().__init__(f"Free accounts can save up to {limit} {label}.")
+        if collection == "drills":
+            message = gettext("Free accounts can save up to %(limit)d drills.", limit=limit)
+        else:
+            message = gettext("Free accounts can save up to %(limit)d practice plans.", limit=limit)
+        super().__init__(message)
 
 
 def lock_library(session: Session, owner_id: int) -> None:
@@ -162,7 +167,7 @@ class Library:
             lock_library(session, owner_id)
             access = session.get(UserAccess, owner_id)
             if not access or access.role != "poweruser" or not access.enabled:
-                raise AdministrationDenied("Poweruser access is required.")
+                raise AdministrationDenied(gettext("Poweruser access is required."))
             if not self._drill_record(session, owner_id, drill_id):
                 raise PlatformDrillNotFound
             if enabled:
@@ -225,7 +230,7 @@ class Library:
                     PlatformDrill.drill_id == record_id, PlatformDrill.owner_id != owner_id,
                 ).limit(1))
                 if published is not None:
-                    raise AdministrationDenied("Copy the platform drill before editing it.")
+                    raise AdministrationDenied(gettext("Copy the platform drill before editing it."))
             if payload is not None:
                 active = session.scalar(select(LibraryRecord.revision).where(
                     LibraryRecord.owner_id == owner_id,

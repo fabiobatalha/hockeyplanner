@@ -8,9 +8,12 @@ from sqlalchemy import delete, func, or_, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, selectinload, sessionmaker
 
+from flask_babel import gettext
+
 from .database import (
     AccountSession, DrillShareLink, EmailConfirmation, LibraryRecord, PasswordResetRequest, PlanShare, PlanShareLink,
-    PlatformDrill, RetiredUserId, User, UserAccess, UserEmail, UserMembership, UserPublicIdentity, lock_postgres,
+    PlatformDrill, RetiredUserId, User, UserAccess, UserEmail, UserLocale, UserMembership, UserPublicIdentity,
+    conflict_insert, lock_postgres,
 )
 from .models import AccountProfile, AccountTier, AccountUpdate, Credentials, Login, PasswordChange, UserProfile
 
@@ -208,10 +211,23 @@ class Accounts:
                 raise AccountNotFound
             return user_id
 
+    def session_locale(self, token: str | None) -> str | None:
+        if not token:
+            return None
+        with self.sessions() as session:
+            return session.scalar(select(UserLocale.language).join(
+                AccountSession, AccountSession.user_id == UserLocale.user_id,
+            ).where(AccountSession.token_hash == token_hash(token), AccountSession.expires > int(time.time())))
+
+    def set_locale(self, user_id: int, language: str) -> None:
+        with self.sessions.begin() as session:
+            session.execute(conflict_insert(session, UserLocale).values(user_id=user_id, language=language)
+                            .on_conflict_do_update(index_elements=["user_id"], set_={"language": language}))
+
     @staticmethod
     def require_account_administrator(session: Session, actor_id: int, user_id: int) -> None:
         if actor_id == user_id:
-            raise AdministrationDenied("You cannot change your own account here.")
+            raise AdministrationDenied(gettext("You cannot change your own account here."))
         # Check authority inside the write transaction to make concurrent role changes safe.
         result = session.execute(update(UserAccess).where(
             UserAccess.user_id == actor_id,
@@ -219,7 +235,7 @@ class Accounts:
             UserAccess.enabled.is_(True),
         ).values(role=UserAccess.role))
         if not result.rowcount:
-            raise AdministrationDenied("Poweruser access is required.")
+            raise AdministrationDenied(gettext("Poweruser access is required."))
 
     def update_user(self, actor_id: int, user_id: int, changes: AccountUpdate) -> AccountProfile:
         with self.sessions.begin() as session:
@@ -289,7 +305,7 @@ class Accounts:
             EmailConfirmation.user_id == user_id,
             func.lower(EmailConfirmation.username) == user.username.lower(),
         )))
-        for record in (AccountSession, PasswordResetRequest, UserEmail, UserMembership, UserAccess):
+        for record in (AccountSession, PasswordResetRequest, UserEmail, UserLocale, UserMembership, UserAccess):
             session.execute(delete(record).where(record.user_id == user_id))
         session.add(RetiredUserId(id=user_id))
         session.delete(user)

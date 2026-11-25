@@ -3,13 +3,13 @@
       <h2 id="plan-limit-title"></h2>
       <div class="plan-limit-usage">
         <strong id="plan-limit-count"></strong>
-        <progress id="plan-limit-meter" aria-label="Free plan usage"></progress>
+        <progress id="plan-limit-meter" aria-label="{{ gettext('Free plan usage') }}"></progress>
       </div>
       <p id="plan-limit-guidance"></p>
-      <p>Full Access will remove these storage limits when it becomes available.</p>
+      <p>{{ gettext("Full Access will remove these storage limits when it becomes available.") }}</p>
       <div class="actions">
-        <form method="dialog"><button type="submit" autofocus>Close</button></form>
-        <a id="compare-plan-limits" class="button-link primary" href="{{ url_for('pages.membership') }}">Compare plans</a>
+        <form method="dialog"><button type="submit" autofocus>{{ gettext("Close") }}</button></form>
+        <a id="compare-plan-limits" class="button-link primary" href="{{ url_for('pages.membership') }}">{{ gettext("Compare plans") }}</a>
       </div>
     </div>
   </dialog>

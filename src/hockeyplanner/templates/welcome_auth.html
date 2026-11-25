@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('web_asset', filename='welcome.css') }}">
+{% endblock %}
+
+{% block header %}
+{% include "welcome_header.html" %}
+{% endblock %}
+
+{% block content %}
+<div class="welcome-login">
+  <div class="welcome-hero welcome-login-hero" aria-hidden="true">
+    <img class="welcome-hero-photo" src="{{ url_for('web_asset', filename='welcome-ice.webp') }}" alt="" fetchpriority="high">
+    <div class="welcome-login-message">
+      <p class="welcome-kicker">Hockey Planner</p>
+      <p class="welcome-login-headline">{{ gettext("Behind every great practice, there's someone who cares.") }}</p>
+      <p class="welcome-login-tagline">{{ gettext("Hockey Planner — Built by volunteer coaches, for volunteer coaches. Inspired by the love of the game.") }}</p>
+    </div>
+  </div>
+  <div class="welcome-login-form">
+    {% block auth_card %}{% endblock %}
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script type="module" src="{{ url_for('web_asset', filename='auth.js') }}"></script>
+{% endblock %}

@@ -1,3 +1,4 @@
+import { gettext } from './i18n.js'
 import { drawItem, drawRink, drawMovementSample, movementLegend, rinkHeight, rinkWidth } from './drawing.js'
 import { markdownText } from './markdown.js'
 
@@ -37,7 +38,7 @@ function renderMovementLegend(entries) {
   const legend = document.createElement('section')
   legend.className = 'plan-viewer-legend'
   const heading = document.createElement('h4')
-  heading.textContent = 'Movement Legend'
+  heading.textContent = gettext('Movement Legend')
   const list = document.createElement('ul')
   list.setAttribute('role', 'list')
   for (const { type, label } of entries) {
@@ -70,7 +71,7 @@ function showActivity(index) {
   diagram.height = rinkHeight(activity.layout)
   diagram.className = 'plan-viewer-rink'
   diagram.style.setProperty('--diagram-ratio', diagram.width / diagram.height)
-  diagram.setAttribute('aria-label', 'Rink diagram for ' + activity.title)
+  diagram.setAttribute('aria-label', gettext('Rink diagram for %(title)s', { title: activity.title }))
   const context = diagram.getContext('2d')
   drawRink(context)
   for (const item of activity.items) drawItem(context, item)
@@ -87,7 +88,7 @@ function showActivity(index) {
   }
   viewerActivities.replaceChildren(section)
   viewerActivities.scrollTop = 0
-  position.textContent = (index + 1) + ' of ' + displayedActivities.length
+  position.textContent = gettext('%(position)d of %(total)d', { position: index + 1, total: displayedActivities.length })
   const focusedControl = document.activeElement
   previous.disabled = index === 0
   next.disabled = index === displayedActivities.length - 1

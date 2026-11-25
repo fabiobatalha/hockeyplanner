@@ -3,26 +3,26 @@
 {% block content %}
     <section id="library-page" aria-labelledby="library-title" data-account-id="{{ user.public_id }}" data-account-role="{{ user.role }}">
       <div class="page-heading">
-        <h1 id="library-title" tabindex="-1">Drill Library</h1>
-        <a class="button-link primary" href="{{ url_for('pages.editor') }}">New Drill</a>
+        <h1 id="library-title" tabindex="-1">{{ gettext("Drill Library") }}</h1>
+        <a class="button-link primary" href="{{ url_for('pages.editor') }}">{{ gettext("New Drill") }}</a>
       </div>
       <div class="card library-toolbar">
-        <div class="library-search-field" role="search" aria-label="Drill Library">
-          <label for="library-search">Search drills</label>
+        <div class="library-search-field" role="search" aria-label="{{ gettext('Drill Library') }}">
+          <label for="library-search">{{ gettext("Search drills") }}</label>
           <div class="library-search-controls">
-            <input id="library-search" type="search" placeholder="Search by name or description" aria-controls="activity-list" disabled>
-            <button id="clear-library-search" type="button" hidden>Clear</button>
+            <input id="library-search" type="search" placeholder="{{ gettext('Search by name or description') }}" aria-controls="activity-list" disabled>
+            <button id="clear-library-search" type="button" hidden>{{ gettext("Clear") }}</button>
           </div>
         </div>
         <div class="library-type-field">
-          <label for="library-type">Drill type</label>
+          <label for="library-type">{{ gettext("Drill type") }}</label>
           <select id="library-type" aria-controls="activity-list" disabled>
-            <option value="all">All drills</option>
-            <option value="personal">Personal Drill</option>
-            <option value="platform">Platform Drill</option>
+            <option value="all">{{ gettext("All drills") }}</option>
+            <option value="personal">{{ gettext("Personal Drill") }}</option>
+            <option value="platform">{{ gettext("Platform Drill") }}</option>
           </select>
         </div>
-        <p id="library-status" class="status" role="status" aria-atomic="true">Loading drills…</p>
+        <p id="library-status" class="status" role="status" aria-atomic="true">{{ gettext("Loading drills…") }}</p>
       </div>
       <div id="activity-list" aria-busy="true"></div>
     </section>

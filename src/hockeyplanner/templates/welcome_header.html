@@ -3,13 +3,12 @@
     <a href="{{ url_for('pages.index') }}" class="welcome-brand">
       <img src="{{ url_for('web_asset', filename='hockey-planner-logo.png') }}" alt="Hockey Planner" width="2172" height="724">
     </a>
-    <nav aria-label="Explore Hockey Planner">
-      <a href="{{ url_for('pages.index') if page == 'login' else '' }}#features">Features</a>
-      <a href="{{ url_for('pages.index') if page == 'login' else '' }}#about">About us</a>
+    <nav aria-label="{{ gettext('Explore Hockey Planner') }}">
+      <a href="{{ url_for('pages.index') if page != 'welcome' else '' }}#about">{{ gettext("About us") }}</a>
       {% if page == 'login' %}
-      <a class="welcome-sign-in" href="{{ url_for('pages.index') }}"><span aria-hidden="true">←</span> Home</a>
+      <a class="welcome-sign-in" href="{{ url_for('pages.index') }}"><span aria-hidden="true">←</span> {{ gettext("Home") }}</a>
       {% else %}
-      <a class="welcome-sign-in" href="{{ url_for('pages.login') }}">Sign in <span aria-hidden="true">↗</span></a>
+      <a class="welcome-sign-in" href="{{ url_for('pages.login', next=next_path or None) }}">{{ gettext("Sign in") }} <span aria-hidden="true">↗</span></a>
       {% endif %}
     </nav>
   </div>

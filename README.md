@@ -25,6 +25,21 @@ uv run --locked python -m pytest test
 
 The tests use temporary SQLite databases and simulated email delivery.
 
+## Translate the interface
+
+English is the source language. Canadian French translations are maintained in
+`src/hockeyplanner/translations/fr_CA/LC_MESSAGES/messages.po`. Refresh the
+catalog when changing text in Python, Jinja, or JavaScript:
+
+```sh
+uv run --locked pybabel extract -k email_text:2 -F babel.cfg -o src/hockeyplanner/translations/messages.pot .
+uv run --locked pybabel update -i src/hockeyplanner/translations/messages.pot -d src/hockeyplanner/translations
+```
+
+Review new and fuzzy translations in the `.po` file. The container build
+compiles the catalog for Flask and generates a browser catalog from the same
+source. To compile locally, run `uv run --locked python -m hockeyplanner.compile_i18n`.
+
 ## Create a drill
 
 - Under **Layout**, choose **Full rink**, **Half rink**, or **Quarter rink**. The quarter-rink view crops both axes and extends past the horizontal midpoint enough to keep the entire goal and crease visible.

@@ -2,11 +2,11 @@
 
 {% block content %}
 {% if status_code in (401, 403) %}
-  {% set art = ('rink-pass.webp', 'A hockey player checks their pockets for a rink pass while a goalie guards the gate.') %}
+  {% set art = ('rink-pass.webp', gettext('A hockey player checks their pockets for a rink pass while a goalie guards the gate.')) %}
 {% elif status_code == 404 %}
-  {% set art = ('lost-puck.webp', 'A goalie searches with a magnifying glass while the missing puck hides behind a skate.') %}
+  {% set art = ('lost-puck.webp', gettext('A goalie searches with a magnifying glass while the missing puck hides behind a skate.')) %}
 {% elif status_code >= 500 %}
-  {% set art = ('resurfacer.webp', 'A referee and a penguin with a tiny wrench inspect a broken ice resurfacer.') %}
+  {% set art = ('resurfacer.webp', gettext('A referee and a penguin with a tiny wrench inspect a broken ice resurfacer.')) %}
 {% endif %}
 <section class="card error-page" aria-labelledby="error-title">
   <header class="error-heading">
@@ -18,9 +18,9 @@
     <div class="actions">
       {% if action %}
         <a class="button-link primary" href="{{ action[1] }}">{{ action[0] }}</a>
-        {% if status_code != 404 %}<a class="button-link" href="{{ url_for('pages.index') }}">Home</a>{% endif %}
+        {% if status_code != 404 %}<a class="button-link" href="{{ url_for('pages.index') }}">{{ gettext("Home") }}</a>{% endif %}
       {% else %}
-        <a class="button-link primary" href="{{ url_for('pages.index') }}">Back to Hockey Planner</a>
+        <a class="button-link primary" href="{{ url_for('pages.index') }}">{{ gettext("Back to Hockey Planner") }}</a>
       {% endif %}
     </div>
   </div>

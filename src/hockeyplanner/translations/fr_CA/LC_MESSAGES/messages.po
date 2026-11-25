@@ -1,0 +1,2310 @@
+# French (Canada) translations for Hockey Planner.
+# Copyright (C) 2026 ORGANIZATION
+# This file is distributed under the same license as the Hockey Planner
+# project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Hockey Planner VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2026-11-25 14:15-0500\n"
+"PO-Revision-Date: 2026-11-25 09:24-0500\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: fr_CA\n"
+"Language-Team: fr_CA <LL@li.org>\n"
+"Plural-Forms: nplurals=3; plural=(n == 0 || n == 1) ? 0 : n != 0 && n % "
+"1000000 == 0 ? 1 : 2;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.19.0\n"
+
+#: src/hockeyplanner/__init__.py:80
+msgid "The server could not complete the request."
+msgstr "Le serveur n’a pas pu traiter la demande."
+
+#: src/hockeyplanner/__init__.py:85
+msgid "Sign in required"
+msgstr "Connexion requise"
+
+#: src/hockeyplanner/__init__.py:86
+msgid "Sign in to open this page."
+msgstr "Connectez-vous pour ouvrir cette page."
+
+#: src/hockeyplanner/__init__.py:87 src/hockeyplanner/pages.py:106
+#: src/hockeyplanner/templates/login.html:5
+#: src/hockeyplanner/templates/login.html:15
+#: src/hockeyplanner/templates/welcome_header.html:11
+msgid "Sign in"
+msgstr "Se connecter"
+
+#: src/hockeyplanner/__init__.py:89
+msgid "Page not found"
+msgstr "Page introuvable"
+
+#: src/hockeyplanner/__init__.py:90
+msgid "This page or shared link may have moved or expired."
+msgstr "Cette page a peut-être été déplacée, ou le lien de partage a expiré."
+
+#: src/hockeyplanner/__init__.py:91 src/hockeyplanner/__init__.py:95
+#: src/hockeyplanner/templates/confirm_email.html:16
+#: src/hockeyplanner/templates/error.html:23
+#: src/hockeyplanner/templates/reset_password.html:16
+msgid "Back to Hockey Planner"
+msgstr "Retour à Hockey Planner"
+
+#: src/hockeyplanner/__init__.py:93
+msgid "Something went wrong"
+msgstr "Un problème est survenu"
+
+#: src/hockeyplanner/__init__.py:94
+msgid "Hockey Planner couldn’t load this page. Try again in a moment."
+msgstr "Hockey Planner n’a pas pu charger cette page. Réessayez dans un instant."
+
+#: src/hockeyplanner/__init__.py:95
+msgid "Try again"
+msgstr "Réessayer"
+
+#: src/hockeyplanner/accounts.py:230
+msgid "You cannot change your own account here."
+msgstr "Vous ne pouvez pas modifier votre propre compte ici."
+
+#: src/hockeyplanner/accounts.py:238 src/hockeyplanner/api.py:137
+#: src/hockeyplanner/library.py:170 src/hockeyplanner/pages.py:182
+msgid "Poweruser access is required."
+msgstr "L’accès administrateur est requis."
+
+#: src/hockeyplanner/api.py:58
+msgid "Invalid data. Check your input and try again."
+msgstr "Données invalides. Vérifiez les renseignements saisis et réessayez."
+
+#: src/hockeyplanner/api.py:62
+msgid "This username is already taken."
+msgstr "Ce nom d’utilisateur est déjà utilisé."
+
+#: src/hockeyplanner/api.py:70
+msgid "User account not found."
+msgstr "Compte introuvable."
+
+#: src/hockeyplanner/api.py:74
+msgid "That email address is already in use."
+msgstr "Cette adresse courriel est déjà utilisée."
+
+#: src/hockeyplanner/api.py:78
+msgid "Incorrect current password."
+msgstr "Le mot de passe actuel est incorrect."
+
+#: src/hockeyplanner/api.py:111
+msgid "This platform drill is no longer available."
+msgstr "Cet exercice de la plateforme n’est plus disponible."
+
+#: src/hockeyplanner/api.py:115
+msgid "The application database is unavailable."
+msgstr "La base de données de l’application est indisponible."
+
+#: src/hockeyplanner/api.py:123
+msgid "This request must come from the planner."
+msgstr "Cette demande doit provenir du planificateur."
+
+#: src/hockeyplanner/api.py:131
+msgid "Sign in to continue."
+msgstr "Connectez-vous pour continuer."
+
+#: src/hockeyplanner/api.py:133
+msgid "Add an email address to your account to continue."
+msgstr "Ajoutez une adresse courriel à votre compte pour continuer."
+
+#: src/hockeyplanner/api.py:135
+msgid "Choose an account plan to continue."
+msgstr "Choisissez un forfait pour continuer."
+
+#: src/hockeyplanner/api.py:155
+msgid "Too many attempts. Try again in a minute."
+msgstr "Trop de tentatives. Réessayez dans une minute."
+
+#: src/hockeyplanner/api.py:185
+msgid "Poweruser accounts always have Full Access."
+msgstr "Les comptes administrateurs ont toujours l’Accès complet."
+
+#: src/hockeyplanner/api.py:187
+msgid "Full Access is not available yet."
+msgstr "Le forfait Accès complet n’est pas encore disponible."
+
+#: src/hockeyplanner/api.py:189
+msgid "Confirm that you want to switch from Full Access to Free."
+msgstr "Confirmez que vous souhaitez passer de l’Accès complet au forfait gratuit."
+
+#: src/hockeyplanner/api.py:199
+msgid ""
+"Use a username of 3–32 letters, numbers, dots, underscores or hyphens and"
+" a valid email address. "
+msgstr ""
+"Utilisez un nom d’utilisateur de 3 à 32 caractères (lettres, chiffres, "
+"points, traits de soulignement ou traits d’union) et une adresse courriel"
+" valide. "
+
+#: src/hockeyplanner/api.py:233
+msgid "Incorrect username, email, or password."
+msgstr "Nom d’utilisateur, courriel ou mot de passe incorrect."
+
+#: src/hockeyplanner/api.py:359
+msgid "Unknown record."
+msgstr "Enregistrement inconnu."
+
+#: src/hockeyplanner/demo.py:7
+msgid "Breakout passing"
+msgstr "Passes en sortie de zone"
+
+#: src/hockeyplanner/demo.py:8
+msgid "Skate with the puck, pass to your teammate, then head toward the net."
+msgstr ""
+"Patinez avec la rondelle, faites une passe à votre coéquipier, puis "
+"dirigez-vous vers le filet."
+
+#: src/hockeyplanner/email_confirmation.py:35
+#: src/hockeyplanner/email_confirmation.py:56
+#: src/hockeyplanner/email_confirmation.py:58
+msgid "Email delivery is not configured. Contact the site administrator."
+msgstr ""
+"L’envoi de courriels n’est pas configuré. Contactez l’administration du "
+"site."
+
+#: src/hockeyplanner/email_confirmation.py:42
+msgid "Confirm your Hockey Planner email"
+msgstr "Confirmez votre adresse courriel Hockey Planner"
+
+#: src/hockeyplanner/email_confirmation.py:43
+#, python-format
+msgid "Your Hockey Planner confirmation code is %(code)s."
+msgstr "Votre code de confirmation Hockey Planner est le %(code)s."
+
+#: src/hockeyplanner/email_confirmation.py:44
+#, python-format
+msgid "Open %(link)s and enter the six-digit code."
+msgstr "Ouvrez %(link)s et entrez le code à six chiffres."
+
+#: src/hockeyplanner/email_confirmation.py:45
+msgid ""
+"The request expires in 30 minutes. If you did not request this, you can "
+"ignore this message."
+msgstr ""
+"La demande expire dans 30 minutes. Si vous ne l’avez pas faite, vous "
+"pouvez ignorer ce message."
+
+#: src/hockeyplanner/email_confirmation.py:91
+msgid "Could not send the email. Try again later."
+msgstr "Impossible d’envoyer le courriel. Réessayez plus tard."
+
+#: src/hockeyplanner/email_confirmation.py:187
+msgid ""
+"This confirmation request is expired or no longer available. Start a new "
+"request."
+msgstr ""
+"Cette demande de confirmation a expiré ou n’est plus disponible. Faites "
+"une nouvelle demande."
+
+#: src/hockeyplanner/email_confirmation.py:195
+msgid "Incorrect code. Check the six digits in your email."
+msgstr "Code incorrect. Vérifiez les six chiffres dans votre courriel."
+
+#: src/hockeyplanner/email_tasks.py:23
+msgid "Email delivery is busy. Try again later."
+msgstr "Le service de courriel est occupé. Réessayez plus tard."
+
+#: src/hockeyplanner/email_tasks.py:28
+msgid "Email delivery is unavailable. Try again later."
+msgstr "Le service de courriel est indisponible. Réessayez plus tard."
+
+#: src/hockeyplanner/library.py:83
+#, python-format
+msgid "Free accounts can save up to %(limit)d drills."
+msgstr "Un compte gratuit permet d’enregistrer jusqu’à %(limit)d exercices."
+
+#: src/hockeyplanner/library.py:85
+#, python-format
+msgid "Free accounts can save up to %(limit)d practice plans."
+msgstr ""
+"Un compte gratuit permet d’enregistrer jusqu’à %(limit)d plans "
+"d’entraînement."
+
+#: src/hockeyplanner/library.py:233
+msgid "Copy the platform drill before editing it."
+msgstr "Copiez l’exercice de la plateforme pour pouvoir le modifier."
+
+#: src/hockeyplanner/pages.py:73
+msgid "Plan your next practice"
+msgstr "Planifiez votre prochain entraînement"
+
+#: src/hockeyplanner/pages.py:77 src/hockeyplanner/templates/editor.html:14
+#: src/hockeyplanner/templates/welcome.html:38
+msgid "Try a sample drill"
+msgstr "Essayer un exercice"
+
+#: src/hockeyplanner/pages.py:86 src/hockeyplanner/pages.py:152
+#: src/hockeyplanner/templates/editor.html:14
+msgid "Drill Editor"
+msgstr "Éditeur d’exercices"
+
+#: src/hockeyplanner/pages.py:110 src/hockeyplanner/templates/login.html:19
+#: src/hockeyplanner/templates/register.html:5
+msgid "Create an account"
+msgstr "Créer un compte"
+
+#: src/hockeyplanner/pages.py:114
+#: src/hockeyplanner/templates/forgot_password.html:6
+msgid "Forgot your password?"
+msgstr "Vous avez oublié votre mot de passe?"
+
+#: src/hockeyplanner/pages.py:120
+#: src/hockeyplanner/templates/confirm_email.html:6
+msgid "Confirm your email"
+msgstr "Confirmez votre adresse courriel"
+
+#: src/hockeyplanner/pages.py:126
+#: src/hockeyplanner/templates/reset_password.html:6
+msgid "Reset your password"
+msgstr "Réinitialisez votre mot de passe"
+
+#: src/hockeyplanner/pages.py:156 src/hockeyplanner/templates/base.html:33
+#: src/hockeyplanner/templates/drills.html:6
+#: src/hockeyplanner/templates/drills.html:10
+msgid "Drill Library"
+msgstr "Bibliothèque d’exercices"
+
+#: src/hockeyplanner/pages.py:160 src/hockeyplanner/templates/base.html:34
+#: src/hockeyplanner/templates/plans.html:6
+msgid "Practice Plans"
+msgstr "Plans d’entraînement"
+
+#: src/hockeyplanner/pages.py:173
+msgid "Choose your plan"
+msgstr "Choisissez votre forfait"
+
+#: src/hockeyplanner/pages.py:173 src/hockeyplanner/templates/account.html:33
+#: src/hockeyplanner/templates/plan_limit.html:12
+msgid "Compare plans"
+msgstr "Comparer les forfaits"
+
+#: src/hockeyplanner/pages.py:182
+msgid "Access denied"
+msgstr "Accès refusé"
+
+#: src/hockeyplanner/pages.py:183 src/hockeyplanner/templates/admin.html:5
+msgid "Account Administration"
+msgstr "Administration des comptes"
+
+#: src/hockeyplanner/pages.py:190
+msgid "Shared Practice Plan"
+msgstr "Plan d’entraînement partagé"
+
+#: src/hockeyplanner/pages.py:196
+msgid "Shared Drill"
+msgstr "Exercice partagé"
+
+#: src/hockeyplanner/password_reset.py:33
+msgid "Reset your Hockey Planner password"
+msgstr "Réinitialisez votre mot de passe Hockey Planner"
+
+#: src/hockeyplanner/password_reset.py:34
+#, python-format
+msgid "Open %(link)s to choose a new password."
+msgstr "Ouvrez %(link)s pour choisir un nouveau mot de passe."
+
+#: src/hockeyplanner/password_reset.py:35
+msgid ""
+"This link can only be used once and expires in 30 minutes. If you did not"
+" request a password reset, you can ignore this message."
+msgstr ""
+"Ce lien n’est utilisable qu’une seule fois et expire dans 30 minutes. Si "
+"vous n’avez pas demandé de réinitialisation, vous pouvez ignorer ce "
+"message."
+
+#: src/hockeyplanner/password_reset.py:125
+msgid "This password reset link is invalid or expired. Request a new link."
+msgstr ""
+"Ce lien de réinitialisation est invalide ou expiré. Demandez un nouveau "
+"lien."
+
+#: src/hockeyplanner/sharing.py:26
+msgid "Plan not found."
+msgstr "Plan introuvable."
+
+#: src/hockeyplanner/sharing.py:26
+msgid "Drill not found."
+msgstr "Exercice introuvable."
+
+#: src/hockeyplanner/sharing.py:47
+msgid "This share link is no longer available."
+msgstr "Ce lien de partage n’est plus disponible."
+
+#: src/hockeyplanner/sharing.py:93
+msgid "No active account matches that username."
+msgstr "Aucun compte actif ne correspond à ce nom d’utilisateur."
+
+#: src/hockeyplanner/sharing.py:129 src/hockeyplanner/sharing.py:217
+msgid "Shared plan not found."
+msgstr "Plan partagé introuvable."
+
+#: src/hockeyplanner/sharing.py:177
+msgid "This drill is no longer in the shared plan."
+msgstr "Cet exercice ne fait plus partie du plan partagé."
+
+#: src/hockeyplanner/templates/account.html:6
+msgid "Account Profile"
+msgstr "Profil du compte"
+
+#: src/hockeyplanner/templates/account.html:10
+msgid "Current subscription"
+msgstr "Abonnement actuel"
+
+#: src/hockeyplanner/templates/account.html:11
+#: src/hockeyplanner/templates/membership.html:31 web/admin.js:65
+msgid "Full Access"
+msgstr "Accès complet"
+
+#: src/hockeyplanner/templates/account.html:11
+#: src/hockeyplanner/templates/membership.html:16 web/admin.js:65
+msgid "Free"
+msgstr "Gratuit"
+
+#: src/hockeyplanner/templates/account.html:14
+#: src/hockeyplanner/templates/membership.html:18
+#: src/hockeyplanner/templates/membership.html:33
+msgid "Drills"
+msgstr "Exercices"
+
+#: src/hockeyplanner/templates/account.html:14
+#: src/hockeyplanner/templates/membership.html:19
+#: src/hockeyplanner/templates/membership.html:34
+msgid "Practice plans"
+msgstr "Plans d’entraînement"
+
+#: src/hockeyplanner/templates/account.html:20
+#, python-format
+msgid "%(used)d of %(limit)d used"
+msgstr "%(used)d sur %(limit)d utilisés"
+
+#: src/hockeyplanner/templates/account.html:24
+msgid "Over the Free plan limit"
+msgstr "Limite du forfait gratuit dépassée"
+
+#: src/hockeyplanner/templates/account.html:24
+msgid "Limit reached"
+msgstr "Limite atteinte"
+
+#: src/hockeyplanner/templates/account.html:30
+msgid "Unlimited drills and practice plans"
+msgstr "Nombre illimité d’exercices et de plans d’entraînement"
+
+#: src/hockeyplanner/templates/account.html:34 web/account.js:101
+msgid "Switch to Free"
+msgstr "Passer au forfait gratuit"
+
+#: src/hockeyplanner/templates/account.html:37
+msgid "Add an email address to continue to the planner."
+msgstr "Ajoutez une adresse courriel pour accéder au planificateur."
+
+#: src/hockeyplanner/templates/account.html:39
+msgid "Email"
+msgstr "Courriel"
+
+#: src/hockeyplanner/templates/account.html:41
+#: src/hockeyplanner/templates/account.html:48
+#: src/hockeyplanner/templates/self_delete.html:7
+msgid "Current password"
+msgstr "Mot de passe actuel"
+
+#: src/hockeyplanner/templates/account.html:43
+msgid "Save email"
+msgstr "Enregistrer le courriel"
+
+#: src/hockeyplanner/templates/account.html:46
+msgid "Change Password"
+msgstr "Modifier le mot de passe"
+
+#: src/hockeyplanner/templates/account.html:50
+#: src/hockeyplanner/templates/reset_password.html:9
+msgid "New password"
+msgstr "Nouveau mot de passe"
+
+#: src/hockeyplanner/templates/account.html:53
+msgid "Change password"
+msgstr "Modifier le mot de passe"
+
+#: src/hockeyplanner/templates/account.html:57
+#: src/hockeyplanner/templates/admin_delete.html:3 web/admin.js:112
+msgid "Delete account"
+msgstr "Supprimer le compte"
+
+#: src/hockeyplanner/templates/account.html:58
+msgid "Permanently remove your profile, drills, and practice plans."
+msgstr ""
+"Supprimez définitivement votre profil, vos exercices et vos plans "
+"d’entraînement."
+
+#: src/hockeyplanner/templates/account.html:59
+#: src/hockeyplanner/templates/membership.html:11
+#: src/hockeyplanner/templates/self_delete.html:3
+msgid "Delete my account"
+msgstr "Supprimer mon compte"
+
+#: src/hockeyplanner/templates/admin_delete.html:7
+#: src/hockeyplanner/templates/base.html:88
+#: src/hockeyplanner/templates/editor.html:95
+#: src/hockeyplanner/templates/plans.html:35
+#: src/hockeyplanner/templates/self_delete.html:10
+msgid "Cancel"
+msgstr "Annuler"
+
+#: src/hockeyplanner/templates/admin_delete.html:8
+msgid "Permanently delete"
+msgstr "Supprimer définitivement"
+
+#: src/hockeyplanner/templates/base.html:17
+msgid "Draw hockey drills and organize your practice plans."
+msgstr "Dessinez vos exercices de hockey et organisez vos plans d’entraînement."
+
+#: src/hockeyplanner/templates/base.html:31
+msgid "Main navigation"
+msgstr "Navigation principale"
+
+#: src/hockeyplanner/templates/base.html:32
+msgid "Editor"
+msgstr "Éditeur"
+
+#: src/hockeyplanner/templates/base.html:36
+msgid "Administration"
+msgstr "Administration"
+
+#: src/hockeyplanner/templates/base.html:41
+#, python-format
+msgid "Account profile for %(username)s"
+msgstr "Profil de %(username)s"
+
+#: src/hockeyplanner/templates/base.html:42
+msgid "Sign out"
+msgstr "Se déconnecter"
+
+#: src/hockeyplanner/templates/base.html:52
+msgid "Upgrade plan"
+msgstr "Changer de forfait"
+
+#: src/hockeyplanner/templates/base.html:60
+msgid "Language"
+msgstr "Langue"
+
+#: src/hockeyplanner/templates/base.html:66
+msgid "Apply"
+msgstr "Appliquer"
+
+#: src/hockeyplanner/templates/base.html:72
+msgid "Notification"
+msgstr "Notification"
+
+#: src/hockeyplanner/templates/base.html:76
+#: src/hockeyplanner/templates/plan_limit.html:11
+#: src/hockeyplanner/templates/plan_sharing.html:4
+msgid "Close"
+msgstr "Fermer"
+
+#: src/hockeyplanner/templates/base.html:83
+msgid "Confirm action"
+msgstr "Confirmer l’action"
+
+#: src/hockeyplanner/templates/base.html:95
+msgid "Enable JavaScript in your browser to use the editor."
+msgstr "Activez JavaScript dans votre navigateur pour utiliser l’éditeur."
+
+#: src/hockeyplanner/templates/confirm_email.html:9
+msgid "Six-digit code"
+msgstr "Code à six chiffres"
+
+#: src/hockeyplanner/templates/confirm_email.html:11
+msgid "Enter the code from your confirmation email."
+msgstr "Entrez le code reçu par courriel."
+
+#: src/hockeyplanner/templates/confirm_email.html:13
+msgid "Confirm email"
+msgstr "Confirmer le courriel"
+
+#: src/hockeyplanner/templates/drills.html:7
+msgid "New Drill"
+msgstr "Nouvel exercice"
+
+#: src/hockeyplanner/templates/drills.html:11
+#: src/hockeyplanner/templates/plans.html:41
+msgid "Search drills"
+msgstr "Rechercher des exercices"
+
+#: src/hockeyplanner/templates/drills.html:13
+msgid "Search by name or description"
+msgstr "Rechercher par nom ou description"
+
+#: src/hockeyplanner/templates/drills.html:14
+msgid "Clear"
+msgstr "Effacer"
+
+#: src/hockeyplanner/templates/drills.html:18
+msgid "Drill type"
+msgstr "Type d’exercice"
+
+#: src/hockeyplanner/templates/drills.html:20
+msgid "All drills"
+msgstr "Tous les exercices"
+
+#: src/hockeyplanner/templates/drills.html:21 web/drill-library.js:20
+msgid "Personal Drill"
+msgstr "Exercice personnel"
+
+#: src/hockeyplanner/templates/drills.html:22 web/drill-library.js:20
+#: web/plans.js:180 web/plans.js:183
+msgid "Platform Drill"
+msgstr "Exercice de la plateforme"
+
+#: src/hockeyplanner/templates/drills.html:25
+msgid "Loading drills…"
+msgstr "Chargement des exercices…"
+
+#: src/hockeyplanner/templates/editor.html:15
+msgid ""
+"Move a player, draw a pass, or preview the drill as your team would see "
+"it."
+msgstr ""
+"Déplacez un joueur, tracez une passe ou affichez l’exercice comme votre "
+"équipe le verra."
+
+#: src/hockeyplanner/templates/editor.html:15
+msgid "Draw drills and plan your on-ice practices."
+msgstr "Dessinez vos exercices et planifiez vos entraînements sur glace."
+
+#: src/hockeyplanner/templates/editor.html:19 web/editor.js:452
+msgid "Edit in fullscreen mode"
+msgstr "Modifier en plein écran"
+
+#: src/hockeyplanner/templates/editor.html:22
+msgid "Reset sample"
+msgstr "Réinitialiser l’exemple"
+
+#: src/hockeyplanner/templates/editor.html:22
+msgid "＋ New"
+msgstr "＋ Nouveau"
+
+#: src/hockeyplanner/templates/editor.html:23
+msgid "↓ PNG"
+msgstr "↓ PNG"
+
+#: src/hockeyplanner/templates/editor.html:24
+msgid "↓ PDF"
+msgstr "↓ PDF"
+
+#: src/hockeyplanner/templates/editor.html:25
+msgid "Preview drill"
+msgstr "Voir l’aperçu"
+
+#: src/hockeyplanner/templates/editor.html:26
+msgid "Save a Copy"
+msgstr "Enregistrer une copie"
+
+#: src/hockeyplanner/templates/editor.html:30
+msgid "Publish to Platform"
+msgstr "Publier sur la plateforme"
+
+#: src/hockeyplanner/templates/editor.html:33
+msgid "Continue to save"
+msgstr "Continuer pour enregistrer"
+
+#: src/hockeyplanner/templates/editor.html:33
+msgid "Create an account to save"
+msgstr "Créer un compte pour enregistrer"
+
+#: src/hockeyplanner/templates/editor.html:33 web/editor.js:621
+msgid "Update Drill"
+msgstr "Mettre à jour l’exercice"
+
+#: src/hockeyplanner/templates/editor.html:33 web/editor.js:621
+msgid "Save Drill"
+msgstr "Enregistrer l’exercice"
+
+#: src/hockeyplanner/templates/editor.html:39
+msgid "Add a public QR link to the PDF"
+msgstr "Ajouter un code QR public au PDF"
+
+#: src/hockeyplanner/templates/editor.html:41
+msgid "Save the drill first. Anyone with the QR code can view the saved drill."
+msgstr ""
+"Enregistrez d’abord l’exercice. Toute personne qui a le code QR peut le "
+"consulter."
+
+#: src/hockeyplanner/templates/editor.html:46
+#: src/hockeyplanner/templates/editor.html:47
+msgid "Tools"
+msgstr "Outils"
+
+#: src/hockeyplanner/templates/editor.html:50
+msgid "Line shape"
+msgstr "Forme du tracé"
+
+#: src/hockeyplanner/templates/editor.html:51
+msgid "Straight"
+msgstr "Droit"
+
+#: src/hockeyplanner/templates/editor.html:51
+msgid "Curved"
+msgstr "Courbe"
+
+#: src/hockeyplanner/templates/editor.html:51
+msgid "Freehand"
+msgstr "À main levée"
+
+#: src/hockeyplanner/templates/editor.html:57
+msgid "Hockey Rink"
+msgstr "Patinoire"
+
+#: src/hockeyplanner/templates/editor.html:57
+msgid "Layout"
+msgstr "Configuration"
+
+#: src/hockeyplanner/templates/editor.html:58 web/drill-library.js:140
+msgid "Full rink"
+msgstr "Patinoire complète"
+
+#: src/hockeyplanner/templates/editor.html:58 web/drill-library.js:18
+msgid "Half rink"
+msgstr "Demi-patinoire"
+
+#: src/hockeyplanner/templates/editor.html:58 web/drill-library.js:18
+msgid "Quarter rink"
+msgstr "Quart de patinoire"
+
+#: src/hockeyplanner/templates/editor.html:60
+msgid "Undo"
+msgstr "Annuler"
+
+#: src/hockeyplanner/templates/editor.html:60
+msgid "Undo (Ctrl+Z)"
+msgstr "Annuler (Ctrl+Z)"
+
+#: src/hockeyplanner/templates/editor.html:60
+msgid "Redo"
+msgstr "Rétablir"
+
+#: src/hockeyplanner/templates/editor.html:60
+msgid "Redo (Ctrl+Shift+Z)"
+msgstr "Rétablir (Ctrl+Maj+Z)"
+
+#: src/hockeyplanner/templates/editor.html:60 web/drill-library.js:158
+msgid "Delete"
+msgstr "Supprimer"
+
+#: src/hockeyplanner/templates/editor.html:62
+msgid "Interactive hockey rink"
+msgstr "Patinoire interactive"
+
+#: src/hockeyplanner/templates/editor.html:62
+msgid "Goal rotation"
+msgstr "Rotation du filet"
+
+#: src/hockeyplanner/templates/editor.html:62
+msgid "Rotate goal 15 degrees counterclockwise"
+msgstr "Faire pivoter le filet de 15 degrés dans le sens antihoraire"
+
+#: src/hockeyplanner/templates/editor.html:62
+msgid "Rotate goal 15° counterclockwise"
+msgstr "Tourner le filet de 15° dans le sens antihoraire"
+
+#: src/hockeyplanner/templates/editor.html:62
+msgid "Rotate goal 15 degrees clockwise"
+msgstr "Faire pivoter le filet de 15 degrés dans le sens horaire"
+
+#: src/hockeyplanner/templates/editor.html:62
+msgid "Rotate goal 15° clockwise"
+msgstr "Tourner le filet de 15° dans le sens horaire"
+
+#: src/hockeyplanner/templates/editor.html:69 web/editor.js:204
+msgid ""
+"Click to select, Shift-click to add or remove items, or drag from an "
+"empty spot to select an area."
+msgstr ""
+"Cliquez pour sélectionner. Maintenez Maj en cliquant pour ajouter ou "
+"retirer un élément de la sélection, ou glissez depuis une zone vide pour "
+"sélectionner une région."
+
+#: src/hockeyplanner/templates/editor.html:72
+msgid "Drill Details"
+msgstr "Détails de l’exercice"
+
+#: src/hockeyplanner/templates/editor.html:74
+msgid "Drill name"
+msgstr "Nom de l’exercice"
+
+#: src/hockeyplanner/templates/editor.html:74
+msgid "e.g. Breakout passing drill"
+msgstr "p. ex. Passes en sortie de zone"
+
+#: src/hockeyplanner/templates/editor.html:77 web/export.js:192
+msgid "Description"
+msgstr "Description"
+
+#: src/hockeyplanner/templates/editor.html:78 web/description-editor.js:57
+msgid "Edit Markdown"
+msgstr "Modifier le Markdown"
+
+#: src/hockeyplanner/templates/editor.html:81
+msgid "Drill objectives, instructions, and variations"
+msgstr "Objectifs, consignes et variantes de l’exercice"
+
+#: src/hockeyplanner/templates/editor.html:85 web/editor.js:800
+msgid "Loading the editor…"
+msgstr "Chargement de l’éditeur…"
+
+#: src/hockeyplanner/templates/editor.html:90
+msgid "Save a copy"
+msgstr "Enregistrer une copie"
+
+#: src/hockeyplanner/templates/editor.html:91
+msgid "Save your current changes as a new drill and keep the original."
+msgstr ""
+"Enregistrez vos modifications dans un nouvel exercice et conservez "
+"l’original."
+
+#: src/hockeyplanner/templates/editor.html:92
+msgid "Name for the copy"
+msgstr "Nom de la copie"
+
+#: src/hockeyplanner/templates/editor.html:96
+msgid "Save Copy"
+msgstr "Enregistrer la copie"
+
+#: src/hockeyplanner/templates/editor_tools.html:14
+msgid "Select and Move"
+msgstr "Sélectionner et déplacer"
+
+#: src/hockeyplanner/templates/editor_tools.html:16
+msgid "Markers"
+msgstr "Marqueurs"
+
+#: src/hockeyplanner/templates/editor_tools.html:19 web/drawing.js:16
+msgid "Player"
+msgstr "Joueur"
+
+#: src/hockeyplanner/templates/editor_tools.html:20
+msgid "Player team"
+msgstr "Équipe du joueur"
+
+#: src/hockeyplanner/templates/editor_tools.html:21
+msgid "blue"
+msgstr "bleue"
+
+#: src/hockeyplanner/templates/editor_tools.html:21
+msgid "red"
+msgstr "rouge"
+
+#: src/hockeyplanner/templates/editor_tools.html:22
+#, python-format
+msgid "Team %(team)s (%(color)s)"
+msgstr "Équipe %(team)s (%(color)s)"
+
+#: src/hockeyplanner/templates/editor_tools.html:23
+#, python-format
+msgid "Team %(team)s"
+msgstr "Équipe %(team)s"
+
+#: src/hockeyplanner/templates/editor_tools.html:28 web/drawing.js:17
+msgid "Cone"
+msgstr "Cône"
+
+#: src/hockeyplanner/templates/editor_tools.html:29 web/drawing.js:18
+msgid "Coach"
+msgstr "Entraîneur"
+
+#: src/hockeyplanner/templates/editor_tools.html:30 web/drawing.js:19
+msgid "Goal"
+msgstr "Filet"
+
+#: src/hockeyplanner/templates/editor_tools.html:31 web/drawing.js:20
+msgid "Goalie"
+msgstr "Gardien"
+
+#: src/hockeyplanner/templates/editor_tools.html:32 web/drawing.js:21
+msgid "Puck"
+msgstr "Rondelle"
+
+#: src/hockeyplanner/templates/editor_tools.html:33 web/drawing.js:22
+msgid "Puck pile"
+msgstr "Rondelles"
+
+#: src/hockeyplanner/templates/editor_tools.html:34 web/drawing.js:23
+msgid "Shot on goal"
+msgstr "Tir au but"
+
+#: src/hockeyplanner/templates/editor_tools.html:35
+#: src/hockeyplanner/templates/editor_tools.html:41 web/drawing.js:24
+msgid "Step number"
+msgstr "Étapes"
+
+#: src/hockeyplanner/templates/editor_tools.html:36 web/drawing.js:25
+msgid "Referee"
+msgstr "Arbitre"
+
+#: src/hockeyplanner/templates/editor_tools.html:37 web/drawing.js:26
+msgid "Start"
+msgstr "Départ"
+
+#: src/hockeyplanner/templates/editor_tools.html:38 web/drawing.js:27
+msgid "End"
+msgstr "Fin"
+
+#: src/hockeyplanner/templates/editor_tools.html:46
+msgid "Movements"
+msgstr "Mouvements"
+
+#: src/hockeyplanner/templates/editor_tools.html:48 web/drawing.js:32
+msgid "Skate forward"
+msgstr "Patinage avant"
+
+#: src/hockeyplanner/templates/editor_tools.html:49 web/drawing.js:33
+msgid "Forward with puck"
+msgstr "Patinage avant avec rondelle"
+
+#: src/hockeyplanner/templates/editor_tools.html:50 web/drawing.js:34
+msgid "Forward and stop"
+msgstr "Patinage avant avec arrêt"
+
+#: src/hockeyplanner/templates/editor_tools.html:51 web/drawing.js:35
+msgid "Forward with puck and stop"
+msgstr "Patinage avant avec rondelle et arrêt"
+
+#: src/hockeyplanner/templates/editor_tools.html:52 web/drawing.js:36
+msgid "Skate backward"
+msgstr "Patinage arrière"
+
+#: src/hockeyplanner/templates/editor_tools.html:53 web/drawing.js:37
+msgid "Backward with puck"
+msgstr "Patinage arrière avec rondelle"
+
+#: src/hockeyplanner/templates/editor_tools.html:54 web/drawing.js:38
+msgid "Backward and stop"
+msgstr "Patinage arrière avec arrêt"
+
+#: src/hockeyplanner/templates/editor_tools.html:55 web/drawing.js:39
+msgid "Backward with puck and stop"
+msgstr "Patinage arrière avec rondelle et arrêt"
+
+#: src/hockeyplanner/templates/editor_tools.html:56 web/drawing.js:40
+msgid "Pass"
+msgstr "Passe"
+
+#: src/hockeyplanner/templates/editor_tools.html:57 web/drawing.js:28
+msgid "Pivot"
+msgstr "Pivot"
+
+#: src/hockeyplanner/templates/error.html:5
+msgid ""
+"A hockey player checks their pockets for a rink pass while a goalie "
+"guards the gate."
+msgstr ""
+"Un joueur de hockey fouille ses poches pour trouver son laissez-passer "
+"pendant qu’un gardien surveille l’entrée."
+
+#: src/hockeyplanner/templates/error.html:7
+msgid ""
+"A goalie searches with a magnifying glass while the missing puck hides "
+"behind a skate."
+msgstr ""
+"Un gardien cherche à la loupe pendant que la rondelle disparue se cache "
+"derrière un patin."
+
+#: src/hockeyplanner/templates/error.html:9
+msgid ""
+"A referee and a penguin with a tiny wrench inspect a broken ice "
+"resurfacer."
+msgstr ""
+"Un arbitre et un manchot muni d’une petite clé examinent une surfaceuse "
+"en panne."
+
+#: src/hockeyplanner/templates/error.html:21
+#: src/hockeyplanner/templates/welcome_header.html:9
+msgid "Home"
+msgstr "Accueil"
+
+#: src/hockeyplanner/templates/forgot_password.html:7
+msgid ""
+"Enter the email address you use for Hockey Planner. We’ll send a link to "
+"reset your password."
+msgstr ""
+"Entrez l’adresse courriel associée à Hockey Planner. Vous recevrez un "
+"lien pour réinitialiser votre mot de passe."
+
+#: src/hockeyplanner/templates/forgot_password.html:10
+#: src/hockeyplanner/templates/register.html:13
+msgid "Email address"
+msgstr "Adresse courriel"
+
+#: src/hockeyplanner/templates/forgot_password.html:13
+msgid "Send reset link"
+msgstr "Envoyer le lien de réinitialisation"
+
+#: src/hockeyplanner/templates/forgot_password.html:16
+#: src/hockeyplanner/templates/register.html:24
+msgid "Back to sign in"
+msgstr "Retour à la connexion"
+
+#: src/hockeyplanner/templates/free_preview_notice.html:1
+#: src/hockeyplanner/templates/free_preview_notice.html:3 web/export.js:93
+msgid "Created with Hockey Planner Free"
+msgstr "Créé avec le forfait gratuit de Hockey Planner"
+
+#: src/hockeyplanner/templates/free_preview_notice.html:4
+msgid "Draw your own drills and build practice plans."
+msgstr "Dessinez vos exercices et créez des plans d’entraînement."
+
+#: src/hockeyplanner/templates/free_preview_notice.html:6
+#: src/hockeyplanner/templates/welcome.html:79
+msgid "Create a free account"
+msgstr "Créer un compte gratuit"
+
+#: src/hockeyplanner/templates/login.html:8
+msgid "Username or email"
+msgstr "Nom d’utilisateur ou courriel"
+
+#: src/hockeyplanner/templates/login.html:12
+#: src/hockeyplanner/templates/register.html:17
+msgid "Password"
+msgstr "Mot de passe"
+
+#: src/hockeyplanner/templates/login.html:17
+msgid "Forgot password?"
+msgstr "Mot de passe oublié?"
+
+#: src/hockeyplanner/templates/login.html:21
+msgid "Back to shared plan"
+msgstr "Retour au plan partagé"
+
+#: src/hockeyplanner/templates/membership.html:8
+msgid ""
+"Both plans include the same coaching tools. The difference is how many "
+"drills and plans you can save."
+msgstr ""
+"Les deux forfaits offrent les mêmes outils. Seul le nombre d’exercices et"
+" de plans que vous pouvez enregistrer varie."
+
+#: src/hockeyplanner/templates/membership.html:22
+#: src/hockeyplanner/templates/membership.html:37
+msgid "Draw and edit on the rink"
+msgstr "Dessiner et modifier sur la glace"
+
+#: src/hockeyplanner/templates/membership.html:23
+#: src/hockeyplanner/templates/membership.html:38
+msgid "Present plans in fullscreen"
+msgstr "Présenter les plans en plein écran"
+
+#: src/hockeyplanner/templates/membership.html:24
+#: src/hockeyplanner/templates/membership.html:39
+msgid "Share, receive, and copy practice plans"
+msgstr "Partager, recevoir et copier des plans d’entraînement"
+
+#: src/hockeyplanner/templates/membership.html:25
+#: src/hockeyplanner/templates/membership.html:40
+msgid "Export drills and plans"
+msgstr "Exporter les exercices et les plans"
+
+#: src/hockeyplanner/templates/membership.html:27
+msgid "Continue with Free"
+msgstr "Continuer avec le forfait gratuit"
+
+#: src/hockeyplanner/templates/membership.html:28
+#: src/hockeyplanner/templates/membership.html:43
+msgid "Current plan"
+msgstr "Forfait actuel"
+
+#: src/hockeyplanner/templates/membership.html:33
+#: src/hockeyplanner/templates/membership.html:34
+msgid "Unlimited"
+msgstr "Illimité"
+
+#: src/hockeyplanner/templates/membership.html:42
+msgid "Coming soon"
+msgstr "Bientôt disponible"
+
+#: src/hockeyplanner/templates/plan_limit.html:6
+msgid "Free plan usage"
+msgstr "Utilisation du forfait gratuit"
+
+#: src/hockeyplanner/templates/plan_limit.html:9
+msgid "Full Access will remove these storage limits when it becomes available."
+msgstr "Le forfait Accès complet lèvera ces limites lorsqu’il sera disponible."
+
+#: src/hockeyplanner/templates/plan_sharing.html:3
+msgid "Share plan"
+msgstr "Partager le plan"
+
+#: src/hockeyplanner/templates/plan_sharing.html:7
+msgid ""
+"Recipients can view this plan and copy it with all its drills into their "
+"account."
+msgstr ""
+"Les destinataires peuvent consulter ce plan et le copier avec tous ses "
+"exercices dans leur compte."
+
+#: src/hockeyplanner/templates/plan_sharing.html:9
+msgid "Recipient username"
+msgstr "Nom d’utilisateur du destinataire"
+
+#: src/hockeyplanner/templates/plan_sharing.html:12 web/plans.js:162
+msgid "Share"
+msgstr "Partager"
+
+#: src/hockeyplanner/templates/plan_sharing.html:15
+msgid "People with access"
+msgstr "Personnes autorisées"
+
+#: src/hockeyplanner/templates/plan_sharing.html:17
+msgid "Share by link"
+msgstr "Partager par lien"
+
+#: src/hockeyplanner/templates/plan_sharing.html:18
+msgid ""
+"Anyone with the link can preview and print this plan. Signing in is "
+"required to accept it. Disabling the link stops new access."
+msgstr ""
+"Toute personne ayant le lien peut consulter et imprimer ce plan. "
+"Connectez-vous pour l’accepter. Désactivez le lien pour empêcher tout "
+"nouvel accès."
+
+#: src/hockeyplanner/templates/plan_sharing.html:19
+msgid "Create share link"
+msgstr "Créer un lien de partage"
+
+#: src/hockeyplanner/templates/plan_sharing.html:21
+msgid "Share link"
+msgstr "Lien de partage"
+
+#: src/hockeyplanner/templates/plan_sharing.html:24
+msgid "Copy link"
+msgstr "Copier le lien"
+
+#: src/hockeyplanner/templates/plan_sharing.html:25
+msgid "Disable link"
+msgstr "Désactiver le lien"
+
+#: src/hockeyplanner/templates/plan_viewer.html:6
+#: src/hockeyplanner/templates/share.html:10
+msgid "Print Drill PDF"
+msgstr "Imprimer l’exercice en PDF"
+
+#: src/hockeyplanner/templates/plan_viewer.html:7
+msgid "Enter Fullscreen"
+msgstr "Passer en plein écran"
+
+#: src/hockeyplanner/templates/plan_viewer.html:8
+msgid "Exit Presentation"
+msgstr "Quitter la présentation"
+
+#: src/hockeyplanner/templates/plan_viewer.html:12
+msgid "Current drill"
+msgstr "Exercice en cours"
+
+#: src/hockeyplanner/templates/plan_viewer.html:13
+msgid "Drill navigation"
+msgstr "Navigation entre les exercices"
+
+#: src/hockeyplanner/templates/plan_viewer.html:14
+msgid "← Previous"
+msgstr "← Précédent"
+
+#: src/hockeyplanner/templates/plan_viewer.html:16
+msgid "Next →"
+msgstr "Suivant →"
+
+#: src/hockeyplanner/templates/plans.html:7
+msgid "New Plan"
+msgstr "Nouveau plan"
+
+#: src/hockeyplanner/templates/plans.html:11
+msgid "My plans"
+msgstr "Mes plans"
+
+#: src/hockeyplanner/templates/plans.html:12
+msgid "Plans in your account. You can edit and share them."
+msgstr "Plans de votre compte. Vous pouvez les modifier et les partager."
+
+#: src/hockeyplanner/templates/plans.html:16
+msgid "Shared with me"
+msgstr "Partagés avec moi"
+
+#: src/hockeyplanner/templates/plans.html:17
+msgid "Read-only plans from other users. Copy them to edit your own version."
+msgstr ""
+"Plans d’autres utilisateurs en lecture seule. Copiez-les pour modifier "
+"votre propre version."
+
+#: src/hockeyplanner/templates/plans.html:24
+msgid "Plan name"
+msgstr "Nom du plan"
+
+#: src/hockeyplanner/templates/plans.html:25
+msgid "e.g. Tuesday practice"
+msgstr "p. ex. Entraînement du mardi"
+
+#: src/hockeyplanner/templates/plans.html:27
+msgid "Drills in this plan"
+msgstr "Exercices dans ce plan"
+
+#: src/hockeyplanner/templates/plans.html:29
+msgid "Drop drills here to add them. Drag within the list to reorder."
+msgstr ""
+"Déposez les exercices ici. Glissez-les dans la liste pour en modifier "
+"l’ordre."
+
+#: src/hockeyplanner/templates/plans.html:34
+msgid "Save Plan"
+msgstr "Enregistrer le plan"
+
+#: src/hockeyplanner/templates/plans.html:39
+msgid "Available drills"
+msgstr "Exercices disponibles"
+
+#: src/hockeyplanner/templates/plans.html:40
+msgid "Drag a drill to the plan or select Add."
+msgstr "Glissez un exercice dans le plan ou sélectionnez Ajouter."
+
+#: src/hockeyplanner/templates/plans.html:42
+msgid "Search by title, description, or owner"
+msgstr "Rechercher par titre, description ou propriétaire"
+
+#: src/hockeyplanner/templates/register.html:8
+msgid "Username"
+msgstr "Nom d’utilisateur"
+
+#: src/hockeyplanner/templates/register.html:10
+msgid "Use 3–32 letters, numbers, dots, underscores or hyphens."
+msgstr ""
+"Utilisez de 3 à 32 lettres, chiffres, points, traits de soulignement ou "
+"traits d’union."
+
+#: src/hockeyplanner/templates/register.html:19
+#: src/hockeyplanner/templates/reset_password.html:11 web/password-policy.js:2
+msgid ""
+"Use 12–128 characters, including at least one uppercase letter and one "
+"special character."
+msgstr ""
+"Utilisez de 12 à 128 caractères, dont au moins une majuscule et un "
+"caractère spécial."
+
+#: src/hockeyplanner/templates/register.html:21
+msgid "Create account"
+msgstr "Créer le compte"
+
+#: src/hockeyplanner/templates/reset_password.html:13
+msgid "Reset password"
+msgstr "Réinitialiser le mot de passe"
+
+#: src/hockeyplanner/templates/self_delete.html:4
+msgid ""
+"This permanently deletes your account, drills, plans, and sharing links, "
+"and signs you out on all devices. Independent copies saved by others "
+"remain in their accounts."
+msgstr ""
+"Votre compte, vos exercices, vos plans et vos liens de partage seront "
+"supprimés définitivement. Vous serez déconnecté sur tous vos appareils. "
+"Les copies indépendantes enregistrées par d’autres personnes resteront "
+"dans leurs comptes."
+
+#: src/hockeyplanner/templates/self_delete.html:5
+msgid ""
+"If you are the only power user, assign another power user first to keep "
+"Administration available for other accounts."
+msgstr ""
+"Si vous êtes la seule personne à administrer les comptes, attribuez "
+"d’abord ce rôle à une autre personne."
+
+#: src/hockeyplanner/templates/self_delete.html:11
+msgid "Permanently delete my account"
+msgstr "Supprimer définitivement mon compte"
+
+#: src/hockeyplanner/templates/share.html:9 web/plans.js:145 web/plans.js:452
+msgid "View Fullscreen"
+msgstr "Afficher en plein écran"
+
+#: src/hockeyplanner/templates/share.html:10 web/plans.js:114
+msgid "Print PDF"
+msgstr "Imprimer en PDF"
+
+#: src/hockeyplanner/templates/share.html:13
+msgid "Accept shared plan"
+msgstr "Accepter le plan partagé"
+
+#: src/hockeyplanner/templates/share.html:15
+msgid "Complete account setup to accept"
+msgstr "Finalisez la configuration du compte pour accepter"
+
+#: src/hockeyplanner/templates/share.html:17
+msgid "Sign in to accept"
+msgstr "Se connecter pour accepter"
+
+#: src/hockeyplanner/templates/share.html:28 web/plans.js:186
+#, python-format
+msgid "Shared by %(owner)s"
+msgstr "Partagé par %(owner)s"
+
+#: src/hockeyplanner/templates/welcome.html:16
+msgid "The ice hockey practice planner"
+msgstr "Le planificateur d’entraînements de hockey"
+
+#: src/hockeyplanner/templates/welcome.html:17
+#: src/hockeyplanner/templates/welcome_auth.html:17
+msgid "Behind every great practice, there's someone who cares."
+msgstr "Derrière chaque bel entraînement, il y a quelqu’un qui y tient."
+
+#: src/hockeyplanner/templates/welcome.html:18
+#: src/hockeyplanner/templates/welcome_auth.html:18
+msgid ""
+"Hockey Planner — Built by volunteer coaches, for volunteer coaches. "
+"Inspired by the love of the game."
+msgstr ""
+"Hockey Planner — Conçu par des entraîneurs bénévoles, pour les "
+"entraîneurs bénévoles. Inspiré par l’amour du hockey."
+
+#: src/hockeyplanner/templates/welcome.html:20
+msgid "Get started free"
+msgstr "Commencer gratuitement"
+
+#: src/hockeyplanner/templates/welcome.html:21
+msgid "Read our story"
+msgstr "Découvrez notre histoire"
+
+#: src/hockeyplanner/templates/welcome.html:31
+msgid "Features"
+msgstr "Fonctionnalités"
+
+#: src/hockeyplanner/templates/welcome.html:32
+msgid "From the whiteboard to the ice."
+msgstr "Du tableau blanc à la glace."
+
+#: src/hockeyplanner/templates/welcome.html:33
+msgid ""
+"Sketch a warm-up, turn it into a full practice, and bring the plan to the"
+" rink."
+msgstr ""
+"Dessinez un échauffement, transformez-le en entraînement complet et "
+"apportez votre plan à l’aréna."
+
+#: src/hockeyplanner/templates/welcome.html:36
+msgid "Example rink diagram with players, cones and a passing route"
+msgstr ""
+"Exemple de schéma de patinoire avec des joueurs, des cônes et un trajet "
+"de passe"
+
+#: src/hockeyplanner/templates/welcome.html:37
+msgid "Sample drill · Breakout passing"
+msgstr "Exemple d’exercice · Passes en sortie de zone"
+
+#: src/hockeyplanner/templates/welcome.html:43
+msgid "Draw the drill"
+msgstr "Dessinez l’exercice"
+
+#: src/hockeyplanner/templates/welcome.html:44
+msgid ""
+"Drop players, cones and pucks onto the rink. Draw a passing lane, mark a "
+"pivot, or show exactly where to stop."
+msgstr ""
+"Placez des joueurs, des cônes et des rondelles sur la glace. Tracez une "
+"ligne de passe, indiquez un pivot ou montrez exactement où s’arrêter."
+
+#: src/hockeyplanner/templates/welcome.html:47
+msgid "Set the practice order"
+msgstr "Organisez votre entraînement"
+
+#: src/hockeyplanner/templates/welcome.html:48
+msgid ""
+"Save drills in your library. Build a practice plan and drag drills into "
+"the order you want, from the first warm-up to the final shot."
+msgstr ""
+"Enregistrez vos exercices dans la bibliothèque. Créez un plan et placez "
+"les exercices dans l’ordre voulu, de l’échauffement au dernier tir."
+
+#: src/hockeyplanner/templates/welcome.html:51
+msgid "Share the practice plan"
+msgstr "Partagez le plan d’entraînement"
+
+#: src/hockeyplanner/templates/welcome.html:52
+msgid ""
+"Send the entire practice plan to another coach or share a read-only link."
+" Coaches with an account can copy a shared plan and its drills into their"
+" own library."
+msgstr ""
+"Envoyez le plan complet à un autre entraîneur ou partagez un lien en "
+"lecture seule. Les entraîneurs qui ont un compte peuvent copier le plan "
+"et ses exercices dans leur bibliothèque."
+
+#: src/hockeyplanner/templates/welcome.html:55
+msgid "Take it to the rink"
+msgstr "Apportez votre plan à l’aréna"
+
+#: src/hockeyplanner/templates/welcome.html:56
+msgid ""
+"Show drills in fullscreen or bring a print-ready PDF with QR codes and a "
+"movement legend."
+msgstr ""
+"Présentez vos exercices en plein écran ou apportez un PDF prêt à imprimer"
+" avec des codes QR et une légende des mouvements."
+
+#: src/hockeyplanner/templates/welcome.html:65
+#: src/hockeyplanner/templates/welcome_header.html:7
+msgid "About us"
+msgstr "À propos"
+
+#: src/hockeyplanner/templates/welcome.html:66
+msgid "More Than a Game. A Community."
+msgstr "Plus qu’un sport. Une communauté."
+
+#: src/hockeyplanner/templates/welcome.html:69
+msgid ""
+"Hockey is more than a sport. It is a cultural expression, a shared "
+"passion and a tradition that brings people together across generations, "
+"backgrounds and communities."
+msgstr ""
+"Chez nous, le hockey, ça fait partie de la vie. C’est une passion qu’on "
+"se transmet d’une génération à l’autre et qui nous rassemble à l’aréna, "
+"peu importe d’où on vient."
+
+#: src/hockeyplanner/templates/welcome.html:70
+msgid ""
+"Behind every young player stepping onto the ice, there is a story. A "
+"story of parents waking up early on cold winter mornings, tying skates, "
+"carrying equipment and cheering from the stands. For many, it is also "
+"about watching their children discover a passion that was once their own "
+"childhood dream."
+msgstr ""
+"Derrière chaque jeune qui saute sur la glace, il y a des parents qui se "
+"lèvent aux aurores, même en plein hiver. Ils lacent les patins, traînent "
+"les poches de hockey et encouragent les jeunes du haut des gradins. Pour "
+"plusieurs, c’est aussi le bonheur de voir leurs enfants tomber en amour "
+"avec le même sport qu’eux quand ils étaient petits."
+
+#: src/hockeyplanner/templates/welcome.html:71
+msgid ""
+"These parents are at the heart of hockey. On and off the ice, they "
+"dedicate their time, energy and enthusiasm to keeping this tradition "
+"alive. Many of them do so as volunteers, becoming coaches, mentors and "
+"role models, simply because they believe in the positive impact that "
+"hockey can have on children's lives."
+msgstr ""
+"Ces parents-là font vivre le hockey. Sur la glace comme dans les "
+"coulisses, ils donnent de leur temps et de leur énergie. Plusieurs se "
+"retrouvent derrière le banc, comme entraîneurs ou mentors bénévoles, "
+"parce qu’ils savent tout ce que le hockey peut apporter aux jeunes."
+
+#: src/hockeyplanner/templates/welcome.html:72
+msgid ""
+"But being a volunteer coach also comes with challenges. Between family, "
+"work and everyday responsibilities, finding the time to prepare "
+"meaningful, engaging and well-structured practices is not always easy."
+msgstr ""
+"Quand on est entraîneur bénévole, les journées sont déjà bien remplies. "
+"Entre le travail, la famille et le reste, ce n’est pas toujours évident "
+"de trouver le temps de préparer une pratique bien ficelée où tout le "
+"monde aura du fun sur la glace."
+
+#: src/hockeyplanner/templates/welcome.html:73
+msgid "That's where Hockey Planner was born."
+msgstr "C’est de là qu’est parti Hockey Planner."
+
+#: src/hockeyplanner/templates/welcome.html:74
+msgid ""
+"Created by a parent and volunteer coach, Hockey Planner started with a "
+"simple idea: to make life easier for those who dedicate their time to "
+"helping young players grow."
+msgstr ""
+"À l’origine, il y a un parent qui donnait de son temps derrière le banc. "
+"Son idée était simple : donner un coup de main à celles et ceux qui "
+"s’investissent pour faire grandir les jeunes au hockey."
+
+#: src/hockeyplanner/templates/welcome.html:75
+msgid ""
+"A place where coaches can create drills, organize practices, share ideas "
+"and collaborate with one another. A tool designed to simplify "
+"preparation, encourage creativity and strengthen the hockey coaching "
+"community."
+msgstr ""
+"Hockey Planner, c’est un endroit pour dessiner ses exercices, monter sa "
+"pratique et se passer des idées entre entraîneurs. On peut reprendre un "
+"exercice qui a bien marché, l’adapter à son équipe et le partager à son "
+"tour."
+
+#: src/hockeyplanner/templates/welcome.html:76
+msgid ""
+"Because every minute saved planning is more time to focus on what truly "
+"matters: helping children develop their skills, build friendships, gain "
+"confidence and, above all, enjoy the game."
+msgstr ""
+"Moins de temps à préparer la pratique, c’est plus de temps avec les "
+"jeunes pour les aider à améliorer leur jeu, à se faire des amis, à "
+"prendre confiance et, surtout, à avoir du fun en jouant au hockey."
+
+#: src/hockeyplanner/templates/welcome.html:77
+msgid ""
+"Hockey Planner is our small contribution to a much bigger tradition. It "
+"is a way of giving back to the community and supporting the people who "
+"make hockey possible, one practice at a time."
+msgstr ""
+"Hockey Planner, c’est notre façon de redonner un peu au hockey d’ici. On "
+"veut donner un coup de main aux gens qui font vivre le hockey dans nos "
+"arénas, une pratique à la fois."
+
+#: src/hockeyplanner/templates/welcome.html:78
+msgid ""
+"Built by a volunteer coach. Inspired by the community. Dedicated to the "
+"next generation."
+msgstr ""
+"Créé par un entraîneur bénévole. Inspiré par les gens de l’aréna. Pensé "
+"pour la relève."
+
+#: src/hockeyplanner/templates/welcome_header.html:6
+msgid "Explore Hockey Planner"
+msgstr "Découvrir Hockey Planner"
+
+#: web/account.js:14
+msgid "current password"
+msgstr "le mot de passe actuel"
+
+#: web/account.js:15 web/auth.js:73
+msgid "new password"
+msgstr "le nouveau mot de passe"
+
+#: web/account.js:33
+msgid "Password changed. Other sessions have been signed out."
+msgstr "Mot de passe modifié. Les autres sessions ont été fermées."
+
+#: web/account.js:65
+msgid "Deleting your account…"
+msgstr "Suppression de votre compte…"
+
+#: web/account.js:69
+msgid "Your account was permanently deleted."
+msgstr "Votre compte a été supprimé définitivement."
+
+#: web/account.js:91
+msgid ""
+"Check your new address for a confirmation link and code. You have 30 "
+"minutes to confirm."
+msgstr ""
+"Vérifiez votre nouvelle boîte de réception pour trouver le lien et le "
+"code. Vous avez 30 minutes pour confirmer."
+
+#: web/account.js:101
+msgid "Switch to Free? You will keep your existing drills and plans."
+msgstr "Passer au forfait gratuit? Vous conserverez vos exercices et vos plans."
+
+#: web/account.js:105
+msgid ""
+"Your subscription was switched to Free. Your saved drills and plans were "
+"kept."
+msgstr ""
+"Vous êtes passé au forfait gratuit. Vos exercices et vos plans ont été "
+"conservés."
+
+#: web/account.js:120
+msgid "Free plan selected."
+msgstr "Forfait gratuit sélectionné."
+
+#: web/admin.js:24
+msgid "Deleting account…"
+msgstr "Suppression du compte…"
+
+#: web/admin.js:28
+#, python-format
+msgid "%(username)s and their content were deleted."
+msgstr "Le compte de %(username)s et son contenu ont été supprimés."
+
+#: web/admin.js:63
+msgid "No email on file"
+msgstr "Aucun courriel au dossier"
+
+#: web/admin.js:65
+msgid "Plan not selected"
+msgstr "Aucun forfait sélectionné"
+
+#: web/admin.js:69
+#, python-format
+msgid "Poweruser · Your account · %(plan)s"
+msgstr "Administrateur · Votre compte · %(plan)s"
+
+#: web/admin.js:75
+#, python-format
+msgid "Manage %(username)s"
+msgstr "Gérer le compte de %(username)s"
+
+#: web/admin.js:76
+msgid "User"
+msgstr "Utilisateur"
+
+#: web/admin.js:76
+msgid "Poweruser"
+msgstr "Administrateur"
+
+#: web/admin.js:77
+msgid "Active"
+msgstr "Actif"
+
+#: web/admin.js:77
+msgid "Disabled"
+msgstr "Désactivé"
+
+#: web/admin.js:93
+msgid "Leave blank to keep current password"
+msgstr "Laissez vide pour garder le mot de passe actuel"
+
+#: web/admin.js:95
+msgid "Role"
+msgstr "Rôle"
+
+#: web/admin.js:96
+msgid "Access"
+msgstr "Accès"
+
+#: web/admin.js:97
+msgid "Subscription plan"
+msgstr "Forfait"
+
+#: web/admin.js:98
+msgid "New password (optional)"
+msgstr "Nouveau mot de passe (facultatif)"
+
+#: web/admin.js:99
+#, python-format
+msgid "new password for %(username)s"
+msgstr "le nouveau mot de passe de %(username)s"
+
+#: web/admin.js:108
+msgid "Save changes"
+msgstr "Enregistrer les changements"
+
+#: web/admin.js:113
+#, python-format
+msgid "Delete account %(username)s"
+msgstr "Supprimer le compte de %(username)s"
+
+#: web/admin.js:116
+#, python-format
+msgid ""
+"Permanently delete %(username)s, their drills and practice plans? This "
+"also ends their sessions and removes their shares. This action cannot be "
+"undone."
+msgstr ""
+"Supprimer définitivement le compte de %(username)s, ses exercices et ses "
+"plans d’entraînement? Ses sessions et ses partages seront aussi "
+"supprimés. Cette action est irréversible."
+
+#: web/admin.js:141
+#, python-format
+msgid "Changes saved for %(username)s."
+msgstr "Changements enregistrés pour %(username)s."
+
+#: web/admin.js:155
+msgid "Loading accounts…"
+msgstr "Chargement des comptes…"
+
+#: web/auth.js:48
+msgid ""
+"Check your email for the confirmation link and six-digit code. You have "
+"30 minutes to confirm your account."
+msgstr ""
+"Vérifiez votre boîte de réception pour trouver le lien et le code à six "
+"chiffres. Vous avez 30 minutes pour confirmer votre compte."
+
+#: web/auth.js:62
+msgid "Email confirmed. Your account is ready."
+msgstr "Courriel confirmé. Votre compte est prêt."
+
+#: web/auth.js:65
+msgid "Email confirmed. You can now sign in with your new address."
+msgstr ""
+"Courriel confirmé. Vous pouvez maintenant vous connecter avec votre "
+"nouvelle adresse."
+
+#: web/auth.js:81
+msgid "Password reset. Sign in with your new password."
+msgstr "Mot de passe réinitialisé. Connectez-vous avec votre nouveau mot de passe."
+
+#: web/auth.js:93
+msgid ""
+"If an account uses that email address, you’ll receive a password reset "
+"link."
+msgstr ""
+"Si un compte utilise cette adresse courriel, vous recevrez un lien pour "
+"réinitialiser votre mot de passe."
+
+#: web/description-editor.js:10
+msgid "Paste link..."
+msgstr "Collez le lien…"
+
+#: web/description-editor.js:14
+msgid "Paragraph"
+msgstr "Paragraphe"
+
+#: web/description-editor.js:15
+#, python-format
+msgid "Heading %(level)d"
+msgstr "Titre %(level)d"
+
+#: web/description-editor.js:26
+msgid "Could not start the visual Markdown editor."
+msgstr "Impossible de démarrer l’éditeur visuel Markdown."
+
+#: web/description-editor.js:63
+msgid "Edit Visually"
+msgstr "Modifier en mode visuel"
+
+#: web/drawing.js:401
+#, python-format
+msgid "Rink thumbnail for %(title)s"
+msgstr "Miniature de la patinoire pour %(title)s"
+
+#: web/drill-library.js:49
+msgid "Show description"
+msgstr "Afficher la description"
+
+#: web/drill-library.js:52
+msgid "Hide description"
+msgstr "Masquer la description"
+
+#: web/drill-library.js:63
+#, python-format
+msgid "Download %(format)s for %(title)s"
+msgstr "Télécharger le fichier %(format)s de %(title)s"
+
+#: web/drill-library.js:73 web/editor.js:788 web/plan-invite.js:43
+#: web/plans.js:120
+msgid "Could not generate the PDF."
+msgstr "Impossible de générer le PDF."
+
+#: web/drill-library.js:74
+msgid "Could not download the PNG. Try again."
+msgstr "Impossible de télécharger le PNG. Réessayez."
+
+#: web/drill-library.js:121
+#, python-format
+msgid "%(visible)d of %(total)d drills"
+msgstr "%(visible)d exercices sur %(total)d"
+
+#: web/drill-library.js:122
+#, python-format
+msgid "%(count)d drill"
+msgid_plural "%(count)d drills"
+msgstr[0] "%(count)d exercice"
+msgstr[1] "%(count)d exercices"
+msgstr[2] ""
+
+#: web/drill-library.js:126
+msgid "No drills match your filters."
+msgstr "Aucun exercice ne correspond aux filtres."
+
+#: web/drill-library.js:126
+msgid "Drills you save will appear here."
+msgstr "Les exercices que vous enregistrez apparaîtront ici."
+
+#: web/drill-library.js:153
+msgid "Open in Editor"
+msgstr "Ouvrir dans l’éditeur"
+
+#: web/drill-library.js:154
+#, python-format
+msgid "Open %(title)s in the editor"
+msgstr "Ouvrir %(title)s dans l’éditeur"
+
+#: web/drill-library.js:159
+#, python-format
+msgid "Delete %(title)s"
+msgstr "Supprimer %(title)s"
+
+#: web/drill-library.js:161
+#, python-format
+msgid "Delete “%(title)s” from the library?"
+msgstr "Supprimer « %(title)s » de la bibliothèque?"
+
+#: web/drill-library.js:161
+msgid "Delete drill"
+msgstr "Supprimer l’exercice"
+
+#: web/drill-library.js:166
+msgid "Could not delete the drill."
+msgstr "Impossible de supprimer l’exercice."
+
+#: web/drill-library.js:181
+msgid "Copy"
+msgstr "Copier"
+
+#: web/drill-library.js:185
+msgid "Drill copied to your library."
+msgstr "Exercice copié dans votre bibliothèque."
+
+#: web/drill-library.js:188
+#, python-format
+msgid "Copy %(title)s"
+msgstr "Copier %(title)s"
+
+#: web/drill-library.js:191
+msgid "Preview"
+msgstr "Aperçu"
+
+#: web/drill-library.js:195
+#, python-format
+msgid "Preview %(title)s"
+msgstr "Afficher l’aperçu de %(title)s"
+
+#: web/drill-library.js:213
+msgid "Could not load the drill library. Reload the page to try again."
+msgstr "Impossible de charger la bibliothèque. Rechargez la page pour réessayer."
+
+#: web/editor.js:199
+msgid "Drag from the start point to the destination to draw a movement."
+msgstr "Glissez du point de départ à la destination pour tracer un déplacement."
+
+#: web/editor.js:200
+msgid ""
+"Drag to draw a curve. Move the pointer off the straight path to shape the"
+" curve."
+msgstr ""
+"Glissez pour tracer une courbe. Éloignez le pointeur du trajet droit pour"
+" donner sa forme à la courbe."
+
+#: web/editor.js:201
+msgid "Drag across the rink to draw a freehand path."
+msgstr "Glissez sur la patinoire pour tracer un trajet à main levée."
+
+#: web/editor.js:202
+msgid "Click the rink to place the marker."
+msgstr "Cliquez sur la patinoire pour placer le marqueur."
+
+#: web/editor.js:203
+msgid "Choose a number from 1 to 9, then click the rink to mark the step."
+msgstr ""
+"Choisissez un numéro de 1 à 9, puis cliquez sur la patinoire pour marquer"
+" l’étape."
+
+#: web/editor.js:205
+#, python-format
+msgid "%(count)d items selected. Drag any selected item to move the group."
+msgstr ""
+"%(count)d éléments sélectionnés. Glissez un des éléments pour déplacer le"
+" groupe."
+
+#: web/editor.js:206
+msgid ""
+"Drag a circular handle to change the movement length, or drag the line to"
+" move it."
+msgstr ""
+"Glissez une poignée ronde pour modifier la longueur du tracé, ou glissez "
+"le tracé pour le déplacer."
+
+#: web/editor.js:207
+msgid "Choose blue or red in the Player tool to change the selected players."
+msgstr ""
+"Choisissez le bleu ou le rouge dans l’outil Joueur pour modifier les "
+"joueurs sélectionnés."
+
+#: web/editor.js:208
+msgid "Drag to move the goal. Use the rotation buttons to change its angle."
+msgstr ""
+"Glissez pour déplacer le filet. Utilisez les boutons de rotation pour "
+"modifier son angle."
+
+#: web/editor.js:209
+msgid "Click the rink where the player should pivot."
+msgstr "Cliquez à l’endroit où le joueur doit pivoter."
+
+#: web/editor.js:210
+msgid "Copy and paste with Ctrl+C / Ctrl+V (⌘ on Mac)."
+msgstr "Copiez et collez avec Ctrl+C / Ctrl+V (⌘ sur Mac)."
+
+#: web/editor.js:452
+msgid "Exit Fullscreen"
+msgstr "Quitter le plein écran"
+
+#: web/editor.js:529
+#, python-format
+msgid "Object copied."
+msgid_plural "%(count)d objects copied."
+msgstr[0] "Objet copié."
+msgstr[1] "%(count)d objets copiés."
+msgstr[2] ""
+
+#: web/editor.js:556
+#, python-format
+msgid "Object pasted."
+msgid_plural "%(count)d objects pasted."
+msgstr[0] "Objet collé."
+msgstr[1] "%(count)d objets collés."
+msgstr[2] ""
+
+#: web/editor.js:587
+msgid "Discard unsaved changes?"
+msgstr "Abandonner les changements non enregistrés?"
+
+#: web/editor.js:587
+msgid "Discard changes"
+msgstr "Abandonner les changements"
+
+#: web/editor.js:617
+msgid "New drill."
+msgstr "Nouvel exercice."
+
+#: web/editor.js:628
+msgid "Make this drill available to all users"
+msgstr "Rendre cet exercice accessible à tout le monde"
+
+#: web/editor.js:628
+msgid "Save the drill first"
+msgstr "Enregistrez d’abord l’exercice"
+
+#: web/editor.js:638
+msgid ""
+"Make the saved drill available to all Hockey Planner users? They can "
+"copy, use, and share it."
+msgstr ""
+"Publier l’exercice enregistré? Toutes les personnes utilisant Hockey "
+"Planner pourront le copier, l’utiliser et le partager."
+
+#: web/editor.js:639
+msgid ""
+"Remove this drill from the platform library and disable its platform "
+"share link?"
+msgstr ""
+"Retirer l’exercice de la bibliothèque de la plateforme et désactiver son "
+"lien de partage?"
+
+#: web/editor.js:640
+msgid "Publish drill"
+msgstr "Publier l’exercice"
+
+#: web/editor.js:640
+msgid "Unpublish drill"
+msgstr "Retirer l’exercice"
+
+#: web/editor.js:644
+msgid "Drill published to the platform."
+msgstr "Exercice publié sur la plateforme."
+
+#: web/editor.js:644
+msgid "Drill unpublished."
+msgstr "Exercice retiré de la plateforme."
+
+#: web/editor.js:646
+msgid "Could not update platform visibility."
+msgstr "Impossible de modifier la visibilité sur la plateforme."
+
+#: web/editor.js:664 web/editor.js:743 web/export.js:144
+msgid "Untitled Drill"
+msgstr "Exercice sans titre"
+
+#: web/editor.js:685
+#, python-format
+msgid "Saved a copy as “%(title)s”."
+msgstr "Copie enregistrée sous « %(title)s »."
+
+#: web/editor.js:685
+msgid "Drill saved to the library."
+msgstr "Exercice enregistré dans la bibliothèque."
+
+#: web/editor.js:685
+msgid "Drill updated."
+msgstr "Exercice mis à jour."
+
+#: web/editor.js:687
+msgid "Could not save the drill. Try again."
+msgstr "Impossible d’enregistrer l’exercice. Réessayez."
+
+#: web/editor.js:726
+msgid ""
+"This browser could not keep your sample drill. Enable browser storage and"
+" try again."
+msgstr ""
+"Ce navigateur n’a pas pu conserver votre exercice. Activez le stockage du"
+" navigateur et réessayez."
+
+#: web/editor.js:752
+#, python-format
+msgid "%(title)s (copy)"
+msgstr "%(title)s (copie)"
+
+#: web/editor.js:766
+msgid "Enter a name different from the original drill."
+msgstr "Entrez un nom différent de celui de l’exercice original."
+
+#: web/editor.js:779
+msgid "Save your changes before exporting with a public QR code."
+msgstr "Enregistrez vos changements avant d’exporter avec un code QR public."
+
+#: web/editor.js:786
+msgid "PNG file ready."
+msgstr "Fichier PNG prêt."
+
+#: web/editor.js:789
+msgid "Could not generate the PNG file."
+msgstr "Impossible de générer le fichier PNG."
+
+#: web/export.js:81
+msgid ""
+"Free accounts include a public QR code in exported drill PDFs. Anyone "
+"with the code can view the saved drill. Upgrade to Full Access to export "
+"drill PDFs without public sharing."
+msgstr ""
+"Les PDF d’exercices exportés avec le forfait gratuit contiennent un code "
+"QR public. Toute personne qui a le code peut consulter l’exercice "
+"enregistré. Passez à l’Accès complet pour exporter des PDF sans partage "
+"public."
+
+#: web/export.js:95
+msgid ""
+"These drills and practice plans were developed with a free Hockey Planner"
+" account."
+msgstr ""
+"Ces exercices et plans ont été créés avec un compte Hockey Planner "
+"gratuit."
+
+#: web/export.js:97
+#, python-format
+msgid "Create an account at %(host)s or scan the QR code."
+msgstr "Créez un compte sur %(host)s ou balayez le code QR."
+
+#: web/export.js:124 web/plan-viewer.js:41
+msgid "Movement Legend"
+msgstr "Légende des mouvements"
+
+#: web/export.js:192
+msgid "Description (continued)"
+msgstr "Description (suite)"
+
+#: web/export.js:207
+msgid "Image encoding failed"
+msgstr "Impossible d’encoder l’image"
+
+#: web/export.js:256 web/export.js:271
+msgid "Scan to view drill"
+msgstr "Balayez pour voir l’exercice"
+
+#: web/export.js:266
+msgid "Scan to view full plan"
+msgstr "Balayez pour voir le plan complet"
+
+#: web/http.js:13
+#, python-format
+msgid "Request failed (%(status)d)."
+msgstr "La demande a échoué (%(status)d)."
+
+#: web/library-onboarding.js:10
+msgid "Could not import drills and plans from this browser."
+msgstr "Impossible d’importer les exercices et les plans de ce navigateur."
+
+#: web/password-policy.js:11
+msgid "password"
+msgstr "le mot de passe"
+
+#: web/password-policy.js:23
+msgid "Hide"
+msgstr "Masquer"
+
+#: web/password-policy.js:23
+msgid "Show"
+msgstr "Afficher"
+
+#: web/password-policy.js:24
+#, python-format
+msgid "Hide %(label)s"
+msgstr "Masquer %(label)s"
+
+#: web/password-policy.js:24
+#, python-format
+msgid "Show %(label)s"
+msgstr "Afficher %(label)s"
+
+#: web/plan-invite.js:28
+msgid "Shared plan added to Shared with me."
+msgstr "Plan ajouté aux plans partagés avec vous."
+
+#: web/plan-limit.js:16
+msgid "Drill limit reached"
+msgstr "Limite d’exercices atteinte"
+
+#: web/plan-limit.js:16
+msgid "Practice plan limit reached"
+msgstr "Limite de plans d’entraînement atteinte"
+
+#: web/plan-limit.js:17
+msgid "Not enough room for these drills"
+msgstr "Espace insuffisant pour ces exercices"
+
+#: web/plan-limit.js:17
+msgid "Not enough room for these practice plans"
+msgstr "Espace insuffisant pour ces plans d’entraînement"
+
+#: web/plan-limit.js:19
+#, python-format
+msgid "%(used)d of %(limit)d drills saved"
+msgstr "%(used)d exercices enregistrés sur %(limit)d"
+
+#: web/plan-limit.js:20
+#, python-format
+msgid "%(used)d of %(limit)d practice plans saved"
+msgstr "%(used)d plans d’entraînement enregistrés sur %(limit)d"
+
+#: web/plan-limit.js:25
+#, python-format
+msgid ""
+"Delete one saved drill from the Drill Library to make room, then try "
+"again."
+msgid_plural ""
+"Delete %(count)d saved drills from the Drill Library to make room, then "
+"try again."
+msgstr[0] ""
+"Supprimez un exercice de la bibliothèque pour libérer de l’espace, puis "
+"réessayez."
+msgstr[1] ""
+"Supprimez %(count)d exercices de la bibliothèque pour libérer de "
+"l’espace, puis réessayez."
+msgstr[2] ""
+
+#: web/plan-limit.js:27
+#, python-format
+msgid "Delete one saved practice plan from My plans to make room, then try again."
+msgid_plural ""
+"Delete %(count)d saved practice plans from My plans to make room, then "
+"try again."
+msgstr[0] ""
+"Supprimez un plan d’entraînement de Mes plans pour libérer de l’espace, "
+"puis réessayez."
+msgstr[1] ""
+"Supprimez %(count)d plans d’entraînement de Mes plans pour libérer de "
+"l’espace, puis réessayez."
+msgstr[2] ""
+
+#: web/plan-limit.js:30
+msgid "This action would add too many drills. Try adding fewer at once."
+msgstr ""
+"Cette action ajouterait trop d’exercices. Essayez d’en ajouter moins à la"
+" fois."
+
+#: web/plan-limit.js:31
+msgid "This action would add too many practice plans. Try adding fewer at once."
+msgstr ""
+"Cette action ajouterait trop de plans d’entraînement. Essayez d’en "
+"ajouter moins à la fois."
+
+#: web/plan-sharing.js:42
+msgid "Share link created."
+msgstr "Lien de partage créé."
+
+#: web/plan-sharing.js:43
+msgid "Share link disabled."
+msgstr "Lien de partage désactivé."
+
+#: web/plan-sharing.js:48
+msgid "Link copied."
+msgstr "Lien copié."
+
+#: web/plan-sharing.js:52
+msgid "Copy the selected link to share it."
+msgstr "Copiez le lien sélectionné pour le partager."
+
+#: web/plan-sharing.js:62
+msgid "No users have been granted access yet."
+msgstr "Aucune personne n’a encore reçu l’accès."
+
+#: web/plan-sharing.js:69
+msgid "Remove access"
+msgstr "Retirer l’accès"
+
+#: web/plan-sharing.js:70
+#, python-format
+msgid "Remove access for %(username)s"
+msgstr "Retirer l’accès à %(username)s"
+
+#: web/plan-sharing.js:76
+#, python-format
+msgid "Access removed for %(username)s."
+msgstr "Accès retiré pour %(username)s."
+
+#: web/plan-sharing.js:98
+msgid "Read-only access granted."
+msgstr "Accès en lecture seule accordé."
+
+#: web/plan-sharing.js:112
+#, python-format
+msgid "Share %(title)s"
+msgstr "Partager %(title)s"
+
+#: web/plan-viewer.js:74
+#, python-format
+msgid "Rink diagram for %(title)s"
+msgstr "Schéma de la patinoire pour %(title)s"
+
+#: web/plan-viewer.js:91
+#, python-format
+msgid "%(position)d of %(total)d"
+msgstr "%(position)d sur %(total)d"
+
+#: web/plans.js:62
+#, python-format
+msgid "Updated %(date)s"
+msgstr "Mis à jour le %(date)s"
+
+#: web/plans.js:67
+msgid "Update date not recorded"
+msgstr "Date de mise à jour inconnue"
+
+#: web/plans.js:104 web/plans.js:257
+#, python-format
+msgid "%(title)s · Platform Drill"
+msgstr "%(title)s · Exercice de la plateforme"
+
+#: web/plans.js:125
+#, python-format
+msgid "Print PDF for %(title)s"
+msgstr "Imprimer le PDF de %(title)s"
+
+#: web/plans.js:138
+msgid "No saved practice plans."
+msgstr "Aucun plan d’entraînement enregistré."
+
+#: web/plans.js:147
+msgid "Delete Plan"
+msgstr "Supprimer le plan"
+
+#: web/plans.js:148
+#, python-format
+msgid "Delete the plan “%(title)s”?"
+msgstr "Supprimer le plan « %(title)s »?"
+
+#: web/plans.js:148
+msgid "Delete plan"
+msgstr "Supprimer le plan"
+
+#: web/plans.js:154
+msgid "Plan deleted."
+msgstr "Plan supprimé."
+
+#: web/plans.js:156
+msgid "Could not delete the plan on the application server."
+msgstr "Impossible de supprimer le plan sur le serveur."
+
+#: web/plans.js:162
+msgid "Edit Plan"
+msgstr "Modifier le plan"
+
+#: web/plans.js:180
+msgid "My drill"
+msgstr "Mon exercice"
+
+#: web/plans.js:258
+#, python-format
+msgid "%(title)s · Shared by %(owner)s"
+msgstr "%(title)s · Partagé par %(owner)s"
+
+#: web/plans.js:263
+#, python-format
+msgid "Move %(title)s up"
+msgstr "Monter %(title)s"
+
+#: web/plans.js:266
+#, python-format
+msgid "Move %(title)s down"
+msgstr "Descendre %(title)s"
+
+#: web/plans.js:267
+msgid "Remove"
+msgstr "Retirer"
+
+#: web/plans.js:291
+msgid "No drills match your search."
+msgstr "Aucun exercice ne correspond à votre recherche."
+
+#: web/plans.js:291
+msgid "No drills available."
+msgstr "Aucun exercice disponible."
+
+#: web/plans.js:312
+msgid "Added"
+msgstr "Ajouté"
+
+#: web/plans.js:312
+msgid "Add"
+msgstr "Ajouter"
+
+#: web/plans.js:314
+#, python-format
+msgid "Added %(title)s · %(source)s"
+msgstr "%(title)s ajouté · %(source)s"
+
+#: web/plans.js:314
+#, python-format
+msgid "Add %(title)s · %(source)s"
+msgstr "Ajouter %(title)s · %(source)s"
+
+#: web/plans.js:366
+msgid "Enter a name for the plan."
+msgstr "Entrez un nom pour le plan."
+
+#: web/plans.js:371
+msgid "Select at least one drill."
+msgstr "Sélectionnez au moins un exercice."
+
+#: web/plans.js:387
+msgid "Plan saved."
+msgstr "Plan enregistré."
+
+#: web/plans.js:389
+msgid "Could not save the plan. Try again."
+msgstr "Impossible d’enregistrer le plan. Réessayez."
+
+#: web/plans.js:414
+msgid "No practice plans have been shared with you."
+msgstr "Aucun plan d’entraînement n’a été partagé avec vous."
+
+#: web/plans.js:419
+#, python-format
+msgid "Shared by %(owner)s · Read-only"
+msgstr "Partagé par %(owner)s · Lecture seule"
+
+#: web/plans.js:423
+msgid "Copy to My Account"
+msgstr "Copier dans mon compte"
+
+#: web/plans.js:428
+msgid "Plan and drills copied to your account."
+msgstr "Le plan et les exercices ont été copiés dans votre compte."
+
+#: web/plans.js:429
+msgid "Copied to My Account"
+msgstr "Copié dans mon compte"
+
+#: web/plans.js:438
+msgid "Remove from Shared with me"
+msgstr "Retirer des plans partagés"
+
+#: web/plans.js:439
+#, python-format
+msgid ""
+"Remove “%(title)s” from Shared with me? Any copies in your account will "
+"be kept."
+msgstr ""
+"Retirer « %(title)s » des plans partagés? Les copies dans votre compte "
+"seront conservées."
+
+#: web/plans.js:439
+msgid "Remove plan"
+msgstr "Retirer le plan"
+
+#: web/plans.js:445
+msgid "Plan removed from Shared with me."
+msgstr "Plan retiré de la liste des plans partagés."
+
+#: web/plans.js:489
+msgid "Could not load the practice plans."
+msgstr "Impossible de charger les plans d’entraînement."
+
+#: web/site.js:22
+msgid "Could not sign out. Try again."
+msgstr "Impossible de se déconnecter. Réessayez."
+

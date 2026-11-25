@@ -1,4 +1,4 @@
-body:is([data-page="welcome"], [data-page="login"]) {
+body:is([data-page="welcome"], [data-page="login"], [data-page="register"]) {
   --welcome-ink: #0d2034;
   --welcome-blue: #1646a4;
   --welcome-red: #c8213b;
@@ -6,7 +6,7 @@ body:is([data-page="welcome"], [data-page="login"]) {
   background: #f3f6fa;
 }
 body[data-page="welcome"] main#planner { width: 100%; max-width: none; margin: 0; padding: 0; }
-body[data-page="login"] main#planner { width: 100%; margin: 0; padding: 0; place-items: stretch; }
+body:is([data-page="login"], [data-page="register"]) main#planner { width: 100%; margin: 0; padding: 0; place-items: stretch; }
 .welcome-wrap { width: min(90%, 76rem); margin-inline: auto; }
 .welcome-header {
   position: sticky;
@@ -80,6 +80,7 @@ body[data-page="welcome"] :is(.welcome-features, .welcome-about) h2 {
 .welcome-rink canvas { display: block; width: 100%; height: auto; }
 .welcome-rink figcaption { border-top: 1px solid #e0e8f0; margin-top: .7rem; padding-top: .65rem; color: #38516c; font-size: .83rem; font-weight: 700; }
 .welcome-rink figcaption span { display: inline-block; margin-right: .35rem; width: .6rem; height: .6rem; border-radius: 50%; background: var(--welcome-blue); }
+.welcome-rink .welcome-button { margin-top: .85rem; }
 .welcome-feature-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(.8rem, 2vw, 1.5rem); margin-top: clamp(1.6rem, 4vw, 3.5rem); }
 .welcome-feature-grid article { padding: 1.35rem; background: white; border: 1px solid #d8e3ee; border-top: 3px solid var(--welcome-blue); border-radius: 9px; }
 .welcome-feature-grid article:nth-child(even) { border-top-color: var(--welcome-red); }
@@ -111,16 +112,16 @@ body[data-page="welcome"] :is(.welcome-features, .welcome-about) h2 {
 }
 .welcome-login-tagline { max-width: 32ch; margin-top: .85rem; color: #e1eaf7; line-height: 1.5; }
 .welcome-login-form { display: grid; place-items: center; padding: clamp(1.25rem, 5vw, 4.25rem); min-width: 0; }
-body[data-page="login"] .sign-in-card {
+body:is([data-page="login"], [data-page="register"]) .sign-in-card {
   max-width: 27rem;
   padding: clamp(1.15rem, 3.5vw, 2.4rem);
   border-color: #d8e3ee;
   border-radius: 14px;
   box-shadow: 0 12px 28px #172f4e12;
 }
-body[data-page="login"] .sign-in-card h1 { font-size: clamp(2rem, 4.5vw, 2.85rem); line-height: 1.05; }
-body[data-page="login"] .sign-in-card .auth-submit { background: var(--welcome-red); border-color: var(--welcome-red); }
-body[data-page="login"] .sign-in-card .auth-submit:hover:enabled { background: #a81731; border-color: #a81731; }
+body:is([data-page="login"], [data-page="register"]) .sign-in-card h1 { font-size: clamp(2rem, 4.5vw, 2.85rem); line-height: 1.05; }
+body:is([data-page="login"], [data-page="register"]) .sign-in-card .auth-submit { background: var(--welcome-red); border-color: var(--welcome-red); }
+body:is([data-page="login"], [data-page="register"]) .sign-in-card .auth-submit:hover:enabled { background: #a81731; border-color: #a81731; }
 
 @media (max-width: 960px) {
   .welcome-feature-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -139,7 +140,7 @@ body[data-page="login"] .sign-in-card .auth-submit:hover:enabled { background: #
 @media (max-width: 390px) {
   .welcome-header-inner { width: 94%; gap: .35rem; }
   .welcome-brand img { width: 5.7rem; }
-  .welcome-header nav { gap: .4rem; }
+  .welcome-header nav { flex-wrap: wrap; justify-content: end; gap: .25rem .4rem; }
   .welcome-header nav a { font-size: .76rem; }
   .welcome-header nav .welcome-sign-in { padding: .45rem .5rem; }
   .welcome-sign-in span { display: none; }

@@ -1,3 +1,4 @@
+import { gettext } from './i18n.js'
 export const width = 1000
 export const height = 460
 export function rinkWidth(layout) {
@@ -12,31 +13,31 @@ export function rinkHeight(layout) {
 export const playerTeamColors = { A: '#174fc9', B: '#bb3345' }
 
 export const markers = {
-  player: ['Player', 'P', playerTeamColors.A],
-  cone: ['Cone', '▲', '#db561b'],
-  coach: ['Coach', 'C', '#7947ad'],
-  goal: ['Goal', '∩', '#bb3345'],
-  goalie: ['Goalie', 'G', '#157869'],
-  puck: ['Puck', '●', '#142742'],
-  pucks: ['Puck pile', '⠿', '#142742'],
-  shot: ['Shot on goal', '◎', '#bb3345'],
-  order: ['Step number', '1', '#223955'],
-  referee: ['Referee', 'R', '#111111'],
-  start: ['Start', '▶', '#157869'],
-  end: ['End', '■', '#bb3345'],
-  pivot: ['Pivot', '', '#b45309'],
+  player: [gettext('Player'), 'P', playerTeamColors.A],
+  cone: [gettext('Cone'), '▲', '#db561b'],
+  coach: [gettext('Coach'), 'C', '#7947ad'],
+  goal: [gettext('Goal'), '∩', '#bb3345'],
+  goalie: [gettext('Goalie'), 'G', '#157869'],
+  puck: [gettext('Puck'), '●', '#142742'],
+  pucks: [gettext('Puck pile'), '⠿', '#142742'],
+  shot: [gettext('Shot on goal'), '◎', '#bb3345'],
+  order: [gettext('Step number'), '1', '#223955'],
+  referee: [gettext('Referee'), 'R', '#111111'],
+  start: [gettext('Start'), '▶', '#157869'],
+  end: [gettext('End'), '■', '#bb3345'],
+  pivot: [gettext('Pivot'), '', '#b45309'],
 }
 
 export const movements = {
-  forward: ['Skate forward', '⟶', '#174fc9'],
-  carry: ['Forward with puck', '∿', '#174fc9'],
-  stop: ['Forward and stop', '⇥', '#174fc9'],
-  carryStop: ['Forward with puck and stop', '∿', '#174fc9'],
-  backward: ['Skate backward', '◠◡', '#7947ad'],
-  backwardPuck: ['Backward with puck', '◠◡', '#7947ad'],
-  backwardStop: ['Backward and stop', '◠◡', '#7947ad'],
-  backwardPuckStop: ['Backward with puck and stop', '◠◡', '#7947ad'],
-  pass: ['Pass', '⇢', '#157869'],
+  forward: [gettext('Skate forward'), '⟶', '#174fc9'],
+  carry: [gettext('Forward with puck'), '∿', '#174fc9'],
+  stop: [gettext('Forward and stop'), '⇥', '#174fc9'],
+  carryStop: [gettext('Forward with puck and stop'), '∿', '#174fc9'],
+  backward: [gettext('Skate backward'), '◠◡', '#7947ad'],
+  backwardPuck: [gettext('Backward with puck'), '◠◡', '#7947ad'],
+  backwardStop: [gettext('Backward and stop'), '◠◡', '#7947ad'],
+  backwardPuckStop: [gettext('Backward with puck and stop'), '◠◡', '#7947ad'],
+  pass: [gettext('Pass'), '⇢', '#157869'],
 }
 
 export function movementLegend(items) {
@@ -397,7 +398,7 @@ export function activityThumbnail(entry) {
   thumbnail.className = 'activity-thumbnail'
   thumbnail.width = 360
   thumbnail.height = 180
-  thumbnail.setAttribute('aria-label', 'Rink thumbnail for ' + entry.title)
+  thumbnail.setAttribute('aria-label', gettext('Rink thumbnail for %(title)s', { title: entry.title }))
 
   const thumbnailContext = thumbnail.getContext('2d')
   const visibleWidth = rinkWidth(entry.layout)

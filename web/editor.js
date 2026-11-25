@@ -1,3 +1,4 @@
+import { gettext, ngettext } from './i18n.js'
 import { confirmAction, showActionMessage } from './action-message.js'
 import { showPlanLimit } from './plan-limit.js'
 import { drillShareLink, flagPlatformDrill, saveRecord } from './library.js'
@@ -11,6 +12,11 @@ import { itemBounds, movementEnds, resizeMovement, translateItem } from './edito
 
 const get = id => document.getElementById(id)
 const rink = get('rink')
+const editorPage = get('editor-page')
+const demo = editorPage.hasAttribute('data-demo')
+const restoreDemo = editorPage.hasAttribute('data-restore-demo')
+const demoDraftKey = 'hockeyplanner.sample-drill'
+const initialDrill = JSON.parse(get('initial-drill').textContent)
 const ctx = rink.getContext('2d')
 const surface = rink.parentElement
 
@@ -55,7 +61,7 @@ let selected = new Set()
 let gesture = null
 let clipboard = []
 let pasteCount = 0
-const clipboardKey = 'hockeyplanner.rink-objects.' + get('editor-page').dataset.accountId
+const clipboardKey = 'hockeyplanner.rink-objects.' + editorPage.dataset.accountId
 const undo = []
 const redo = []
 
@@ -63,79 +69,39 @@ function status(message) {
   get('status').textContent = message
 }
 
-function addTools(container, entries) {
-  for (const [id, [label, icon, color]] of Object.entries(entries)) {
-    const button = document.createElement('button')
-    const symbol = document.createElement(id === 'pivot' ? 'canvas' : 'span')
-    if (id === 'pivot') {
-      symbol.width = symbol.height = 32
-      drawItem(symbol.getContext('2d'), { type: 'pivot', x: 16, y: 16 })
-    } else {
-      symbol.textContent = icon
-    }
-    symbol.className = 'tool-icon'
-    if (['player', 'coach', 'goalie', 'order', 'referee'].includes(id)) symbol.classList.add('letter-icon')
-    if (id === 'referee') symbol.classList.add('referee-icon')
-    symbol.setAttribute('aria-hidden', 'true')
-    if (color) symbol.style.setProperty('--icon', color)
-    button.type = 'button'
-    button.className = 'tool'
-    button.dataset.tool = id
-    button.append(symbol, label)
-    if (id === 'player') {
-      const options = document.createElement('div')
-      options.id = 'player-options'
-      options.setAttribute('role', 'group')
-      options.setAttribute('aria-label', 'Player team')
-      options.hidden = true
-      for (const [team, name] of [['A', 'blue'], ['B', 'red']]) {
-        const choice = document.createElement('button')
-        choice.type = 'button'
-        choice.className = 'tool'
-        choice.dataset.playerTeam = team
-        choice.setAttribute('aria-label', 'Team ' + team + ' (' + name + ')')
-        const badge = symbol.cloneNode(true)
-        badge.style.setProperty('--icon', playerTeamColors[team])
-        choice.append(badge, 'Team ' + team)
-        options.append(choice)
-      }
-      button.setAttribute('aria-controls', options.id)
-      button.setAttribute('aria-expanded', 'false')
-      button.addEventListener('click', () => {
-        if (gesture) return
-        playerOptionsOpen = !playerOptionsOpen
-        if (playerOptionsOpen && !selectedPlayers().length) {
-          playerTeam = 'A'
-          tool = 'player'
-          selected.clear()
-        }
-        render()
-      })
-
-      const group = document.createElement('div')
-      group.className = 'player-tool'
-      group.append(button, options)
-      get(container).append(group)
-      continue
-    }
-    button.addEventListener('click', () => {
-      if (gesture) return
-      tool = id
-      playerOptionsOpen = false
-      selected.clear()
-      render()
-    })
-    get(container).append(button)
-  }
-}
-addTools('selection-tools', { select: ['Select and Move', '⌖'] })
-const { pivot, ...markerTools } = markers
-addTools('marker-tools', markerTools)
-addTools('movement-tools', { ...movements, pivot })
-
+const toolButtons = document.querySelectorAll('[data-tool]')
 const playerButton = document.querySelector('[data-tool=player]')
 const playerOptions = get('player-options')
 const teamButtons = playerOptions.querySelectorAll('button')
+
+for (const button of toolButtons) {
+  const id = button.dataset.tool
+  const icon = button.querySelector('.tool-icon')
+  const color = (markers[id] ?? movements[id])?.[2]
+  if (color) icon.style.setProperty('--icon', color)
+  if (id === 'pivot') drawItem(icon.getContext('2d'), { type: 'pivot', x: 16, y: 16 })
+  button.addEventListener('click', () => {
+    if (gesture) return
+    if (id === 'player') {
+      playerOptionsOpen = !playerOptionsOpen
+      if (playerOptionsOpen && !selectedPlayers().length) {
+        playerTeam = 'A'
+        tool = 'player'
+        selected.clear()
+      }
+    } else {
+      tool = id
+      playerOptionsOpen = false
+      selected.clear()
+    }
+    render()
+  })
+}
+
+for (const button of teamButtons) {
+  button.querySelector('.tool-icon').style.setProperty('--icon', playerTeamColors[button.dataset.playerTeam])
+}
+
 function selectedPlayers() {
   return [...selected].map(index => activity.items[index]).filter(item => item.type === 'player')
 }
@@ -164,12 +130,14 @@ function hitEndpoint(item, point) {
 function render() {
   const visibleWidth = rinkWidth(activity.layout)
   const visibleHeight = rinkHeight(activity.layout)
-  if (rink.width !== visibleWidth) rink.width = visibleWidth
-  if (rink.height !== visibleHeight) rink.height = visibleHeight
+  if (rink.width !== visibleWidth || rink.height !== visibleHeight) {
+    if (rink.width !== visibleWidth) rink.width = visibleWidth
+    if (rink.height !== visibleHeight) rink.height = visibleHeight
+    surface.style.setProperty('--rink-width', visibleWidth)
+    surface.style.setProperty('--rink-height', visibleHeight)
+  }
   rinkLayout.value = visibleWidth === width ? 'full' : activity.layout
   rinkLayout.disabled = !!gesture
-  surface.style.setProperty('--rink-width', visibleWidth)
-  surface.style.setProperty('--rink-height', visibleHeight)
   drawRink(ctx)
   activity.items.forEach((item, index) => drawItem(ctx, item, selected.has(index)))
   const resizable = selectedMovement()
@@ -201,7 +169,7 @@ function render() {
   rink.classList.toggle('select', tool === 'select')
   rink.classList.toggle('dragging', gesture?.kind === 'move')
   if (!resizable) rink.classList.remove('resize-endpoint')
-  for (const button of document.querySelectorAll('[data-tool]')) {
+  for (const button of toolButtons) {
     button.setAttribute('aria-pressed', String(button.dataset.tool === tool))
   }
   get('order-options').hidden = tool !== 'order'
@@ -228,18 +196,18 @@ function render() {
     rotation.classList.toggle('left-of-goal', item.x > visibleWidth * .65)
     for (const button of rotation.querySelectorAll('button')) button.disabled = !!gesture
   }
-  let hint = 'Drag from the start point to the destination to draw a movement.'
-  if (shape === 'curve') hint = 'Drag to draw a curve. Move the pointer off the straight path to shape the curve.'
-  if (shape === 'freehand') hint = 'Drag across the rink to draw a freehand path.'
-  if (markers[tool]) hint = 'Click the rink to place the marker.'
-  if (tool === 'order') hint = 'Choose a number from 1 to 9, then click the rink to mark the step.'
-  if (tool === 'select') hint = 'Click to select, Shift-click to add or remove items, or drag from an empty spot to select an area.'
-  if (selected.size > 1) hint = selected.size + ' items selected. Drag any selected item to move the group.'
-  if (resizable) hint = 'Drag a circular handle to change the movement length, or drag the line to move it.'
-  if (players.length) hint += ' Choose blue or red in the Player tool to change the selected players.'
-  if (goalSelected) hint = 'Drag to move the goal. Use the rotation buttons to change its angle.'
-  if (tool === 'pivot') hint = 'Click the rink where the player should pivot.'
-  if (selected.size) hint += ' Copy and paste with Ctrl+C / Ctrl+V (⌘ on Mac).'
+  let hint = gettext('Drag from the start point to the destination to draw a movement.')
+  if (shape === 'curve') hint = gettext('Drag to draw a curve. Move the pointer off the straight path to shape the curve.')
+  if (shape === 'freehand') hint = gettext('Drag across the rink to draw a freehand path.')
+  if (markers[tool]) hint = gettext('Click the rink to place the marker.')
+  if (tool === 'order') hint = gettext('Choose a number from 1 to 9, then click the rink to mark the step.')
+  if (tool === 'select') hint = gettext('Click to select, Shift-click to add or remove items, or drag from an empty spot to select an area.')
+  if (selected.size > 1) hint = gettext('%(count)d items selected. Drag any selected item to move the group.', { count: selected.size })
+  if (resizable) hint = gettext('Drag a circular handle to change the movement length, or drag the line to move it.')
+  if (players.length) hint += ' ' + gettext('Choose blue or red in the Player tool to change the selected players.')
+  if (goalSelected) hint = gettext('Drag to move the goal. Use the rotation buttons to change its angle.')
+  if (tool === 'pivot') hint = gettext('Click the rink where the player should pivot.')
+  if (selected.size) hint += ' ' + gettext('Copy and paste with Ctrl+C / Ctrl+V (⌘ on Mac).')
   get('hint').textContent = hint
 }
 
@@ -330,6 +298,11 @@ rink.addEventListener('pointerdown', event => {
     if (tool === 'player') item.team = playerTeam
     if (tool === 'order') item.number = Number(get('order-number').value)
     activity.items.push(item)
+    if (item.type === 'goal') {
+      tool = 'select'
+      selected.clear()
+      selected.add(activity.items.length - 1)
+    }
     render()
     return
   }
@@ -467,7 +440,6 @@ rinkLayout.addEventListener('change', () => {
   fitRink()
 })
 
-const editorPage = get('editor-page')
 const fullscreen = get('fullscreen')
 const fullscreenLabel = get('fullscreen-label')
 let expandedEditor = false
@@ -477,7 +449,7 @@ editorPage.append(get('action-message'), get('action-confirmation'), get('plan-l
 function updateFullscreen() {
   const active = expandedEditor || document.fullscreenElement === editorPage
   editorPage.classList.toggle('editor-fullscreen', active)
-  fullscreenLabel.textContent = active ? 'Exit Fullscreen' : 'Edit in fullscreen mode'
+  fullscreenLabel.textContent = active ? gettext('Exit Fullscreen') : gettext('Edit in fullscreen mode')
   fullscreen.setAttribute('aria-pressed', String(active))
   for (const control of document.querySelectorAll('.topbar, .site-footer, #upgrade-plan')) {
     control.inert = expandedEditor
@@ -554,7 +526,7 @@ function copySelection() {
   } catch {
     // The in-memory clipboard still works on this page.
   }
-  status(clipboard.length === 1 ? 'Object copied.' : clipboard.length + ' objects copied.')
+  status(ngettext('Object copied.', '%(count)d objects copied.', clipboard.length))
   return true
 }
 
@@ -581,7 +553,7 @@ function pasteSelection() {
   }
   tool = 'select'
   playerOptionsOpen = false
-  status(clipboard.length === 1 ? 'Object pasted.' : clipboard.length + ' objects pasted.')
+  status(ngettext('Object pasted.', '%(count)d objects pasted.', clipboard.length))
   render()
   return true
 }
@@ -612,7 +584,7 @@ function hasUnsavedChanges() {
 }
 
 function confirmDiscard() {
-  return confirmAction('Discard unsaved changes?', 'Discard changes', true)
+  return confirmAction(gettext('Discard unsaved changes?'), gettext('Discard changes'), true)
 }
 
 function load(next, isPublished = false) {
@@ -634,21 +606,26 @@ function load(next, isPublished = false) {
 
 get('new').addEventListener('click', async () => {
   if (gesture || savingDrill || publishingDrill || (hasUnsavedChanges() && !await confirmDiscard())) return
+  if (demo) {
+    load(initialDrill)
+    return
+  }
+  if (restoreDemo) clearDemoDraft()
   load(fresh())
   history.replaceState(history.state, '', appUrl('editor'))
   title.focus()
-  showActionMessage('New drill.')
+  showActionMessage(gettext('New drill.'))
 })
 
 function updateSaveControls() {
-  save.textContent = activity.id ? 'Update Drill' : 'Save Drill'
+  if (!demo) save.textContent = activity.id ? gettext('Update Drill') : gettext('Save Drill')
   save.disabled = saveCopy.disabled = !libraryReady || savingDrill || publishingDrill
   saveCopy.hidden = !activity.id
   if (publicPdfLink) publicPdfLink.disabled = !activity.id || savingDrill
   if (publishPlatform) {
     publishPlatform.checked = published
     publishPlatform.disabled = !libraryReady || !activity.id || savingDrill || publishingDrill
-    publishPlatform.parentElement.title = activity.id ? 'Make this drill available to all users' : 'Save the drill first'
+    publishPlatform.parentElement.title = activity.id ? gettext('Make this drill available to all users') : gettext('Save the drill first')
   }
 }
 
@@ -658,15 +635,15 @@ publishPlatform?.addEventListener('change', async () => {
   updateSaveControls()
   try {
     if (!await confirmAction(
-      enabled ? 'Make the saved drill available to all Hockey Planner users? They can copy, use, and share it.'
-        : 'Remove this drill from the platform library and disable its platform share link?',
-      enabled ? 'Publish drill' : 'Unpublish drill',
+      enabled ? gettext('Make the saved drill available to all Hockey Planner users? They can copy, use, and share it.')
+        : gettext('Remove this drill from the platform library and disable its platform share link?'),
+      enabled ? gettext('Publish drill') : gettext('Unpublish drill'),
     )) return
     await flagPlatformDrill(activity.id, enabled)
     published = enabled
-    showActionMessage(enabled ? 'Drill published to the platform.' : 'Drill unpublished.')
+    showActionMessage(enabled ? gettext('Drill published to the platform.') : gettext('Drill unpublished.'))
   } catch (error) {
-    showActionMessage(error.message || 'Could not update platform visibility.')
+    showActionMessage(error.message || gettext('Could not update platform visibility.'))
   } finally {
     publishingDrill = false
     updateSaveControls()
@@ -684,7 +661,7 @@ async function persistDrill(nameForCopy) {
     saved.title = nameForCopy
   } else {
     saved.id ??= (pendingDrillId ??= newRecordId())
-    saved.title = saved.title.trim() || 'Untitled Drill'
+    saved.title = saved.title.trim() || gettext('Untitled Drill')
   }
   const originalTitle = activity.title
   savingDrill = true
@@ -692,6 +669,7 @@ async function persistDrill(nameForCopy) {
   copySubmit.disabled = copyCancel.disabled = copyName.disabled = true
   try {
     await saveRecord('drills', saved)
+    if (restoreDemo) clearDemoDraft()
     const count = get('activity-count')
     if (newRecord) count.textContent = Number(count.textContent) + 1
     if (makingCopy) {
@@ -704,9 +682,9 @@ async function persistDrill(nameForCopy) {
     }
     history.replaceState(history.state, '', appUrl('editor/' + saved.id))
     status('')
-    showActionMessage(makingCopy ? 'Saved a copy as “' + saved.title + '”.' : newRecord ? 'Drill saved to the library.' : 'Drill updated.')
+    showActionMessage(makingCopy ? gettext('Saved a copy as “%(title)s”.', { title: saved.title }) : newRecord ? gettext('Drill saved to the library.') : gettext('Drill updated.'))
   } catch (error) {
-    if (!showPlanLimit(error)) showActionMessage(error.message || 'Could not save the drill. Try again.')
+    if (!showPlanLimit(error)) showActionMessage(error.message || gettext('Could not save the drill. Try again.'))
   } finally {
     savingDrill = false
     copySubmit.disabled = copyCancel.disabled = copyName.disabled = false
@@ -714,13 +692,64 @@ async function persistDrill(nameForCopy) {
   }
 }
 
-save.addEventListener('click', () => persistDrill())
+function clearDemoDraft() {
+  try {
+    localStorage.removeItem(demoDraftKey)
+  } catch {
+    // The drill can still be saved to the account if browser storage is unavailable.
+  }
+}
+
+function readDemoDraft() {
+  try {
+    const draft = JSON.parse(localStorage.getItem(demoDraftKey))
+    if (draft && typeof draft.title === 'string' && typeof draft.description === 'string'
+        && ['full', 'half', 'quarter'].includes(draft.layout) && Array.isArray(draft.items)) {
+      return { ...fresh(), title: draft.title, description: draft.description, layout: draft.layout, items: draft.items }
+    }
+  } catch {
+    // Fall back to the original sample if the draft is unavailable.
+  }
+  return initialDrill
+}
+
+save.addEventListener('click', () => {
+  if (!demo) {
+    persistDrill()
+    return
+  }
+  if (gesture) return
+  activity.description = description.getValue()
+  try {
+    localStorage.setItem(demoDraftKey, JSON.stringify(activity))
+  } catch {
+    showActionMessage(gettext('This browser could not keep your sample drill. Enable browser storage and try again.'))
+    return
+  }
+  location.assign(editorPage.dataset.saveUrl)
+})
+
+const demoPreview = get('preview-demo')
+if (demoPreview) {
+  demoPreview.addEventListener('click', async () => {
+    if (gesture) return
+    if (document.fullscreenElement === editorPage) await document.exitFullscreen()
+    if (expandedEditor) {
+      expandedEditor = false
+      updateFullscreen()
+    }
+    const { presentPlan } = await import('./plan-viewer.js')
+    activity.description = description.getValue()
+    const drill = { ...structuredClone(activity), title: activity.title.trim() || gettext('Untitled Drill') }
+    presentPlan(drill.title, [drill], { auto: true })
+  })
+}
 saveCopy.addEventListener('click', () => {
   if (gesture || savingDrill || !activity.id) return
   const currentName = activity.title.trim()
   const savedName = JSON.parse(baseline).title.trim()
   copyName.value = currentName && currentName.toLowerCase() !== savedName.toLowerCase()
-    ? currentName : (savedName || 'Untitled Drill').slice(0, 113).trimEnd() + ' (copy)'
+    ? currentName : gettext('%(title)s (copy)', { title: (savedName || gettext('Untitled Drill')).slice(0, 110).trimEnd() })
   copyName.setCustomValidity('')
   copyDialog.showModal()
   copyName.select()
@@ -734,7 +763,7 @@ get('copy-drill-form').addEventListener('submit', event => {
   event.preventDefault()
   const name = copyName.value.trim()
   const savedName = JSON.parse(baseline).title.trim().toLowerCase()
-  copyName.setCustomValidity(!name || name.toLowerCase() === savedName ? 'Enter a name different from the original drill.' : '')
+  copyName.setCustomValidity(!name || name.toLowerCase() === savedName ? gettext('Enter a name different from the original drill.') : '')
   if (copyName.reportValidity()) persistDrill(name)
 })
 
@@ -747,31 +776,31 @@ for (const format of ['png', 'pdf']) {
     const saved = Boolean(snapshot.id) && JSON.stringify(snapshot) === baseline
     const createLink = format === 'pdf' && (freePdf || publicPdfLink?.checked)
     if (createLink && !saved) {
-      showActionMessage('Save your changes before exporting with a public QR code.')
+      showActionMessage(gettext('Save your changes before exporting with a public QR code.'))
       return
     }
     button.disabled = true
     try {
       const token = createLink ? (await drillShareLink(snapshot.id, 'PUT')).token : null
       await exportActivity(snapshot, format, token)
-      if (format === 'png') showActionMessage('PNG file ready.')
+      if (format === 'png') showActionMessage(gettext('PNG file ready.'))
     } catch {
-      if (format === 'pdf') showActionMessage('Could not generate the PDF.')
-      else showActionMessage('Could not generate the PNG file.')
+      if (format === 'pdf') showActionMessage(gettext('Could not generate the PDF.'))
+      else showActionMessage(gettext('Could not generate the PNG file.'))
     } finally {
       button.disabled = false
     }
   })
 }
 
-const initialDrill = JSON.parse(get('initial-drill').textContent)
-load(initialDrill ?? fresh(), publishPlatform?.defaultChecked)
+load((restoreDemo ? readDemoDraft() : initialDrill) ?? fresh(), publishPlatform?.defaultChecked)
 fitRink()
 
-await prepareLibrary()
-if (get('status').textContent === 'Loading the editor…') status('')
+if (!demo) await prepareLibrary()
+if (get('status').textContent === gettext('Loading the editor…')) status('')
 libraryReady = true
 updateSaveControls()
+if (demoPreview) demoPreview.disabled = false
 
 document.addEventListener('click', async event => {
   const link = event.target.closest('a[href]')
@@ -781,4 +810,10 @@ document.addEventListener('click', async event => {
       !hasUnsavedChanges()) return
   event.preventDefault()
   if (await confirmDiscard()) location.assign(link.href)
+})
+
+document.querySelector('.language-picker')?.addEventListener('submit', async event => {
+  if (!hasUnsavedChanges()) return
+  event.preventDefault()
+  if (await confirmDiscard()) event.target.submit()
 })

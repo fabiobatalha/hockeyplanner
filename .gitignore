@@ -1,3 +1,5 @@
 /data/
 __pycache__/
 /.env
+/src/hockeyplanner/translations/*/LC_MESSAGES/messages.mo
+/src/hockeyplanner/translations/*/LC_MESSAGES/browser.json

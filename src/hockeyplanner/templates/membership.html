@@ -5,42 +5,42 @@
       <header class="membership-heading">
         <div>
           <h1 id="membership-title" tabindex="-1"> {{ title }}</h1>
-          <p>Both plans include the same coaching tools. The difference is how many drills and plans you can save.</p>
+          <p>{{ gettext("Both plans include the same coaching tools. The difference is how many drills and plans you can save.") }}</p>
         </div>
         <div id="membership-account-actions" class="actions" {% if user.tier != "pending" %}hidden{% endif %}>
-          <button id="membership-delete-account" class="danger-outline" type="button">Delete my account</button>
+          <button id="membership-delete-account" class="danger-outline" type="button">{{ gettext("Delete my account") }}</button>
         </div>
       </header>
       <div class="membership-options">
         <article class="card membership-option">
-          <h2>Free</h2>
+          <h2>{{ gettext("Free") }}</h2>
           <dl class="membership-limits">
-            <div><dt>Drills</dt><dd>{{ free_limits["drills"] }}</dd></div>
-            <div><dt>Practice plans</dt><dd>{{ free_limits["plans"] }}</dd></div>
+            <div><dt>{{ gettext("Drills") }}</dt><dd>{{ free_limits["drills"] }}</dd></div>
+            <div><dt>{{ gettext("Practice plans") }}</dt><dd>{{ free_limits["plans"] }}</dd></div>
           </dl>
           <ul class="membership-features">
-            <li>Draw and edit on the rink</li>
-            <li>Present plans in fullscreen</li>
-            <li>Share, receive, and copy practice plans</li>
-            <li>Export drills and plans</li>
+            <li>{{ gettext("Draw and edit on the rink") }}</li>
+            <li>{{ gettext("Present plans in fullscreen") }}</li>
+            <li>{{ gettext("Share, receive, and copy practice plans") }}</li>
+            <li>{{ gettext("Export drills and plans") }}</li>
           </ul>
-          <button id="choose-free-plan" data-next="{{ next_path }}" class="primary" type="button" {% if user.tier != "pending" %}hidden{% endif %}>Continue with Free</button>
-          <p id="current-free-plan" class="membership-current" {% if user.tier != "free" %}hidden{% endif %}>Current plan</p>
+          <button id="choose-free-plan" data-next="{{ next_path }}" class="primary" type="button" {% if user.tier != "pending" %}hidden{% endif %}>{{ gettext("Continue with Free") }}</button>
+          <p id="current-free-plan" class="membership-current" {% if user.tier != "free" %}hidden{% endif %}>{{ gettext("Current plan") }}</p>
         </article>
         <article class="card membership-option membership-full">
-          <h2>Full Access</h2>
+          <h2>{{ gettext("Full Access") }}</h2>
           <dl class="membership-limits">
-            <div><dt>Drills</dt><dd>Unlimited</dd></div>
-            <div><dt>Practice plans</dt><dd>Unlimited</dd></div>
+            <div><dt>{{ gettext("Drills") }}</dt><dd>{{ gettext("Unlimited") }}</dd></div>
+            <div><dt>{{ gettext("Practice plans") }}</dt><dd>{{ gettext("Unlimited") }}</dd></div>
           </dl>
           <ul class="membership-features">
-            <li>Draw and edit on the rink</li>
-            <li>Present plans in fullscreen</li>
-            <li>Share, receive, and copy practice plans</li>
-            <li>Export drills and plans</li>
+            <li>{{ gettext("Draw and edit on the rink") }}</li>
+            <li>{{ gettext("Present plans in fullscreen") }}</li>
+            <li>{{ gettext("Share, receive, and copy practice plans") }}</li>
+            <li>{{ gettext("Export drills and plans") }}</li>
           </ul>
-          <button id="choose-full-plan" type="button" disabled {% if user.tier == "full" %}hidden{% endif %}>Coming soon</button>
-          <p id="current-full-plan" class="membership-current" {% if user.tier != "full" %}hidden{% endif %}>Current plan</p>
+          <button id="choose-full-plan" type="button" disabled {% if user.tier == "full" %}hidden{% endif %}>{{ gettext("Coming soon") }}</button>
+          <p id="current-full-plan" class="membership-current" {% if user.tier != "full" %}hidden{% endif %}>{{ gettext("Current plan") }}</p>
         </article>
       </div>
     </section>

@@ -7,10 +7,13 @@ from collections.abc import Callable
 from sqlalchemy import delete, or_, select
 from sqlalchemy.orm import Session, sessionmaker
 
+from flask_babel import gettext
+
 from .accounts import Accounts, password_hash, token_hash
-from .database import PasswordResetRequest, User, UserAccess, UserEmail
+from .database import PasswordResetRequest, User, UserAccess, UserEmail, UserLocale
 from .email_confirmation import public_email_link, send_email
 from .email_tasks import EmailDeliveryError, EmailTasks
+from .i18n import LANGUAGES, email_text
 from .models import ResetPassword
 
 
@@ -23,14 +26,13 @@ class InvalidPasswordReset(Exception):
     pass
 
 
-def smtp_password_reset(address: str, token: str) -> None:
+def smtp_password_reset(address: str, token: str, *, language: str = "en") -> None:
     link = public_email_link(f"reset-password/{token}")
     send_email(
         address,
-        "Reset your Hockey Planner password",
-        f"Open {link} to choose a new password.\n\n"
-        "This link can only be used once and expires in 30 minutes. "
-        "If you did not request a password reset, you can ignore this message.\n",
+        email_text(language, "Reset your Hockey Planner password"),
+        email_text(language, "Open %(link)s to choose a new password.", link=link) + "\n\n"
+        + email_text(language, "This link can only be used once and expires in 30 minutes. If you did not request a password reset, you can ignore this message.") + "\n",
     )
 
 
@@ -40,7 +42,7 @@ class PasswordResets:
         self.send = send
         self.tasks = tasks
 
-    def request(self, email: str) -> None:
+    def request(self, email: str, language: str = "en") -> None:
         token = secrets.token_urlsafe(32)
         digest = token_hash(token)
         now = int(time.time())
@@ -71,9 +73,12 @@ class PasswordResets:
             pending.expires = now + RESET_AGE
             user_id = user.id
             address = verified_email.address
+            preference = session.get(UserLocale, user_id)
+            if preference and preference.language in LANGUAGES:
+                language = preference.language
 
         try:
-            self.tasks.submit(self._deliver, user_id, digest, address, token)
+            self.tasks.submit(self._deliver, user_id, digest, address, token, language)
         except EmailDeliveryError:
             self._discard(digest)
             logger.warning("Password reset email could not be queued.")
@@ -82,13 +87,16 @@ class PasswordResets:
         with self.sessions.begin() as session:
             session.execute(delete(PasswordResetRequest).where(PasswordResetRequest.token_hash == digest))
 
-    def _deliver(self, user_id: int, digest: bytes, address: str, token: str) -> None:
+    def _deliver(self, user_id: int, digest: bytes, address: str, token: str, language: str) -> None:
         try:
             with self.sessions() as session:
                 pending = session.get(PasswordResetRequest, user_id)
                 if pending is None or pending.token_hash != digest or pending.expires <= int(time.time()):
                     return
-            self.send(address, token)
+            if self.send is smtp_password_reset:
+                smtp_password_reset(address, token, language=language)
+            else:
+                self.send(address, token)
         except Exception:
             self._discard(digest)
             raise
@@ -114,4 +122,4 @@ class PasswordResets:
                     Accounts.replace_password(session, user, salt, password_hash(change.new_password, salt))
                     return
                 session.delete(pending)
-        raise InvalidPasswordReset("This password reset link is invalid or expired. Request a new link.")
+        raise InvalidPasswordReset(gettext("This password reset link is invalid or expired. Request a new link."))

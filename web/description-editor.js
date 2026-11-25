@@ -1,3 +1,4 @@
+import { gettext } from './i18n.js'
 import {
   CrepeBuilder, editorViewCtx, linkTooltip, listItem, placeholder, replaceAll, table, topBar, uploadConfig,
 } from './vendor/milkdown-7.23.0.mjs'
@@ -6,9 +7,14 @@ export async function setupDescriptionEditor(visual, source, mode) {
   const editor = new CrepeBuilder({ root: visual })
     .addFeature(placeholder, { text: source.placeholder, mode: 'doc' })
     .addFeature(listItem)
-    .addFeature(linkTooltip)
+    .addFeature(linkTooltip, { inputPlaceholder: gettext('Paste link...') })
     .addFeature(table)
-    .addFeature(topBar)
+    .addFeature(topBar, {
+      headingOptions: [
+        { label: gettext('Paragraph'), level: null },
+        ...[1, 2, 3, 4, 5, 6].map(level => ({ label: gettext('Heading %(level)d', { level }), level })),
+      ],
+    })
 
   editor.editor.config(ctx => {
     ctx.update(uploadConfig.key, options => ({ ...options, uploader: async () => [] }))
@@ -17,7 +23,7 @@ export async function setupDescriptionEditor(visual, source, mode) {
   try {
     await editor.create()
   } catch (error) {
-    console.error('Could not start the visual Markdown editor.', error)
+    console.error(gettext('Could not start the visual Markdown editor.'), error)
     visual.hidden = mode.hidden = true
     source.hidden = false
     return {
@@ -48,13 +54,13 @@ export async function setupDescriptionEditor(visual, source, mode) {
       loadVisual()
       source.hidden = true
       visual.hidden = false
-      mode.textContent = 'Edit Markdown'
+      mode.textContent = gettext('Edit Markdown')
       view.focus()
     } else {
       source.value = getValue()
       visual.hidden = true
       source.hidden = false
-      mode.textContent = 'Edit Visually'
+      mode.textContent = gettext('Edit Visually')
       source.focus()
     }
   })

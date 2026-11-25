@@ -1,3 +1,4 @@
+import { gettext } from './i18n.js'
 import { navigateWithMessage, showActionMessage } from './action-message.js'
 import { currentPresentedDrill, presentPlan } from './plan-viewer.js'
 import { activityThumbnail } from './drawing.js'
@@ -24,7 +25,7 @@ accept?.addEventListener('click', async () => {
   accept.disabled = true
   try {
     await claimPlanLink(token)
-    navigateWithMessage(appUrl('plans'), 'Shared plan added to Shared with me.')
+    navigateWithMessage(appUrl('plans'), gettext('Shared plan added to Shared with me.'))
   } catch (error) {
     showActionMessage(error.message)
     accept.disabled = false
@@ -39,7 +40,7 @@ async function printPdf(button, drill) {
     if (drill) await exportActivity(drill, 'pdf', token)
     else await exportTrainingPlan(plan.name, plan.activities, token)
   } catch {
-    showActionMessage('Could not generate the PDF.')
+    showActionMessage(gettext('Could not generate the PDF.'))
   } finally {
     button.disabled = false
   }

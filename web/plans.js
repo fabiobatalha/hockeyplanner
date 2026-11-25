@@ -1,3 +1,4 @@
+import { gettext, locale } from './i18n.js'
 import { appUrl } from './urls.js'
 import { prepareLibrary } from './library-onboarding.js'
 import { confirmAction, showActionMessage } from './action-message.js'
@@ -58,12 +59,12 @@ function setupPlans({ getActivities, getPlatforms, refreshLibrary }) {
       const date = document.createElement('time')
       date.className = 'plan-updated'
       date.dateTime = timestamp
-      date.textContent = 'Updated ' + updated.toLocaleDateString(undefined, { dateStyle: 'medium' })
+      date.textContent = gettext('Updated %(date)s', { date: updated.toLocaleDateString(locale, { dateStyle: 'medium' }) })
       details.append(date)
     } else {
       const missingDate = document.createElement('span')
       missingDate.className = 'plan-updated'
-      missingDate.textContent = 'Update date not recorded'
+      missingDate.textContent = gettext('Update date not recorded')
       details.append(missingDate)
     }
     summary.append(details)
@@ -100,7 +101,7 @@ function setupPlans({ getActivities, getPlatforms, refreshLibrary }) {
       thumbnail.removeAttribute('aria-label')
       thumbnail.setAttribute('aria-hidden', 'true')
       const title = document.createElement('span')
-      title.textContent = saved.platformSource ? activity.title + ' · Platform Drill' : activity.title
+      title.textContent = saved.platformSource ? gettext('%(title)s · Platform Drill', { title: activity.title }) : activity.title
       open.replaceChildren(thumbnail, title)
       row.append(open)
       exercises.append(row)
@@ -110,18 +111,18 @@ function setupPlans({ getActivities, getPlatforms, refreshLibrary }) {
 
   function printButton(plan, ownerId) {
     const shared = ownerId !== undefined
-    const print = button('Print PDF', async () => {
+    const print = button(gettext('Print PDF'), async () => {
       print.disabled = true
       try {
         const { token } = shared ? await readReceivedPlanLink(ownerId, plan.id) : await readPlanLink(plan.id)
         await exportTrainingPlan(plan.name, planActivities(plan, shared), token)
       } catch {
-        showActionMessage('Could not generate the PDF.')
+        showActionMessage(gettext('Could not generate the PDF.'))
       } finally {
         print.disabled = false
       }
     })
-    print.setAttribute('aria-label', 'Print PDF for ' + plan.name)
+    print.setAttribute('aria-label', gettext('Print PDF for %(title)s', { title: plan.name }))
     return print
   }
 
@@ -134,31 +135,31 @@ function setupPlans({ getActivities, getPlatforms, refreshLibrary }) {
     planColumns.hidden = false
     list.replaceChildren()
     feedback.textContent = ''
-    if (!plans.length) list.textContent = 'No saved practice plans.'
+    if (!plans.length) list.textContent = gettext('No saved practice plans.')
 
     for (const [index, plan] of plans.entries()) {
       const entry = planCard(plan, index === 0)
       const exercises = exerciseList(plan)
       const actions = document.createElement('div')
       actions.className = 'actions'
-      const view = button('View Fullscreen', () => presentPlan(plan.name, planActivities(plan, false)))
+      const view = button(gettext('View Fullscreen'), () => presentPlan(plan.name, planActivities(plan, false)))
       view.className = 'primary'
-      const remove = button('Delete Plan', async () => {
-        if (saving || !await confirmAction('Delete the plan “' + plan.name + '”?', 'Delete plan', true)) return
+      const remove = button(gettext('Delete Plan'), async () => {
+        if (saving || !await confirmAction(gettext('Delete the plan “%(title)s”?', { title: plan.name }), gettext('Delete plan'), true)) return
         saving = true
         try {
           await deleteRecord('plans', plan.id)
           plans = plans.filter(item => item.id !== plan.id)
           showList()
-          showActionMessage('Plan deleted.')
+          showActionMessage(gettext('Plan deleted.'))
         } catch {
-          showActionMessage('Could not delete the plan on the application server.')
+          showActionMessage(gettext('Could not delete the plan on the application server.'))
         } finally {
           saving = false
         }
       })
       remove.className = 'danger-outline'
-      actions.append(view, button('Edit Plan', () => edit(plan)), printButton(plan), button('Share', () => openSharing(plan)), remove)
+      actions.append(view, button(gettext('Edit Plan'), () => edit(plan)), printButton(plan), button(gettext('Share'), () => openSharing(plan)), remove)
       entry.append(exercises, actions)
       list.append(entry)
     }
@@ -176,13 +177,13 @@ function setupPlans({ getActivities, getPlatforms, refreshLibrary }) {
     const platforms = getPlatforms()
     const ownedPlatformIds = new Set(platforms.filter(drill => drill.platformSource.ownerId === accountId).map(drill => drill.id))
     const entries = new Map(getActivities().map(drill => [drill.id, {
-      drill, source: ownedPlatformIds.has(drill.id) ? 'Platform Drill' : 'My drill',
+      drill, source: ownedPlatformIds.has(drill.id) ? gettext('Platform Drill') : gettext('My drill'),
     }]))
     for (const drill of platforms) {
-      if (drill.platformSource.ownerId !== accountId) entries.set(platformKey(drill.platformSource), { drill, source: 'Platform Drill' })
+      if (drill.platformSource.ownerId !== accountId) entries.set(platformKey(drill.platformSource), { drill, source: gettext('Platform Drill') })
     }
     for (const { drill, sharedSource } of sharedDrills) {
-      entries.set(sharedKey(sharedSource), { drill, sharedSource, source: 'Shared by ' + sharedSource.owner })
+      entries.set(sharedKey(sharedSource), { drill, sharedSource, source: gettext('Shared by %(owner)s', { owner: sharedSource.owner }) })
     }
     return entries
   }
@@ -253,17 +254,17 @@ function setupPlans({ getActivities, getPlatforms, refreshLibrary }) {
       })
 
       const label = document.createElement('span')
-      label.textContent = drill.platformSource ? drill.title + ' · Platform Drill'
-        : drill.sharedSource && !currentActivity(drill) ? drill.title + ' · Shared by ' + drill.sharedSource.owner : drill.title
+      label.textContent = drill.platformSource ? gettext('%(title)s · Platform Drill', { title: drill.title })
+        : drill.sharedSource && !currentActivity(drill) ? gettext('%(title)s · Shared by %(owner)s', { title: drill.title, owner: drill.sharedSource.owner }) : drill.title
       const controls = document.createElement('div')
       controls.className = 'actions'
       const up = button('↑', () => reorderDrill(key, index - 1))
       up.disabled = saving || index === 0
-      up.setAttribute('aria-label', 'Move ' + drill.title + ' up')
+      up.setAttribute('aria-label', gettext('Move %(title)s up', { title: drill.title }))
       const down = button('↓', () => reorderDrill(key, index + 1))
       down.disabled = saving || index === selection.size - 1
-      down.setAttribute('aria-label', 'Move ' + drill.title + ' down')
-      const remove = button('Remove', () => {
+      down.setAttribute('aria-label', gettext('Move %(title)s down', { title: drill.title }))
+      const remove = button(gettext('Remove'), () => {
         if (saving) return
         selection.delete(key)
         renderBuilder()
@@ -287,7 +288,7 @@ function setupPlans({ getActivities, getPlatforms, refreshLibrary }) {
       .filter(([, { drill, source }]) => matches(drill, source))
       .sort(([a], [b]) => Number(selection.has(a)) - Number(selection.has(b)))
 
-    if (!entries.length) catalog.textContent = query ? 'No drills match your search.' : 'No drills available.'
+    if (!entries.length) catalog.textContent = query ? gettext('No drills match your search.') : gettext('No drills available.')
     for (const [key, { drill, source }] of entries) {
       const row = document.createElement('article')
       row.className = 'catalog-drill'
@@ -308,9 +309,9 @@ function setupPlans({ getActivities, getPlatforms, refreshLibrary }) {
       const label = document.createElement('p')
       label.textContent = source
       details.append(title, label)
-      const add = button(added ? 'Added' : 'Add', () => addDrill(key))
+      const add = button(added ? gettext('Added') : gettext('Add'), () => addDrill(key))
       add.disabled = added || saving
-      add.setAttribute('aria-label', (added ? 'Added ' : 'Add ') + drill.title + ' · ' + source)
+      add.setAttribute('aria-label', added ? gettext('Added %(title)s · %(source)s', { title: drill.title, source }) : gettext('Add %(title)s · %(source)s', { title: drill.title, source }))
       row.append(activityThumbnail(drill), details, add)
       catalog.append(row)
     }
@@ -362,12 +363,12 @@ function setupPlans({ getActivities, getPlatforms, refreshLibrary }) {
     if (saving) return
     const trimmed = name.value.trim()
     if (!trimmed) {
-      name.setCustomValidity('Enter a name for the plan.')
+      name.setCustomValidity(gettext('Enter a name for the plan.'))
       name.reportValidity()
       return
     }
     if (!selection.size) {
-      showActionMessage('Select at least one drill.')
+      showActionMessage(gettext('Select at least one drill.'))
       return
     }
     const plan = {
@@ -383,9 +384,9 @@ function setupPlans({ getActivities, getPlatforms, refreshLibrary }) {
       plans = [saved, ...plans.filter(item => item.id !== plan.id)]
       newPlanId = null
       showList()
-      showActionMessage('Plan saved.')
+      showActionMessage(gettext('Plan saved.'))
     } catch (error) {
-      if (!showPlanLimit(error)) showActionMessage(error.message || 'Could not save the plan. Try again.')
+      if (!showPlanLimit(error)) showActionMessage(error.message || gettext('Could not save the plan. Try again.'))
     } finally {
       saving = false
       for (const control of controls) control.disabled = false
@@ -410,22 +411,22 @@ function setupPlans({ getActivities, getPlatforms, refreshLibrary }) {
       if (!builder.hidden) renderBuilder()
       sharedStatus.textContent = ''
       sharedList.replaceChildren()
-      if (!shared.length) sharedList.textContent = 'No practice plans have been shared with you.'
+      if (!shared.length) sharedList.textContent = gettext('No practice plans have been shared with you.')
       for (const [index, { owner, owner_id: ownerId, plan }] of shared.entries()) {
         const card = planCard(plan, index === 0)
         const byline = document.createElement('p')
         byline.className = 'shared-plan-owner'
-        byline.textContent = 'Shared by ' + owner + ' · Read-only'
+        byline.textContent = gettext('Shared by %(owner)s · Read-only', { owner })
         const actions = document.createElement('div')
         actions.className = 'actions'
         const copyId = newRecordId()
-        const copy = button('Copy to My Account', async () => {
+        const copy = button(gettext('Copy to My Account'), async () => {
           copy.disabled = remove.disabled = true
           try {
             await copySharedPlan(ownerId, plan.id, copyId)
             await refreshLibrary()
-            showActionMessage('Plan and drills copied to your account.')
-            copy.textContent = 'Copied to My Account'
+            showActionMessage(gettext('Plan and drills copied to your account.'))
+            copy.textContent = gettext('Copied to My Account')
           } catch (error) {
             if (!showPlanLimit(error)) showActionMessage(error.message)
             copy.disabled = false
@@ -434,21 +435,21 @@ function setupPlans({ getActivities, getPlatforms, refreshLibrary }) {
           }
         })
         copy.className = 'primary'
-        const remove = button('Remove from Shared with me', async () => {
-          if (!await confirmAction('Remove “' + plan.name + '” from Shared with me? Any copies in your account will be kept.', 'Remove plan', true)) return
+        const remove = button(gettext('Remove from Shared with me'), async () => {
+          if (!await confirmAction(gettext('Remove “%(title)s” from Shared with me? Any copies in your account will be kept.', { title: plan.name }), gettext('Remove plan'), true)) return
           const copyWasDisabled = copy.disabled
           remove.disabled = copy.disabled = true
           try {
             await removeReceivedShare(ownerId, plan.id)
             await refreshShared()
-            showActionMessage('Plan removed from Shared with me.')
+            showActionMessage(gettext('Plan removed from Shared with me.'))
           } catch (error) {
             showActionMessage(error.message)
             remove.disabled = false
             copy.disabled = copyWasDisabled
           }
         })
-        actions.append(button('View Fullscreen', () => presentPlan(plan.name, plan.activities)), printButton(plan, ownerId), copy, remove)
+        actions.append(button(gettext('View Fullscreen'), () => presentPlan(plan.name, plan.activities)), printButton(plan, ownerId), copy, remove)
         card.querySelector('summary > div').append(byline)
         card.append(exerciseList(plan, true), actions)
         sharedList.append(card)
@@ -485,7 +486,7 @@ async function refreshLibrary() {
     document.getElementById('activity-count').textContent = activities.length
     refresh(data.plans)
   } catch (error) {
-    document.getElementById('plan-status').textContent = 'Could not load the practice plans.'
+    document.getElementById('plan-status').textContent = gettext('Could not load the practice plans.')
     throw error
   }
 }

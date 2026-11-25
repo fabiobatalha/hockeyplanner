@@ -1,3 +1,4 @@
+import { gettext } from './i18n.js'
 import { publicUrl } from './urls.js'
 import { showActionMessage } from './action-message.js'
 import { createPlanLink, disablePlanLink, readPlanLink, readPlanRecipients, revokePlanShare, sharePracticePlan } from './library.js'
@@ -38,17 +39,17 @@ export function setupPlanSharing() {
     }
   }
 
-  create.addEventListener('click', () => changeLink(create, createPlanLink, 'Share link created.'))
-  disable.addEventListener('click', () => changeLink(disable, disablePlanLink, 'Share link disabled.'))
+  create.addEventListener('click', () => changeLink(create, createPlanLink, gettext('Share link created.')))
+  disable.addEventListener('click', () => changeLink(disable, disablePlanLink, gettext('Share link disabled.')))
   copy.addEventListener('click', async () => {
     const url = linkUrl.value
     try {
       await navigator.clipboard.writeText(url)
-      showActionMessage('Link copied.')
+      showActionMessage(gettext('Link copied.'))
     } catch {
       linkUrl.focus()
       linkUrl.select()
-      showActionMessage('Copy the selected link to share it.')
+      showActionMessage(gettext('Copy the selected link to share it.'))
     }
   })
 
@@ -58,21 +59,21 @@ export function setupPlanSharing() {
     list.replaceChildren()
     if (!recipients.length) {
       const row = document.createElement('li')
-      row.textContent = 'No users have been granted access yet.'
+      row.textContent = gettext('No users have been granted access yet.')
       list.append(row)
     }
     for (const recipient of recipients) {
       const row = document.createElement('li')
       const remove = document.createElement('button')
       remove.type = 'button'
-      remove.textContent = 'Remove access'
-      remove.setAttribute('aria-label', 'Remove access for ' + recipient.username)
+      remove.textContent = gettext('Remove access')
+      remove.setAttribute('aria-label', gettext('Remove access for %(username)s', { username: recipient.username }))
       remove.addEventListener('click', async () => {
         remove.disabled = true
         try {
           await revokePlanShare(plan.id, recipient.id)
           await refresh(plan)
-          if (activePlan === plan) showActionMessage('Access removed for ' + recipient.username + '.')
+          if (activePlan === plan) showActionMessage(gettext('Access removed for %(username)s.', { username: recipient.username }))
         } catch (error) {
           if (activePlan === plan) showActionMessage(error.message)
           remove.disabled = false
@@ -94,7 +95,7 @@ export function setupPlanSharing() {
       await refresh(plan)
       if (activePlan === plan) {
         form.reset()
-        showActionMessage('Read-only access granted.')
+        showActionMessage(gettext('Read-only access granted.'))
       }
     } catch (error) {
       if (activePlan === plan) showActionMessage(error.message)
@@ -108,7 +109,7 @@ export function setupPlanSharing() {
   return async function open(plan) {
     activePlan = { id: plan.id }
     const requested = activePlan
-    heading.textContent = 'Share ' + plan.name
+    heading.textContent = gettext('Share %(title)s', { title: plan.name })
     form.reset()
     form.querySelector('button').disabled = false
     list.replaceChildren()

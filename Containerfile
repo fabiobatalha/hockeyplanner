@@ -16,6 +16,7 @@ COPY README.md ./
 COPY src/ ./src/
 COPY web/ ./web/
 RUN uv sync --locked --no-dev \
+    && python -m hockeyplanner.compile_i18n \
     && install -d -o 10001 -g 10001 /app/data
 
 USER 10001:10001

@@ -11,9 +11,12 @@ from email.message import EmailMessage
 from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session, sessionmaker
 
+from flask_babel import gettext
+
 from .accounts import Accounts, EmailTaken, IncorrectPassword, UsernameTaken, password_hash, token_hash
 from .database import EmailConfirmation, PasswordResetRequest, User, UserAccess, UserEmail
 from .email_tasks import EmailDeliveryError, EmailTasks
+from .i18n import email_text
 from .models import ConfirmEmail, EmailUpdate, Registration
 from .public_urls import public_base_url
 
@@ -29,17 +32,17 @@ def public_email_link(path: str) -> str:
     try:
         return public_base_url() + path
     except ValueError as error:
-        raise EmailDeliveryError("Email delivery is not configured. Contact the site administrator.") from error
+        raise EmailDeliveryError(gettext("Email delivery is not configured. Contact the site administrator.")) from error
 
 
-def smtp_confirmation(address: str, code: str, token: str) -> None:
+def smtp_confirmation(address: str, code: str, token: str, *, language: str = "en") -> None:
     link = public_email_link(f"confirm-email/{token}")
     send_email(
         address,
-        "Confirm your Hockey Planner email",
-        f"Your Hockey Planner confirmation code is {code}.\n\n"
-        f"Open {link} and enter the six-digit code.\n"
-        "The request expires in 30 minutes. If you did not request this, you can ignore this message.\n",
+        email_text(language, "Confirm your Hockey Planner email"),
+        email_text(language, "Your Hockey Planner confirmation code is %(code)s.", code=code) + "\n\n"
+        + email_text(language, "Open %(link)s and enter the six-digit code.", link=link) + "\n"
+        + email_text(language, "The request expires in 30 minutes. If you did not request this, you can ignore this message.") + "\n",
     )
 
 
@@ -50,9 +53,9 @@ def smtp_settings() -> tuple[str, str, str, int]:
     try:
         port = int(os.getenv("HOCKEYPLANNER_SMTP_PORT", "465" if mode == "ssl" else "587"))
     except ValueError as error:
-        raise EmailDeliveryError("Email delivery is not configured. Contact the site administrator.") from error
+        raise EmailDeliveryError(gettext("Email delivery is not configured. Contact the site administrator.")) from error
     if not host or not sender or mode not in ("starttls", "ssl") or not 1 <= port <= 65535:
-        raise EmailDeliveryError("Email delivery is not configured. Contact the site administrator.")
+        raise EmailDeliveryError(gettext("Email delivery is not configured. Contact the site administrator."))
     return host, sender, mode, port
 
 
@@ -85,7 +88,7 @@ def send_email(address: str, subject: str, body: str) -> None:
                 if sending or attempt == 2:
                     raise
     except (OSError, ValueError, smtplib.SMTPException) as error:
-        raise EmailDeliveryError("Could not send the email. Try again later.") from error
+        raise EmailDeliveryError(gettext("Could not send the email. Try again later.")) from error
 
 
 def code_hash(code: str, salt: bytes) -> bytes:
@@ -122,20 +125,23 @@ class EmailConfirmations:
         with self.sessions.begin() as session:
             session.execute(delete(EmailConfirmation).where(EmailConfirmation.token_hash == digest))
 
-    def _deliver(self, digest: bytes, address: str, token: str, code: str) -> None:
+    def _deliver(self, digest: bytes, address: str, token: str, code: str, language: str) -> None:
         try:
             with self.sessions() as session:
                 pending = session.get(EmailConfirmation, digest)
                 if pending is None or pending.expires <= int(time.time()):
                     return
-            self.send(address, code, token)
+            if self.send is smtp_confirmation:
+                smtp_confirmation(address, code, token, language=language)
+            else:
+                self.send(address, code, token)
         except Exception:
             self._discard(digest)
             raise
 
-    def _queue(self, pending: EmailConfirmation, token: str, code: str) -> None:
+    def _queue(self, pending: EmailConfirmation, token: str, code: str, language: str) -> None:
         try:
-            self.tasks.submit(self._deliver, pending.token_hash, pending.email, token, code)
+            self.tasks.submit(self._deliver, pending.token_hash, pending.email, token, code, language)
         except EmailDeliveryError:
             self._discard(pending.token_hash)
             raise
@@ -145,7 +151,7 @@ class EmailConfirmations:
             smtp_settings()
             public_email_link("")
 
-    def start_registration(self, details: Registration) -> None:
+    def start_registration(self, details: Registration, language: str = "en") -> None:
         salt = secrets.token_bytes(16)
         pending, token, code = self.request(
             details.email, username=details.username, password_salt=salt,
@@ -160,9 +166,9 @@ class EmailConfirmations:
                 raise EmailTaken
             self._check_delivery_settings()
             session.add(pending)
-        self._queue(pending, token, code)
+        self._queue(pending, token, code, language)
 
-    def start_change(self, user_id: int, changes: EmailUpdate) -> None:
+    def start_change(self, user_id: int, changes: EmailUpdate, language: str = "en") -> None:
         with self.sessions.begin() as session:
             self.remove_expired(session)
             user = session.get(User, user_id)
@@ -175,10 +181,10 @@ class EmailConfirmations:
             pending, token, code = self.request(changes.email, user_id=user_id, password_digest=user.password_hash)
             session.execute(delete(EmailConfirmation).where(EmailConfirmation.user_id == user_id))
             session.add(pending)
-        self._queue(pending, token, code)
+        self._queue(pending, token, code, language)
 
     def confirm(self, confirmation: ConfirmEmail) -> tuple[int | None, str]:
-        failure = "This confirmation request is expired or no longer available. Start a new request."
+        failure = gettext("This confirmation request is expired or no longer available. Start a new request.")
         with self.sessions.begin() as session:
             self.remove_expired(session)
             pending = session.get(EmailConfirmation, token_hash(confirmation.token), with_for_update=True)
@@ -186,7 +192,7 @@ class EmailConfirmations:
                 if not hmac.compare_digest(pending.code_digest, code_hash(confirmation.code, pending.code_salt)):
                     pending.attempts_left -= 1
                     if pending.attempts_left:
-                        failure = "Incorrect code. Check the six digits in your email."
+                        failure = gettext("Incorrect code. Check the six digits in your email.")
                     else:
                         session.delete(pending)
                 elif pending.user_id is None:

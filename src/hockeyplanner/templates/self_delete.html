@@ -1,14 +1,14 @@
   <dialog id="self-delete-dialog" aria-labelledby="self-delete-title" aria-describedby="self-delete-warning">
     <div class="delete-account-content">
-      <h2 id="self-delete-title">Delete my account</h2>
-      <p id="self-delete-warning">This permanently deletes your account, drills, plans, and sharing links, and signs you out on all devices. Independent copies saved by others remain in their accounts.</p>
-      <p id="self-delete-admin-warning" {% if user.role != "poweruser" %}hidden{% endif %}>If you are the only power user, assign another power user first to keep Administration available for other accounts.</p>
+      <h2 id="self-delete-title">{{ gettext("Delete my account") }}</h2>
+      <p id="self-delete-warning">{{ gettext("This permanently deletes your account, drills, plans, and sharing links, and signs you out on all devices. Independent copies saved by others remain in their accounts.") }}</p>
+      <p id="self-delete-admin-warning" {% if user.role != "poweruser" %}hidden{% endif %}>{{ gettext("If you are the only power user, assign another power user first to keep Administration available for other accounts.") }}</p>
       <form method="post" id="self-delete-form">
-        <label for="self-delete-password">Current password</label>
+        <label for="self-delete-password">{{ gettext("Current password") }}</label>
         <input id="self-delete-password" type="password" autocomplete="current-password" maxlength="128" required>
         <div class="actions">
-          <button id="self-delete-cancel" type="button" autofocus>Cancel</button>
-          <button id="self-delete-confirm" type="submit" class="danger">Permanently delete my account</button>
+          <button id="self-delete-cancel" type="button" autofocus>{{ gettext("Cancel") }}</button>
+          <button id="self-delete-confirm" type="submit" class="danger">{{ gettext("Permanently delete my account") }}</button>
         </div>
       </form>
       <p id="self-delete-status" class="status" role="status"></p>

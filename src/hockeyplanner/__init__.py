@@ -4,15 +4,17 @@ from hashlib import sha256
 from pathlib import Path
 
 from flask import Flask, render_template, request, url_for
+from flask_babel import Babel, gettext
 from sqlalchemy.exc import SQLAlchemyError
 from werkzeug.exceptions import HTTPException
 
 from .accounts import Accounts
-from .api import create_api
+from .api import create_api, session_token
 from .database import configured_database, open_database
 from .email_confirmation import EmailConfirmations, smtp_confirmation
 from .email_tasks import EmailTasks
 from .library import Library
+from .i18n import LANGUAGES, PlannerDomain, browser_catalog, language_tag, request_language
 from .pages import create_pages
 from .password_reset import PasswordResets, smtp_password_reset
 from .public_urls import public_base_url
@@ -36,7 +38,11 @@ def create_app(
 
     @app.context_processor
     def public_link_context():
-        return {"public_root": public_root}
+        language = language_tag()
+        return {
+            "public_root": public_root, "language": language, "languages": LANGUAGES,
+            "browser_translations": browser_catalog(language),
+        }
 
     asset_hash = sha256()
     for asset in sorted(path for path in web.rglob("*") if path.is_file()):
@@ -55,6 +61,8 @@ def create_app(
     confirmations = EmailConfirmations(sessions, send_confirmation, email_tasks)
     confirmations.cleanup()
     library, accounts, sharing = Library(sessions), Accounts(sessions), Sharing(sessions)
+    babel = Babel(app, locale_selector=lambda: request_language(accounts.session_locale(session_token())).replace("-", "_"))
+    babel.domain_instance = PlannerDomain()
     app.register_blueprint(create_api(
         library, accounts, sharing, confirmations,
         PasswordResets(sessions, send_password_reset, email_tasks), secure_cookies,
@@ -69,22 +77,22 @@ def create_app(
         response = error.get_response()
         if request.path == "/api" or request.path.startswith("/api/"):
             response.set_data(app.json.dumps({
-                "error": "The server could not complete the request." if server_error else error.description,
+                "error": gettext("The server could not complete the request.") if server_error else error.description,
             }))
             response.mimetype = "application/json"
         elif not request.path.startswith("/static/") and (server_error or code in (401, 404)):
             if code == 401:
-                title = "Sign in required"
-                message = "Sign in to open this page."
-                action = ("Sign in", url_for("pages.login", next=request.path))
+                title = gettext("Sign in required")
+                message = gettext("Sign in to open this page.")
+                action = (gettext("Sign in"), url_for("pages.login", next=request.path))
             elif code == 404:
-                title = "Page not found"
-                message = error.description if error.description != type(error).description else "This page or shared link may have moved or expired."
-                action = ("Back to Hockey Planner", url_for("pages.index"))
+                title = gettext("Page not found")
+                message = error.description if error.description != type(error).description else gettext("This page or shared link may have moved or expired.")
+                action = (gettext("Back to Hockey Planner"), url_for("pages.index"))
             else:
-                title = "Something went wrong"
-                message = "Hockey Planner couldn’t load this page. Try again in a moment."
-                action = ("Try again", "") if request.method == "GET" else ("Back to Hockey Planner", url_for("pages.index"))
+                title = gettext("Something went wrong")
+                message = gettext("Hockey Planner couldn’t load this page. Try again in a moment.")
+                action = (gettext("Try again"), "") if request.method == "GET" else (gettext("Back to Hockey Planner"), url_for("pages.index"))
             response.set_data(render_template(
                 "error.html", page="error", title=title, error=message, status_code=code, action=action,
             ))

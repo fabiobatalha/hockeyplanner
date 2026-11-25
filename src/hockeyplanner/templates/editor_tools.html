@@ -1,0 +1,58 @@
+{% macro tool(id, label, icon, letter=false) %}
+<button type="button" class="tool" data-tool="{{ id }}" aria-pressed="{{ 'true' if id == 'select' else 'false' }}"
+  {% if id == 'player' %}aria-controls="player-options" aria-expanded="false"{% endif %}>
+  {% if id == 'pivot' %}
+  <canvas class="tool-icon" width="32" height="32" aria-hidden="true"></canvas>
+  {% else %}
+  <span class="tool-icon{% if letter %} letter-icon{% endif %}{% if id == 'referee' %} referee-icon{% endif %}" aria-hidden="true">{{ icon }}</span>
+  {% endif %}
+  {{ label }}
+</button>
+{% endmacro %}
+
+<div id="selection-tools" class="tool-list">
+  {{ tool('select', gettext('Select and Move'), '⌖') }}
+</div>
+<h3>{{ gettext("Markers") }}</h3>
+<div id="marker-tools" class="tool-list markers">
+  <div class="player-tool">
+    {{ tool('player', gettext('Player'), 'P', true) }}
+    <div id="player-options" role="group" aria-label="{{ gettext('Player team') }}" hidden>
+      {% for team, color in [('A', gettext('blue')), ('B', gettext('red'))] %}
+      <button type="button" class="tool" data-player-team="{{ team }}" aria-label="{{ gettext('Team %(team)s (%(color)s)', team=team, color=color) }}">
+        <span class="tool-icon letter-icon" aria-hidden="true">P</span>{{ gettext('Team %(team)s', team=team) }}
+      </button>
+      {% endfor %}
+    </div>
+  </div>
+  {{ tool('cone', gettext('Cone'), '▲') }}
+  {{ tool('coach', gettext('Coach'), 'C', true) }}
+  {{ tool('goal', gettext('Goal'), '∩') }}
+  {{ tool('goalie', gettext('Goalie'), 'G', true) }}
+  {{ tool('puck', gettext('Puck'), '●') }}
+  {{ tool('pucks', gettext('Puck pile'), '⠿') }}
+  {{ tool('shot', gettext('Shot on goal'), '◎') }}
+  {{ tool('order', gettext('Step number'), '1', true) }}
+  {{ tool('referee', gettext('Referee'), 'R', true) }}
+  {{ tool('start', gettext('Start'), '▶') }}
+  {{ tool('end', gettext('End'), '■') }}
+</div>
+<div id="order-options" class="order-options" hidden>
+  <label for="order-number">{{ gettext("Step number") }}</label>
+  <select id="order-number">
+    {% for number in range(1, 10) %}<option>{{ number }}</option>{% endfor %}
+  </select>
+</div>
+<h3>{{ gettext("Movements") }}</h3>
+<div id="movement-tools" class="tool-list">
+  {{ tool('forward', gettext('Skate forward'), '⟶') }}
+  {{ tool('carry', gettext('Forward with puck'), '∿') }}
+  {{ tool('stop', gettext('Forward and stop'), '⇥') }}
+  {{ tool('carryStop', gettext('Forward with puck and stop'), '∿') }}
+  {{ tool('backward', gettext('Skate backward'), '◠◡') }}
+  {{ tool('backwardPuck', gettext('Backward with puck'), '◠◡') }}
+  {{ tool('backwardStop', gettext('Backward and stop'), '◠◡') }}
+  {{ tool('backwardPuckStop', gettext('Backward with puck and stop'), '◠◡') }}
+  {{ tool('pass', gettext('Pass'), '⇢') }}
+  {{ tool('pivot', gettext('Pivot'), '') }}
+</div>

@@ -1,4 +1,5 @@
 import { appUrl } from './urls.js'
+import { gettext } from './i18n.js'
 
 export async function request(path, method = 'GET', body) {
   const options = { method, cache: 'no-store' }
@@ -9,7 +10,7 @@ export async function request(path, method = 'GET', body) {
   const response = await fetch(appUrl('api/' + path), options)
   if (!response.ok) {
     const details = await response.json().catch(() => null)
-    const error = new Error(details?.error || 'Request failed (' + response.status + ').')
+    const error = new Error(details?.error || gettext('Request failed (%(status)d).', { status: response.status }))
     error.status = response.status
     error.code = details?.code
     error.capacity = details?.capacity

@@ -1,3 +1,4 @@
+import { gettext } from './i18n.js'
 import { publicUrl } from './urls.js'
 import { markdownText } from './markdown.js'
 import { width, rinkHeight, rinkWidth, drawRink, drawItem, drawMovementSample, movementLegend } from './drawing.js'
@@ -65,10 +66,11 @@ function drawPdfHeader(ctx, logo, pageWidth, margin, codes) {
     const center = pageWidth - margin - 66 - (codes.length - 1 - index) * 156
     drawQr(ctx, code, center, 10, 132)
     ctx.fillStyle = '#152741'
-    ctx.font = '15px system-ui'
+    ctx.font = '14px system-ui'
     ctx.save()
     ctx.textAlign = 'center'
-    ctx.fillText(label, center, 145)
+    wrap(ctx, label, codes.length > 1 ? 140 : 200)
+      .forEach((line, index) => ctx.fillText(line, center, 138 + index * 15))
     ctx.restore()
   }
   ctx.fillStyle = '#c7d5ea'
@@ -76,7 +78,7 @@ function drawPdfHeader(ctx, logo, pageWidth, margin, codes) {
 }
 
 const freeNoticeHeight = 116
-const publicDrillNotice = 'Free accounts include a public QR code in exported drill PDFs. Anyone with the code can view the saved drill. Upgrade to Full Access to export drill PDFs without public sharing.'
+const publicDrillNotice = gettext('Free accounts include a public QR code in exported drill PDFs. Anyone with the code can view the saved drill. Upgrade to Full Access to export drill PDFs without public sharing.')
 const noticeLineHeight = 24
 
 function drawFreeNotice(ctx, code, pageWidth, margin, top, noticeHeight, noticeLines) {
@@ -88,11 +90,11 @@ function drawFreeNotice(ctx, code, pageWidth, margin, top, noticeHeight, noticeL
   const left = margin + 22
   ctx.fillStyle = '#102346'
   ctx.font = 'bold 23px system-ui'
-  ctx.fillText('Created with Hockey Planner Free', left, top + 17)
+  ctx.fillText(gettext('Created with Hockey Planner Free'), left, top + 17)
   ctx.font = '18px system-ui'
-  ctx.fillText('These drills and practice plans were developed with a free Hockey Planner account.', left, top + 49)
+  ctx.fillText(gettext('These drills and practice plans were developed with a free Hockey Planner account.'), left, top + 49)
   ctx.font = 'bold 18px system-ui'
-  ctx.fillText('Create an account at ' + publicUrl().host + ' or scan the QR code.', left, top + 77)
+  ctx.fillText(gettext('Create an account at %(host)s or scan the QR code.', { host: publicUrl().host }), left, top + 77)
   ctx.font = '18px system-ui'
   noticeLines.forEach((line, index) => ctx.fillText(line, left, top + 105 + index * noticeLineHeight))
   drawQr(ctx, code, pageWidth - margin - 64, top + 9, 98)
@@ -119,7 +121,7 @@ const legendHeadingHeight = 28
 function drawMovementLegend(ctx, entries, left, top) {
   ctx.fillStyle = '#152741'
   ctx.font = 'bold 18px system-ui'
-  ctx.fillText('Movement Legend', left, top)
+  ctx.fillText(gettext('Movement Legend'), left, top)
   for (const [index, { type, label }] of entries.entries()) {
     const x = left + (index % 2) * width / 2
     const y = top + legendHeadingHeight + Math.floor(index / 2) * legendRowHeight
@@ -139,7 +141,7 @@ function* makePages(activity, paper, { logo, planName = '', codes = [], signup, 
   const lineHeight = 25
   const { ctx: measure } = makeCanvas(1, 1)
   measure.font = titleFont
-  const title = wrap(measure, activity.title.trim() || 'Untitled Drill', width)
+  const title = wrap(measure, activity.title.trim() || gettext('Untitled Drill'), width)
   measure.font = textFont
   const noticeLines = signup && notice ? wrap(measure, notice, width - 160) : []
   const planHeading = planName ? wrap(measure, planName, width) : []
@@ -187,7 +189,7 @@ function* makePages(activity, paper, { logo, planName = '', codes = [], signup, 
     }
     if (pageLines.length) {
       ctx.font = 'bold 18px system-ui'
-      ctx.fillText(first ? 'Description' : 'Description (continued)', margin, top)
+      ctx.fillText(first ? gettext('Description') : gettext('Description (continued)'), margin, top)
       ctx.font = textFont
       pageLines.forEach((line, i) => ctx.fillText(line, margin, top + (i + 1) * lineHeight))
     }
@@ -202,7 +204,7 @@ function encodeCanvas(canvas, mime, quality) {
   return new Promise((resolve, reject) => {
     canvas.toBlob(blob => {
       if (blob) resolve(blob)
-      else reject(new Error('Image encoding failed'))
+      else reject(new Error(gettext('Image encoding failed')))
     }, mime, quality)
   })
 }
@@ -251,7 +253,7 @@ async function makePdf(pages, paper) {
 
 export async function exportActivity(activity, format, token) {
   const paper = format === 'pdf' ? portraitLetter : null
-  const codes = token && activity.id ? [{ code: shareQr(token, 'drill/' + activity.id), label: 'Scan to view drill' }] : []
+  const codes = token && activity.id ? [{ code: shareQr(token, 'drill/' + activity.id), label: gettext('Scan to view drill') }] : []
   const pages = makePages(activity, paper, paper ? {
     logo: await loadPdfLogo(), codes, signup: signupQr(), notice: codes.length ? publicDrillNotice : '',
   } : undefined)
@@ -261,12 +263,12 @@ export async function exportActivity(activity, format, token) {
 
 export async function exportTrainingPlan(name, activities, token) {
   const logo = await loadPdfLogo()
-  const planCode = token ? { code: shareQr(token, 'present'), label: 'Scan to view full plan' } : null
+  const planCode = token ? { code: shareQr(token, 'present'), label: gettext('Scan to view full plan') } : null
   const signup = signupQr()
   function* pages() {
     for (const activity of activities) {
       const codes = planCode ? [planCode] : []
-      if (token && activity.id) codes.push({ code: shareQr(token, 'drill/' + activity.id), label: 'Scan to view drill' })
+      if (token && activity.id) codes.push({ code: shareQr(token, 'drill/' + activity.id), label: gettext('Scan to view drill') })
       yield* makePages(activity, portraitLetter, { logo, planName: name, codes, signup })
     }
   }

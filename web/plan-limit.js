@@ -1,3 +1,4 @@
+import { gettext, ngettext } from './i18n.js'
 import { openTimedDialog } from './action-message.js'
 
 const get = id => document.getElementById(id)
@@ -10,22 +11,25 @@ export function showPlanLimit(error) {
 
   const { collection, limit, used, requested } = error.capacity
   const drill = collection === 'drills'
-  const singular = drill ? 'drill' : 'practice plan'
-  const plural = drill ? 'drills' : 'practice plans'
-  const location = drill ? 'Drill Library' : 'Practice Plans under My plans'
   const required = used + requested - limit
   get('plan-limit-title').textContent = used >= limit
-    ? (drill ? 'Drill limit reached' : 'Practice plan limit reached')
-    : 'Not enough room for ' + plural
-  get('plan-limit-count').textContent = used + ' of ' + limit + ' ' + plural + ' saved'
+    ? (drill ? gettext('Drill limit reached') : gettext('Practice plan limit reached'))
+    : (drill ? gettext('Not enough room for these drills') : gettext('Not enough room for these practice plans'))
+  get('plan-limit-count').textContent = drill
+    ? gettext('%(used)d of %(limit)d drills saved', { used, limit })
+    : gettext('%(used)d of %(limit)d practice plans saved', { used, limit })
   const meter = get('plan-limit-meter')
   meter.max = limit
   meter.value = Math.min(used, limit)
-  const guidance = required === 1 ? 'one saved ' + singular : required + ' saved ' + plural
+  const guidance = drill
+    ? ngettext('Delete one saved drill from the Drill Library to make room, then try again.',
+      'Delete %(count)d saved drills from the Drill Library to make room, then try again.', required)
+    : ngettext('Delete one saved practice plan from My plans to make room, then try again.',
+      'Delete %(count)d saved practice plans from My plans to make room, then try again.', required)
   get('plan-limit-guidance').textContent = requested > limit
-    ? 'This action would add ' + requested + ' ' + plural + '. Try adding fewer at once.'
-    : 'Delete ' + guidance + ' from ' + location + ' to make room, then try again.'
+    ? (drill ? gettext('This action would add too many drills. Try adding fewer at once.')
+      : gettext('This action would add too many practice plans. Try adding fewer at once.'))
+    : guidance
   openTimedDialog(dialog)
   return true
 }
-

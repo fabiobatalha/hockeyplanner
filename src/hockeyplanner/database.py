@@ -35,6 +35,13 @@ class UserPublicIdentity(Base):
     public_id: Mapped[UUID] = mapped_column(unique=True, default=uuid4)
 
 
+class UserLocale(Base):
+    __tablename__ = "user_locales"
+
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), primary_key=True)
+    language: Mapped[str]
+
+
 class RetiredUserId(Base):
     __tablename__ = "retired_user_ids"
 

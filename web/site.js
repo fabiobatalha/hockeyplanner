@@ -1,3 +1,4 @@
+import { gettext } from './i18n.js'
 import { restoreActionMessage, showActionMessage } from './action-message.js'
 import { request } from './http.js'
 import { appUrl } from './urls.js'
@@ -18,7 +19,7 @@ signOut?.addEventListener('click', async () => {
     location.replace(appUrl('login'))
   } catch {
     signOut.disabled = false
-    showActionMessage('Could not sign out. Try again.')
+    showActionMessage(gettext('Could not sign out. Try again.'))
   }
 })
 restoreActionMessage()

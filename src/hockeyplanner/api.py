@@ -3,6 +3,7 @@ import time
 from threading import Lock
 from urllib.parse import urlsplit
 
+from flask_babel import gettext
 from flask import Blueprint, Response, abort, g, jsonify, make_response, request
 from pydantic import ValidationError
 from sqlalchemy.exc import SQLAlchemyError
@@ -11,6 +12,7 @@ from werkzeug.exceptions import HTTPException
 from .accounts import SESSION_AGE, AccountNotFound, Accounts, AdministrationDenied, EmailTaken, IncorrectPassword, UsernameTaken
 from .email_confirmation import ConfirmationError, EmailConfirmations
 from .email_tasks import EmailDeliveryError
+from .i18n import language_tag
 from .library import MODELS, CapacityExceeded, Library, PlatformDrillNotFound, valid_id
 from .models import PASSWORD_REQUIREMENTS, AccountDeletion, AccountUpdate, ConfirmEmail, EmailUpdate, ForgotPassword, LibraryImport, Login, PasswordChange, Registration, ResetPassword, PlanCopyRequest, PlanLinkClaim, PlanLinkPreview, PlanShareRequest, TierSelection
 from .password_reset import InvalidPasswordReset, PasswordResets
@@ -52,12 +54,12 @@ def create_api(library: Library, accounts: Accounts, sharing: Sharing, confirmat
     @api.errorhandler(RecursionError)
     def invalid_data(error):
         if isinstance(error, ValidationError) and any(item["type"] == "password_policy" for item in error.errors()):
-            return jsonify(error=PASSWORD_REQUIREMENTS), 400
-        return jsonify(error="Invalid data. Check your input and try again."), 400
+            return jsonify(error=gettext(PASSWORD_REQUIREMENTS)), 400
+        return jsonify(error=gettext("Invalid data. Check your input and try again.")), 400
 
     @api.errorhandler(UsernameTaken)
     def duplicate_username(_error):
-        return jsonify(error="This username is already taken."), 409
+        return jsonify(error=gettext("This username is already taken.")), 409
 
     @api.errorhandler(AdministrationDenied)
     def administration_denied(error):
@@ -65,15 +67,15 @@ def create_api(library: Library, accounts: Accounts, sharing: Sharing, confirmat
 
     @api.errorhandler(AccountNotFound)
     def account_not_found(_error):
-        return jsonify(error="User account not found."), 404
+        return jsonify(error=gettext("User account not found.")), 404
 
     @api.errorhandler(EmailTaken)
     def duplicate_email(_error):
-        return jsonify(error="That email address is already in use."), 409
+        return jsonify(error=gettext("That email address is already in use.")), 409
 
     @api.errorhandler(IncorrectPassword)
     def incorrect_password(_error):
-        return jsonify(error="Incorrect current password."), 403
+        return jsonify(error=gettext("Incorrect current password.")), 403
 
     @api.errorhandler(EmailDeliveryError)
     def email_delivery_error(error):
@@ -106,11 +108,11 @@ def create_api(library: Library, accounts: Accounts, sharing: Sharing, confirmat
 
     @api.errorhandler(PlatformDrillNotFound)
     def platform_drill_not_found(_error):
-        return jsonify(error="This platform drill is no longer available."), 404
+        return jsonify(error=gettext("This platform drill is no longer available.")), 404
 
     @api.errorhandler(SQLAlchemyError)
     def database_error(_error):
-        return jsonify(error="The application database is unavailable."), 503
+        return jsonify(error=gettext("The application database is unavailable.")), 503
 
     @api.before_request
     def authorize():
@@ -118,7 +120,7 @@ def create_api(library: Library, accounts: Accounts, sharing: Sharing, confirmat
         if request.method in {"POST", "PUT", "DELETE"} and origin:
             parsed = urlsplit(origin)
             if parsed.scheme not in {"http", "https"} or parsed.netloc.lower() != request.host.lower():
-                abort(403, "This request must come from the planner.")
+                abort(403, gettext("This request must come from the planner."))
         if request.endpoint not in {
             "planner_api.login", "planner_api.register", "planner_api.logout",
             "planner_api.confirm_email", "planner_api.preview_plan_link",
@@ -126,13 +128,13 @@ def create_api(library: Library, accounts: Accounts, sharing: Sharing, confirmat
         }:
             g.user = accounts.get_user(session_token())
             if request.endpoint != "planner_api.account" and g.user is None:
-                abort(401, "Sign in to continue.")
+                abort(401, gettext("Sign in to continue."))
             if request.endpoint not in {"planner_api.account", "planner_api.update_email", "planner_api.delete_account"} and not g.user.email:
-                abort(403, "Add an email address to your account to continue.")
+                abort(403, gettext("Add an email address to your account to continue."))
             if request.endpoint not in {"planner_api.account", "planner_api.update_email", "planner_api.select_tier", "planner_api.delete_account"} and g.user.tier == "pending":
-                abort(403, "Choose an account plan to continue.")
+                abort(403, gettext("Choose an account plan to continue."))
             if request.path.startswith("/api/admin/") and g.user.role != "poweruser":
-                abort(403, "Poweruser access is required.")
+                abort(403, gettext("Poweruser access is required."))
 
     @api.after_request
     def prevent_caching(response):
@@ -150,7 +152,7 @@ def create_api(library: Library, accounts: Accounts, sharing: Sharing, confirmat
 
     def credential_payload():
         if not limiter.allow(request.remote_addr or ""):
-            abort(429, "Too many attempts. Try again in a minute.")
+            abort(429, gettext("Too many attempts. Try again in a minute."))
         request.max_content_length = 4096
         return request.get_json()
 
@@ -167,7 +169,7 @@ def create_api(library: Library, accounts: Accounts, sharing: Sharing, confirmat
     @api.put("/account/email")
     def update_email():
         changes = EmailUpdate.model_validate(credential_payload())
-        confirmations.start_change(g.user.id, changes)
+        confirmations.start_change(g.user.id, changes, language_tag())
         return "", 202
 
     @api.put("/account/password")
@@ -180,11 +182,11 @@ def create_api(library: Library, accounts: Accounts, sharing: Sharing, confirmat
         request.max_content_length = 4096
         choice = TierSelection.model_validate(request.get_json())
         if g.user.role == "poweruser":
-            abort(403, "Poweruser accounts always have Full Access.")
+            abort(403, gettext("Poweruser accounts always have Full Access."))
         if choice.tier == "full":
-            abort(400, "Full Access is not available yet.")
+            abort(400, gettext("Full Access is not available yet."))
         if not accounts.select_free_tier(g.user.id, allow_downgrade=choice.confirm_downgrade):
-            abort(409, "Confirm that you want to switch from Full Access to Free.")
+            abort(409, gettext("Confirm that you want to switch from Full Access to Free."))
         return "", 204
 
     @api.post("/register")
@@ -194,8 +196,8 @@ def create_api(library: Library, accounts: Accounts, sharing: Sharing, confirmat
         except ValidationError as error:
             if any(item["type"] == "password_policy" for item in error.errors()):
                 raise
-            abort(400, "Use a username of 3–32 letters, numbers, dots, underscores or hyphens and a valid email address. " + PASSWORD_REQUIREMENTS)
-        confirmations.start_registration(details)
+            abort(400, gettext("Use a username of 3–32 letters, numbers, dots, underscores or hyphens and a valid email address. ") + gettext(PASSWORD_REQUIREMENTS))
+        confirmations.start_registration(details, language_tag())
         return "", 202
 
     @api.post("/confirm-email")
@@ -211,7 +213,7 @@ def create_api(library: Library, accounts: Accounts, sharing: Sharing, confirmat
     @api.post("/forgot-password")
     def forgot_password():
         details = ForgotPassword.model_validate(credential_payload())
-        resets.request(details.email)
+        resets.request(details.email, language_tag())
         return "", 202
 
     @api.post("/reset-password")
@@ -228,7 +230,7 @@ def create_api(library: Library, accounts: Accounts, sharing: Sharing, confirmat
             user = None
         token = accounts.start_session(user.id, session_token(), user.password_hash) if user else None
         if token is None:
-            abort(401, "Incorrect username, email, or password.")
+            abort(401, gettext("Incorrect username, email, or password."))
         return session_response(token)
 
     @api.post("/logout")
@@ -354,7 +356,7 @@ def create_api(library: Library, accounts: Accounts, sharing: Sharing, confirmat
     def write_library(collection: str, record_id: str):
         model = MODELS.get(collection)
         if model is None or not valid_id(record_id):
-            abort(404, "Unknown record.")
+            abort(404, gettext("Unknown record."))
         payload = model.model_validate(request.get_json()) if request.method == "PUT" else None
         body = library.write(g.user.id, collection, record_id, payload)
         if collection == "plans" and body is not None:

@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import unittest
 from pathlib import Path
 from queue import Queue
@@ -51,6 +52,77 @@ class ApplicationTestCase(unittest.TestCase):
 
 
 class PageAndAccountTests(ApplicationTestCase):
+    def test_guests_can_edit_the_sample_but_need_an_account_to_save(self):
+        app = self.create_app()
+        guest = app.test_client()
+        self.assertIn(b'href="/demo"', guest.get("/").data)
+        demo = guest.get("/demo")
+        self.assert_status(demo, 200)
+        self.assertIn(b"Breakout passing", demo.data)
+        self.assertIn(b"Create an account to save", demo.data)
+        self.assertIn(b'id="preview-demo"', demo.data)
+        self.assertEqual(guest.get("/editor/demo-draft").location, "/login?next=/editor/demo-draft")
+        self.assert_status(guest.put(f"/api/drills/{uuid4()}", json={}), 401)
+
+        self.account("coach")
+        self.sign_in(guest, "coach")
+        draft = guest.get("/editor/demo-draft")
+        self.assert_status(draft, 200)
+        self.assertIn(b"data-restore-demo", draft.data)
+
+    def test_language_cookie_and_account_preference(self):
+        app = self.create_app()
+        client = app.test_client()
+        response = client.get("/login", headers={"Accept-Language": "fr-CA"})
+        self.assertIn(b'lang="fr-CA"', response.data)
+        self.assertIn(b"Se connecter", response.data)
+        browser_json = re.search(r'id="browser-translations" type="application/json">(.*?)</script>',
+                                 response.get_data(as_text=True)).group(1)
+        self.assertEqual(json.loads(browser_json)["Movement Legend"], "Légende des mouvements")
+
+        response = client.post("/language", data={"language": "en", "next": "/login?next=/plans"})
+        self.assert_status(response, 303)
+        self.assertEqual(response.location, "/login?next=/plans")
+        self.assertIn(b'lang="en"', client.get("/login", headers={"Accept-Language": "fr"}).data)
+
+        self.account("coach")
+        self.sign_in(client, "coach")
+        self.assert_status(client.post("/language", data={"language": "fr-CA", "next": "/editor"}), 303)
+        another_browser = app.test_client()
+        self.sign_in(another_browser, "coach")
+        self.assertIn(b'lang="fr-CA"', another_browser.get("/editor", headers={"Accept-Language": "en"}).data)
+        self.assertIn("Éditeur d’exercices", another_browser.get("/editor").get_data(as_text=True))
+
+    def test_language_selection_checks_locale_and_redirect(self):
+        client = self.create_app().test_client()
+        self.assert_status(client.post("/language", data={"language": "invalid"}), 400)
+        response = client.post("/language", data={"language": "en", "next": "//example.com"})
+        self.assertEqual(response.location, "/")
+
+    def test_browser_language_priority_handles_regional_variants(self):
+        client = self.create_app().test_client()
+        for header, expected in (("en-US,fr-CA;q=0.8", "en"), ("fr-FR,en;q=0.8", "fr-CA")):
+            with self.subTest(header=header):
+                response = client.get("/login", headers={"Accept-Language": header})
+                self.assertIn(f'lang="{expected}"'.encode(), response.data)
+
+    def test_confirmation_email_uses_request_language_in_the_worker(self):
+        deliveries = Queue()
+        client = self.create_app().test_client()
+        with (
+            patch("hockeyplanner.email_confirmation.smtp_settings"),
+            patch("hockeyplanner.email_confirmation.send_email", side_effect=lambda *parts: deliveries.put(parts)),
+        ):
+            response = client.post("/api/register", headers={"Accept-Language": "fr-CA"}, json={
+                "username": "coach", "email": "coach@example.com", "password": PASSWORD,
+            })
+            self.assert_status(response, 202)
+            address, subject, body = deliveries.get(timeout=5)
+        self.assertEqual(address, "coach@example.com")
+        self.assertIn("Confirmez", subject)
+        self.assertIn("code à six chiffres", body)
+        self.assertIn("https://hockeyplanner.ca/confirm-email/", body)
+
     def test_regular_account_cannot_manage_another_account_with_its_exact_id(self):
         app = self.create_app()
         admin, coach, guest = (app.test_client() for _ in range(3))
@@ -117,6 +189,7 @@ class PageAndAccountTests(ApplicationTestCase):
         client = self.create_app(send_confirmation=deliver).test_client()
         response = client.post("/api/register", json={
             "username": "coach", "email": "coach@example.com", "password": PASSWORD,
+            "return_to": "/editor/demo-draft",
         })
         self.assert_status(response, 202)
         address, code, token = deliveries.get(timeout=5)
@@ -128,7 +201,9 @@ class PageAndAccountTests(ApplicationTestCase):
 
         wrong = "000001" if code == "000000" else "000000"
         self.assert_status(client.post("/api/confirm-email", json={"token": token, "code": wrong}), 400)
-        self.assert_status(client.post("/api/confirm-email", json={"token": token, "code": code}), 200)
+        confirmed = client.post("/api/confirm-email", json={"token": token, "code": code})
+        self.assert_status(confirmed, 200)
+        self.assertEqual(confirmed.json["return_to"], "/editor/demo-draft")
         self.assertEqual(client.get("/api/account").json["user"]["email"], address)
         self.assert_status(client.post("/api/confirm-email", json={"token": token, "code": code}), 400)
 
