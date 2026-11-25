@@ -7,7 +7,6 @@ import ssl
 import time
 from collections.abc import Callable
 from email.message import EmailMessage
-from urllib.parse import urlsplit
 
 from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session, sessionmaker
@@ -16,6 +15,7 @@ from .accounts import Accounts, EmailTaken, IncorrectPassword, UsernameTaken, pa
 from .database import EmailConfirmation, PasswordResetRequest, User, UserAccess, UserEmail
 from .email_tasks import EmailDeliveryError, EmailTasks
 from .models import ConfirmEmail, EmailUpdate, Registration
+from .public_urls import public_base_url
 
 
 CONFIRMATION_AGE = 30 * 60
@@ -26,14 +26,10 @@ class ConfirmationError(Exception):
 
 
 def public_email_link(path: str) -> str:
-    url = os.getenv("HOCKEYPLANNER_PUBLIC_URL", "").rstrip("/")
     try:
-        parsed = urlsplit(url)
+        return public_base_url() + path
     except ValueError as error:
         raise EmailDeliveryError("Email delivery is not configured. Contact the site administrator.") from error
-    if parsed.scheme not in ("http", "https") or not parsed.hostname or parsed.username or parsed.query or parsed.fragment:
-        raise EmailDeliveryError("Email delivery is not configured. Contact the site administrator.")
-    return f"{url}/{path}"
 
 
 def smtp_confirmation(address: str, code: str, token: str) -> None:

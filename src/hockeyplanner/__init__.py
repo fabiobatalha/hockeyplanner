@@ -15,6 +15,7 @@ from .email_tasks import EmailTasks
 from .library import Library
 from .pages import create_pages
 from .password_reset import PasswordResets, smtp_password_reset
+from .public_urls import public_base_url
 from .sharing import Sharing
 
 
@@ -31,6 +32,12 @@ def create_app(
         raise FileNotFoundError("Web directory not found. Run the editor from the project.")
 
     app = Flask(__name__, static_folder=str(web), static_url_path="/static")
+    public_root = public_base_url()
+
+    @app.context_processor
+    def public_link_context():
+        return {"public_root": public_root}
+
     asset_hash = sha256()
     for asset in sorted(path for path in web.rglob("*") if path.is_file()):
         asset_hash.update(asset.relative_to(web).as_posix().encode())

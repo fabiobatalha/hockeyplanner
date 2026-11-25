@@ -1,4 +1,4 @@
-import { drawItem, drawRink, rinkHeight, rinkWidth } from './drawing.js'
+import { drawItem, drawRink, drawMovementSample, movementLegend, rinkHeight, rinkWidth } from './drawing.js'
 import { markdownText } from './markdown.js'
 
 const viewer = document.getElementById('plan-viewer')
@@ -33,6 +33,29 @@ viewer.addEventListener('close', () => {
   displayedActivities = []
 })
 
+function renderMovementLegend(entries) {
+  const legend = document.createElement('section')
+  legend.className = 'plan-viewer-legend'
+  const heading = document.createElement('h4')
+  heading.textContent = 'Movement Legend'
+  const list = document.createElement('ul')
+  list.setAttribute('role', 'list')
+  for (const { type, label } of entries) {
+    const row = document.createElement('li')
+    const sample = document.createElement('canvas')
+    sample.width = 256
+    sample.height = 64
+    sample.setAttribute('aria-hidden', 'true')
+    const ctx = sample.getContext('2d')
+    ctx.scale(2, 2)
+    drawMovementSample(ctx, type, 0, 16)
+    row.append(sample, label)
+    list.append(row)
+  }
+  legend.append(heading, list)
+  return legend
+}
+
 function showActivity(index) {
   const activity = displayedActivities[index]
   if (!activity) return
@@ -45,12 +68,15 @@ function showActivity(index) {
   const diagram = document.createElement('canvas')
   diagram.width = rinkWidth(activity.layout)
   diagram.height = rinkHeight(activity.layout)
+  diagram.className = 'plan-viewer-rink'
   diagram.style.setProperty('--diagram-ratio', diagram.width / diagram.height)
   diagram.setAttribute('aria-label', 'Rink diagram for ' + activity.title)
   const context = diagram.getContext('2d')
   drawRink(context)
   for (const item of activity.items) drawItem(context, item)
   section.append(title, diagram)
+  const entries = movementLegend(activity.items)
+  if (entries.length) section.append(renderMovementLegend(entries))
 
   const description = markdownText(activity.description ?? '').trim()
   if (description) {

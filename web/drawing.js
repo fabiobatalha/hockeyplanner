@@ -39,6 +39,20 @@ export const movements = {
   pass: ['Pass', '⇢', '#157869'],
 }
 
+export function movementLegend(items) {
+  const used = new Set(items.map(item => item.type))
+  const types = [...Object.keys(movements), 'pivot', 'shot', 'start', 'end']
+  return types.filter(type => used.has(type)).map(type => ({
+    type,
+    label: (movements[type] ?? markers[type])[0],
+  }))
+}
+
+export function drawMovementSample(ctx, type, x, y) {
+  if (movements[type]) drawItem(ctx, { type, x: x + 16, y, endX: x + 112, endY: y })
+  else drawItem(ctx, { type, x: x + 60, y })
+}
+
 export function drawRink(ctx, clear = true) {
   if (clear) ctx.clearRect(0, 0, width, height)
   ctx.beginPath()

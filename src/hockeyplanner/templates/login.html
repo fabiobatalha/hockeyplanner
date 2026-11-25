@@ -1,28 +1,47 @@
 {% extends "base.html" %}
 
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('web_asset', filename='welcome.css') }}">
+{% endblock %}
+
+{% block header %}
+{% include "welcome_header.html" %}
+{% endblock %}
+
 {% block content %}
-<section class="card sign-in-card" aria-labelledby="auth-heading">
-  <img class="sign-in-logo" src="{{ url_for('web_asset', filename='hockey-planner-logo.png') }}" alt="Hockey Planner" width="2172" height="724">
-  <h1 id="auth-heading">Sign in</h1>
-  <form method="post" id="auth-form" class="auth-form" data-next="{{ next_path }}">
-    <div class="auth-field">
-      <label for="username">Username or email</label>
-      <input id="username" name="username" autocomplete="username" required maxlength="320" autocapitalize="none" spellcheck="false">
+<div class="welcome-login">
+  <div class="welcome-hero welcome-login-hero" aria-hidden="true">
+    <img class="welcome-hero-photo" src="{{ url_for('web_asset', filename='welcome-ice.webp') }}" alt="" fetchpriority="high">
+    <div class="welcome-login-message">
+      <p class="welcome-kicker">Hockey Planner</p>
+      <p class="welcome-login-headline">Behind every great practice, there's someone who cares.</p>
+      <p class="welcome-login-tagline">Hockey Planner — Built by volunteer coaches, for volunteer coaches. Inspired by the love of the game.</p>
     </div>
-    <div class="auth-field">
-      <label for="password">Password</label>
-      <input id="password" name="password" type="password" autocomplete="current-password" required maxlength="128">
-    </div>
-    <button id="auth-submit" class="primary auth-submit" type="submit" disabled>Sign in</button>
-  </form>
-  <a class="button-link auth-recovery" id="forgot-password" href="{{ url_for('pages.forgot_password', next=next_path or None) }}">Forgot password?</a>
-  <div class="auth-card-footer">
-    <a class="button-link" href="{{ url_for('pages.register', next=next_path or None) }}">Create an account</a>
-    {% if next_path.startswith('/share/') %}
-    <a href="{{ url_for('pages.index') ~ next_path[1:] }}">Back to shared plan</a>
-    {% endif %}
   </div>
-</section>
+  <div class="welcome-login-form">
+    <section class="card sign-in-card" aria-labelledby="auth-heading">
+      <h1 id="auth-heading">Sign in</h1>
+      <form method="post" id="auth-form" class="auth-form" data-next="{{ next_path }}">
+        <div class="auth-field">
+          <label for="username">Username or email</label>
+          <input id="username" name="username" autocomplete="username" required maxlength="320" autocapitalize="none" spellcheck="false">
+        </div>
+        <div class="auth-field">
+          <label for="password">Password</label>
+          <input id="password" name="password" type="password" autocomplete="current-password" required maxlength="128">
+        </div>
+        <button id="auth-submit" class="primary auth-submit" type="submit" disabled>Sign in</button>
+      </form>
+      <a class="button-link auth-recovery" id="forgot-password" href="{{ url_for('pages.forgot_password', next=next_path or None) }}">Forgot password?</a>
+      <div class="auth-card-footer">
+        <a class="button-link" href="{{ url_for('pages.register', next=next_path or None) }}">Create an account</a>
+        {% if next_path.startswith('/share/') %}
+        <a href="{{ url_for('pages.index') ~ next_path[1:] }}">Back to shared plan</a>
+        {% endif %}
+      </div>
+    </section>
+  </div>
+</div>
 {% endblock %}
 
 {% block scripts %}

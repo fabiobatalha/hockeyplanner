@@ -1,7 +1,5 @@
 import qrcode from './vendor/qrcode-generator-2.0.4.mjs'
 
-export const signupUrl = 'https://hockeyplanner.ca/register'
-
 export function makeQr(url) {
   const code = qrcode(0, 'M')
   code.addData(url)

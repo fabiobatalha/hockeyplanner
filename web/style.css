@@ -474,11 +474,28 @@ body:has(.editor-fullscreen) { overflow: hidden; }
   padding: 1.25rem 5% 2rem;
 }
 .plan-viewer-activity h3 { font-size: clamp(1.15rem, 3vw, 1.65rem); overflow-wrap: anywhere; }
-.plan-viewer-activity canvas {
+.plan-viewer-rink {
   display: block;
   width: min(100%, calc(58dvh * var(--diagram-ratio)));
   height: auto;
 }
+.plan-viewer-legend {
+  width: min(100%, 60rem);
+  padding: .7rem .9rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: white;
+}
+.plan-viewer-legend ul {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+  gap: .2rem .75rem;
+  margin-top: .35rem;
+  padding: 0;
+  list-style: none;
+}
+.plan-viewer-legend li { display: flex; align-items: center; gap: .35rem; font-size: .875rem; }
+.plan-viewer-legend canvas { flex: none; width: 6rem; height: 1.5rem; }
 .plan-viewer-description {
   width: min(100%, 60rem);
   white-space: pre-wrap;

@@ -1,7 +1,7 @@
-import { appUrl } from './urls.js'
+import { publicUrl } from './urls.js'
 import { markdownText } from './markdown.js'
-import { width, rinkHeight, rinkWidth, drawRink, drawItem, markers, movements } from './drawing.js'
-import { drawQr, makeQr, signupUrl } from './qr.js'
+import { width, rinkHeight, rinkWidth, drawRink, drawItem, drawMovementSample, movementLegend } from './drawing.js'
+import { drawQr, makeQr } from './qr.js'
 
 const portraitLetter = { width: 612, height: 792 }
 
@@ -51,7 +51,7 @@ async function loadPdfLogo() {
 }
 
 function shareQr(token, target) {
-  return makeQr(appUrl('share/' + token + '/' + target).href)
+  return makeQr(publicUrl('share/' + token + '/' + target).href)
 }
 
 function pdfDivider(codes) {
@@ -92,14 +92,14 @@ function drawFreeNotice(ctx, code, pageWidth, margin, top, noticeHeight, noticeL
   ctx.font = '18px system-ui'
   ctx.fillText('These drills and practice plans were developed with a free Hockey Planner account.', left, top + 49)
   ctx.font = 'bold 18px system-ui'
-  ctx.fillText('Create an account at hockeyplanner.ca or scan the QR code.', left, top + 77)
+  ctx.fillText('Create an account at ' + publicUrl().host + ' or scan the QR code.', left, top + 77)
   ctx.font = '18px system-ui'
   noticeLines.forEach((line, index) => ctx.fillText(line, left, top + 105 + index * noticeLineHeight))
   drawQr(ctx, code, pageWidth - margin - 64, top + 9, 98)
 }
 
 function signupQr() {
-  return document.body.hasAttribute('data-free-pdf') ? makeQr(signupUrl) : null
+  return document.body.hasAttribute('data-free-pdf') ? makeQr(publicUrl('register').href) : null
 }
 
 function drawPdfFooter(ctx, pageWidth, pageHeight, margin) {
@@ -120,11 +120,10 @@ function drawMovementLegend(ctx, entries, left, top) {
   ctx.fillStyle = '#152741'
   ctx.font = 'bold 18px system-ui'
   ctx.fillText('Movement Legend', left, top)
-  for (const [index, { type, label, line }] of entries.entries()) {
+  for (const [index, { type, label }] of entries.entries()) {
     const x = left + (index % 2) * width / 2
     const y = top + legendHeadingHeight + Math.floor(index / 2) * legendRowHeight
-    drawItem(ctx, line ? { type, x: x + 16, y: y + 13, endX: x + 112, endY: y + 13 }
-      : { type, x: x + 60, y: y + 13 })
+    drawMovementSample(ctx, type, x, y + 13)
     ctx.fillStyle = '#152741'
     ctx.font = '17px system-ui'
     ctx.fillText(label, x + 135, y + 3)
@@ -146,11 +145,7 @@ function* makePages(activity, paper, { logo, planName = '', codes = [], signup, 
   const planHeading = planName ? wrap(measure, planName, width) : []
   const lines = activity.description.trim() ? wrap(measure, markdownText(activity.description), width) : []
   const visibleHeight = rinkHeight(activity.layout)
-  const usedTypes = new Set(activity.items.map(item => item.type))
-  const legend = paper ? [
-    ...Object.entries(movements).map(([type, [label]]) => ({ type, label, line: true })),
-    ...['pivot', 'shot', 'start', 'end'].map(type => ({ type, label: markers[type][0] })),
-  ].filter(({ type }) => usedTypes.has(type)) : []
+  const legend = paper ? movementLegend(activity.items) : []
   const legendHeight = legend.length ? legendHeadingHeight + Math.ceil(legend.length / 2) * legendRowHeight + 14 : 0
   let first = true
   let index = 0

@@ -20,7 +20,8 @@
   <link rel="stylesheet" href="{{ url_for('web_asset', filename='style.css') }}">
 </head>
 {% set auth_flow = page in ('login', 'register', 'forgot_password', 'confirm_email', 'reset_password') %}
-<body{% if auth_flow %} class="auth-flow"{% endif %} data-page="{{ page }}" data-root="{{ url_for('pages.index') }}"{% if free_pdf %} data-free-pdf{% endif %}>
+<body{% if auth_flow %} class="auth-flow"{% endif %} data-page="{{ page }}" data-root="{{ url_for('pages.index') }}" data-public-root="{{ public_root }}"{% if free_pdf %} data-free-pdf{% endif %}>
+  {% block header %}
   {% if not auth_flow %}
   <header class="topbar">
     <a href="{{ url_for('pages.index') }}" class="brand"><img src="{{ url_for('web_asset', filename='hockey-planner-logo.png') }}" alt="Hockey Planner" width="2172" height="724"></a>
@@ -44,6 +45,7 @@
     {% endif %}
   </header>
   {% endif %}
+  {% endblock %}
   <main id="planner">
     {% block content %}{% endblock %}
     {% if not auth_flow and user and user.tier == 'free' and user.role != 'poweruser' and user.email %}

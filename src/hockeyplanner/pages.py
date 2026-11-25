@@ -25,7 +25,7 @@ def create_pages(accounts: Accounts, library: Library, sharing: Sharing) -> Blue
     measurement_id = getenv("HOCKEYPLANNER_GA_MEASUREMENT_ID", "").strip()
     if not re.fullmatch(r"G-[A-Z0-9]{4,20}", measurement_id):
         measurement_id = ""
-    tracked_pages = {"login", "register", "editor", "drills", "plans", "membership"}
+    tracked_pages = {"welcome", "login", "register", "editor", "drills", "plans", "membership"}
 
     @pages.before_request
     def load_account():
@@ -64,7 +64,9 @@ def create_pages(accounts: Accounts, library: Library, sharing: Sharing) -> Blue
 
     @pages.get("/")
     def index():
-        return redirect(url_for("pages.editor" if g.account else "pages.login"))
+        if g.account:
+            return redirect(url_for("pages.editor"))
+        return render("welcome", "Plan your next practice")
 
     @pages.get("/login")
     def login():

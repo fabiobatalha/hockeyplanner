@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('web_asset', filename='welcome.css') }}">
+{% endblock %}
+
+{% block header %}
+{% include "welcome_header.html" %}
+{% endblock %}
+
+{% block content %}
+<section class="welcome-hero" aria-labelledby="welcome-title">
+  <img class="welcome-hero-photo" src="{{ url_for('web_asset', filename='welcome-ice.webp') }}" alt="" fetchpriority="high">
+  <div class="welcome-wrap welcome-hero-inner">
+    <div class="welcome-hero-content">
+      <p class="welcome-kicker">The ice hockey practice planner</p>
+      <h1 id="welcome-title">Behind every great practice, there's someone who cares.</h1>
+      <p class="welcome-lead">Hockey Planner — Built by volunteer coaches, for volunteer coaches. Inspired by the love of the game.</p>
+      <div class="welcome-actions">
+        <a class="welcome-button" href="{{ url_for('pages.register') }}">Get started free <span aria-hidden="true">→</span></a>
+        <a class="welcome-secondary" href="#about">Read our story <span aria-hidden="true">↓</span></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="features" class="welcome-features" aria-labelledby="welcome-features-title">
+  <div class="welcome-wrap">
+    <div class="welcome-feature-intro">
+      <div>
+        <p class="welcome-kicker">Features</p>
+        <h2 id="welcome-features-title">From the whiteboard<br>to the ice.</h2>
+        <p>Sketch a warm-up, turn it into a full practice, and bring the plan to the rink.</p>
+      </div>
+      <figure class="welcome-rink">
+        <canvas id="welcome-rink" width="1000" height="460" role="img" aria-label="Example rink diagram with players, cones and a passing route"></canvas>
+        <figcaption><span aria-hidden="true"></span> Sample drill · Breakout passing</figcaption>
+      </figure>
+    </div>
+    <div class="welcome-feature-grid">
+      <article>
+        <h3>Draw the drill</h3>
+        <p>Drop players, cones and pucks onto the rink. Draw a passing lane, mark a pivot, or show exactly where to stop.</p>
+      </article>
+      <article>
+        <h3>Set the practice order</h3>
+        <p>Save drills in your library. Build a practice plan and drag drills into the order you want, from the first warm-up to the final shot.</p>
+      </article>
+      <article>
+        <h3>Share the practice plan</h3>
+        <p>Send the entire practice plan to another coach or share a read-only link. Coaches with an account can copy a shared plan and its drills into their own library.</p>
+      </article>
+      <article>
+        <h3>Take it to the rink</h3>
+        <p>Show drills in fullscreen or bring a print-ready PDF with QR codes and a movement legend.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section id="about" class="welcome-about" aria-labelledby="welcome-about-title">
+  <div class="welcome-wrap welcome-about-inner">
+    <div>
+      <p class="welcome-kicker">About us</p>
+      <h2 id="welcome-about-title">More Than a Game. A Community.</h2>
+    </div>
+    <div class="welcome-story">
+      <p class="welcome-story-lead">Hockey is more than a sport. It is a cultural expression, a shared passion and a tradition that brings people together across generations, backgrounds and communities.</p>
+      <p>Behind every young player stepping onto the ice, there is a story. A story of parents waking up early on cold winter mornings, tying skates, carrying equipment and cheering from the stands. For many, it is also about watching their children discover a passion that was once their own childhood dream.</p>
+      <p>These parents are at the heart of hockey. On and off the ice, they dedicate their time, energy and enthusiasm to keeping this tradition alive. Many of them do so as volunteers, becoming coaches, mentors and role models, simply because they believe in the positive impact that hockey can have on children's lives.</p>
+      <p>But being a volunteer coach also comes with challenges. Between family, work and everyday responsibilities, finding the time to prepare meaningful, engaging and well-structured practices is not always easy.</p>
+      <p class="welcome-story-turn">That's where Hockey Planner was born.</p>
+      <p>Created by a parent and volunteer coach, Hockey Planner started with a simple idea: to make life easier for those who dedicate their time to helping young players grow.</p>
+      <p>A place where coaches can create drills, organize practices, share ideas and collaborate with one another. A tool designed to simplify preparation, encourage creativity and strengthen the hockey coaching community.</p>
+      <p>Because every minute saved planning is more time to focus on what truly matters: helping children develop their skills, build friendships, gain confidence and, above all, enjoy the game.</p>
+      <p>Hockey Planner is our small contribution to a much bigger tradition. It is a way of giving back to the community and supporting the people who make hockey possible, one practice at a time.</p>
+      <p class="welcome-story-close">Built by a volunteer coach. Inspired by the community. Dedicated to the next generation.</p>
+      <a class="welcome-button" href="{{ url_for('pages.register') }}">Create a free account <span aria-hidden="true">→</span></a>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script type="module" src="{{ url_for('web_asset', filename='welcome.js') }}"></script>
+{% endblock %}

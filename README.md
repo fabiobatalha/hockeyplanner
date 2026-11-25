@@ -81,7 +81,7 @@ Keep the `.env` file private. It is excluded from Git.
 
 | Variable | Purpose |
 | --- | --- |
-| `HOCKEYPLANNER_PUBLIC_URL` | The browser-accessible URL used in confirmation and password reset links, such as `https://planner.example.com`. |
+| `HOCKEYPLANNER_PUBLIC_URL` | Public base URL for account emails, copied share links, and PDF QR codes. Defaults to `https://hockeyplanner.ca`. |
 | `HOCKEYPLANNER_SMTP_HOST` | SMTP server hostname. |
 | `HOCKEYPLANNER_SMTP_FROM` | Sender email address. |
 | `HOCKEYPLANNER_SMTP_SECURITY` | `starttls` by default, or `ssl` for implicit TLS. |
@@ -111,7 +111,7 @@ podman pod ps
 podman logs hockeyplanner-web
 ```
 
-Open the app at [http://127.0.0.1:8000](http://127.0.0.1:8000). For LAN access, set `HOCKEYPLANNER_PUBLIC_URL` to the address other devices can reach.
+Open the app at [http://127.0.0.1:8000](http://127.0.0.1:8000). For a LAN-only deployment, you can set `HOCKEYPLANNER_PUBLIC_URL` to an address recipients can reach.
 
 After editing `.env`, run `python3 deploy/configure-secrets.py` again and recreate the pod with `podman kube play --replace --network hockeyplanner deploy/hockeyplanner.yaml`. The configuration script preserves the database passwords on subsequent runs. Keep the PostgreSQL volume when replacing the pod.
 
