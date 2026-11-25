@@ -17,6 +17,14 @@ Open [http://127.0.0.1:8000](http://127.0.0.1:8000) in a modern browser. Create 
 
 Free accounts can save up to 20 drills and 3 practice plans. All other features are available. Editing a saved item does not use another slot, and deleting an item frees its slot. Copies of shared plans and their drills use slots in the recipient’s library.
 
+## Run the tests
+
+```sh
+uv run --locked python -m pytest test
+```
+
+The tests use temporary SQLite databases and simulated email delivery.
+
 ## Create a drill
 
 - Under **Layout**, choose **Full rink**, **Half rink**, or **Quarter rink**. The quarter-rink view crops both axes and extends past the horizontal midpoint enough to keep the entire goal and crease visible.
