@@ -112,6 +112,7 @@ class UserProfile(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
+    public_id: UUID
     username: str
     role: AccountRole = "user"
     enabled: bool = True
@@ -130,9 +131,8 @@ class AccountProfile(UserProfile):
     tier: AccountTier = "free"
     email: str | None = None
 
-
-class AccountStatus(BaseModel):
-    user: AccountProfile | None
+    def public_payload(self) -> dict:
+        return {**self.model_dump(exclude={"id", "public_id"}), "id": str(self.public_id)}
 
 
 class Point(BaseModel):

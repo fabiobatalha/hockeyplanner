@@ -1,3 +1,4 @@
+import json
 import os
 import unittest
 from pathlib import Path
@@ -5,9 +6,11 @@ from queue import Queue
 from tempfile import TemporaryDirectory
 from threading import Event
 from unittest.mock import patch
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from hockeyplanner import Accounts, create_app, open_database
+from hockeyplanner.database import LibraryRecord, UserPublicIdentity
+from hockeyplanner.library import Library
 from hockeyplanner.email_tasks import EmailTasks
 from hockeyplanner.models import Credentials
 
@@ -48,6 +51,42 @@ class ApplicationTestCase(unittest.TestCase):
 
 
 class PageAndAccountTests(ApplicationTestCase):
+    def test_regular_account_cannot_manage_another_account_with_its_exact_id(self):
+        app = self.create_app()
+        admin, coach, guest = (app.test_client() for _ in range(3))
+        self.account("admin")
+        self.account("coach")
+        self.sign_in(admin, "admin")
+        self.sign_in(coach, "coach")
+        target_id = admin.get("/api/account").json["user"]["id"]
+        path = f"/api/admin/users/{target_id}"
+        changes = {"role": "user", "enabled": False}
+        self.assert_status(guest.delete(path), 401)
+        self.assert_status(coach.get("/api/admin/users"), 403)
+        self.assert_status(coach.put(path, json=changes), 403)
+        self.assert_status(coach.delete(path), 403)
+        self.assertEqual(admin.get("/api/account").json["user"]["role"], "poweruser")
+
+    def test_admin_actions_use_public_uuids(self):
+        app = self.create_app()
+        self.account("admin")
+        internal_id = self.account("coach")
+        admin = app.test_client()
+        self.sign_in(admin, "admin")
+        users = admin.get("/api/admin/users").json["users"]
+        target = next(user for user in users if user["username"] == "coach")
+        self.assertEqual(UUID(target["id"]).version, 4)
+        path = f"/api/admin/users/{target['id']}"
+        changes = {"role": "user", "enabled": False}
+        self.assert_status(admin.put(f"/api/admin/users/{internal_id}", json=changes), 404)
+        self.assert_status(admin.put(f"/api/admin/users/{uuid4()}", json=changes), 404)
+        updated = admin.put(path, json=changes)
+        self.assert_status(updated, 200)
+        self.assertEqual(updated.json["user"]["id"], target["id"])
+        self.assertFalse(updated.json["user"]["enabled"])
+        self.assert_status(admin.delete(path), 204)
+        self.assert_status(admin.delete(path), 404)
+
     def test_welcome_page_and_protected_library(self):
         client = self.create_app().test_client()
         self.account("coach")
@@ -137,7 +176,7 @@ class LibraryTests(ApplicationTestCase):
 
     def test_platform_drills_are_read_only_and_copies_are_independent(self):
         app = self.create_app()
-        owner_id = self.account("admin")
+        self.account("admin")
         self.account("coach")
         owner, coach, guest = (app.test_client() for _ in range(3))
         self.sign_in(owner, "admin")
@@ -145,6 +184,7 @@ class LibraryTests(ApplicationTestCase):
 
         original = self.drill()
         path = f"/api/drills/{original['id']}"
+        owner_id = owner.get("/api/account").json["user"]["id"]
         platform = f"/api/platform-drills/{owner_id}/{original['id']}"
         self.assert_status(owner.put(path, json=original), 204)
         self.assert_status(coach.put(path + "/platform"), 403)
@@ -161,12 +201,41 @@ class LibraryTests(ApplicationTestCase):
         self.assert_status(coach.put(f"/api/drills/{copy_id}", json=copy | {"title": "My drill"}), 204)
         self.assertEqual(owner.get("/api/library").json["drills"][0]["title"], original["title"])
 
+    def test_existing_accounts_and_platform_snapshots_gain_public_uuids(self):
+        owner_id = self.account("admin")
+        coach_id = self.account("coach")
+        original = self.drill()
+        draft = original | {"id": str(uuid4()), "platformSource": {"ownerId": owner_id, "drillId": original["id"]}}
+        plan = {"id": str(uuid4()), "name": "Existing plan", "activities": [draft]}
+
+        with self.sessions.begin() as session:
+            session.add_all([
+                LibraryRecord(owner_id=owner_id, collection="drills", id=original["id"], body=json.dumps(original)),
+                LibraryRecord(owner_id=coach_id, collection="plans", id=plan["id"], body=json.dumps(plan)),
+            ])
+        Library(self.sessions).flag_platform_drill(owner_id, original["id"], True)
+        UserPublicIdentity.__table__.drop(self.sessions.kw["bind"])
+
+        first = open_database(self.database)
+        self.addCleanup(first.kw["bind"].dispose)
+        second = open_database(self.database)
+        self.addCleanup(second.kw["bind"].dispose)
+        identity = Accounts(first).list_users()[0]
+        self.assertEqual(identity.id, owner_id)
+        self.assertEqual(identity.public_id.version, 4)
+        self.assertEqual(Accounts(second).list_users()[0].public_id, identity.public_id)
+        data = Library(second).read(coach_id)
+        source = {"ownerId": str(identity.public_id), "drillId": original["id"]}
+        self.assertEqual(data["platform_drills"][0]["platformSource"], source)
+        self.assertEqual(data["plans"][0]["activities"][0]["platformSource"], source)
+
     def test_shared_plan_opens_for_guests_and_can_be_copied(self):
         app = self.create_app()
-        owner_id = self.account("owner")
+        self.account("owner")
         self.account("recipient")
         owner, recipient, guest = (app.test_client() for _ in range(3))
         self.sign_in(owner, "owner")
+        owner_id = owner.get("/api/account").json["user"]["id"]
         self.sign_in(recipient, "recipient")
 
         drill = self.drill()
@@ -178,6 +247,11 @@ class LibraryTests(ApplicationTestCase):
         self.assert_status(link, 200)
         token = link.json["token"]
         self.assert_status(guest.get(f"/share/{token}/present"), 200)
+        self.assert_status(recipient.get(path + "/link"), 404)
+        self.assert_status(recipient.get(f"/api/shared-plans/{owner_id}/{plan['id']}/link"), 404)
+        self.assert_status(recipient.post(
+            f"/api/shared-plans/{owner_id}/{plan['id']}/copy", json={"id": str(uuid4())},
+        ), 404)
         self.assert_status(recipient.post("/api/shared-plans/claim", json={"token": token}), 204)
 
         copy_id = str(uuid4())

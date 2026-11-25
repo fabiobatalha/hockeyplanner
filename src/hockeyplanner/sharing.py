@@ -5,8 +5,8 @@ from uuid import uuid4
 from sqlalchemy import and_, delete, func, or_, select
 from sqlalchemy.orm import Session, sessionmaker
 
-from .library import check_capacity, lock_library, plan_body, platform_records, resolve_platform_drills
-from .database import DrillShareLink, LibraryRecord, PlatformDrill, PlanShare, PlanShareLink, User, UserAccess, UserMembership, conflict_insert
+from .library import check_capacity, lock_library, plan_body, platform_records, public_drill_sources, resolve_platform_drills
+from .database import DrillShareLink, LibraryRecord, PlatformDrill, PlanShare, PlanShareLink, User, UserAccess, UserMembership, UserPublicIdentity, conflict_insert
 
 
 class ShareNotFound(Exception):
@@ -57,6 +57,7 @@ def resolved_plan(session: Session, record: LibraryRecord) -> dict:
     ))
     replacements = {drill.id: json.loads(drill.body) for drill in current}
     activities = [drill if drill.get("platformSource") else replacements.get(drill["id"], drill) for drill in saved]
+    public_drill_sources(session, activities)
     if any(drill.get("platformSource") for drill in activities):
         activities = resolve_platform_drills(activities, platform_records(session))
     plan["activities"] = activities
@@ -71,11 +72,13 @@ class Sharing:
         with self.sessions() as session:
             find_plan(session, owner_id, plan_id)
             rows = session.execute(
-                select(User.id, User.username).join(PlanShare, PlanShare.recipient_id == User.id)
+                select(UserPublicIdentity.public_id, User.username).select_from(PlanShare)
+                .join(User, User.id == PlanShare.recipient_id)
+                .join(UserPublicIdentity, UserPublicIdentity.user_id == PlanShare.recipient_id)
                 .where(PlanShare.owner_id == owner_id, PlanShare.plan_id == plan_id)
                 .order_by(User.username)
             )
-            return [{"id": row.id, "username": row.username} for row in rows]
+            return [{"id": str(row.public_id), "username": row.username} for row in rows]
 
     def share(self, owner_id: int, plan_id: str, username: str) -> None:
         with self.sessions.begin() as session:
@@ -190,15 +193,16 @@ class Sharing:
     def incoming(self, recipient_id: int) -> list[dict]:
         with self.sessions() as session:
             matches = session.execute(
-                select(LibraryRecord, User.username)
+                select(LibraryRecord, User.username, UserPublicIdentity.public_id)
                 .join(PlanShare, and_(PlanShare.owner_id == LibraryRecord.owner_id, PlanShare.plan_id == LibraryRecord.id))
                 .join(User, User.id == PlanShare.owner_id)
+                .join(UserPublicIdentity, UserPublicIdentity.user_id == PlanShare.owner_id)
                 .where(PlanShare.recipient_id == recipient_id, LibraryRecord.collection == "plans", LibraryRecord.body.is_not(None))
                 .order_by(LibraryRecord.revision.desc())
             )
             return [
-                {"owner_id": record.owner_id, "owner": username, "plan": resolved_plan(session, record)}
-                for record, username in matches
+                {"owner_id": str(public_id), "owner": username, "plan": resolved_plan(session, record)}
+                for record, username, public_id in matches
             ]
 
     def copy(self, recipient_id: int, owner_id: int, plan_id: str, copy_id: str) -> str:
@@ -232,6 +236,7 @@ class Sharing:
                 source_id = drill["id"]
                 if source_id not in copied:
                     new_drill = {**drill, "id": str(uuid4())}
+                    new_drill.pop("sharedSource", None)
                     copied[source_id] = new_drill
                     session.add(LibraryRecord(
                         owner_id=recipient_id, collection="drills", id=new_drill["id"], body=json.dumps(new_drill),

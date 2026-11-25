@@ -1,13 +1,14 @@
 from os import getenv
 from pathlib import Path
 from time import sleep
+from uuid import UUID, uuid4
 
 from sqlalchemy import ForeignKey, Index, MetaData, String, Table, UniqueConstraint, create_engine, func, insert, inspect, literal, select, update
 from sqlalchemy.dialects.postgresql import insert as postgres_insert
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from sqlalchemy.engine import Connection, Engine, URL
 from sqlalchemy.exc import OperationalError
-from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, sessionmaker
+from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, relationship, sessionmaker
 
 
 class Base(DeclarativeBase):
@@ -21,9 +22,17 @@ class User(Base):
     username: Mapped[str] = mapped_column(String().with_variant(String(collation="NOCASE"), "sqlite"), unique=True)
     salt: Mapped[bytes]
     password_hash: Mapped[bytes]
+    public_identity: Mapped["UserPublicIdentity"] = relationship(cascade="all, delete-orphan")
 
 
 Index("ix_users_username_lower", func.lower(User.username), unique=True).ddl_if(dialect="postgresql")
+
+
+class UserPublicIdentity(Base):
+    __tablename__ = "user_public_identities"
+
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), primary_key=True)
+    public_id: Mapped[UUID] = mapped_column(unique=True, default=uuid4)
 
 
 class RetiredUserId(Base):
@@ -183,6 +192,11 @@ def open_database(target: Path | URL) -> sessionmaker[Session]:
         lock_postgres(connection, 1)
         bootstrap_access = not inspect(connection).has_table("user_access")
         Base.metadata.create_all(connection)
+        missing_identities = connection.scalars(select(User.id).where(
+            ~select(UserPublicIdentity.user_id).where(UserPublicIdentity.user_id == User.id).exists(),
+        ))
+        for batch in missing_identities.partitions(500):
+            connection.execute(insert(UserPublicIdentity.__table__), [{"user_id": user_id} for user_id in batch])
         if bootstrap_access:
             first_user = select(User.id, literal("poweruser"), literal(True)).order_by(User.id).limit(1)
             connection.execute(insert(UserAccess.__table__).from_select(

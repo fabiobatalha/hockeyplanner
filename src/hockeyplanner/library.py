@@ -8,7 +8,7 @@ from sqlalchemy import and_, delete, func, select, update
 from sqlalchemy.orm import Session, sessionmaker
 
 from .accounts import AccountNotFound, AdministrationDenied
-from .database import DrillShareLink, LibraryRecord, PlatformDrill, PlanShare, PlanShareLink, User, UserAccess, UserMembership, conflict_insert
+from .database import DrillShareLink, LibraryRecord, PlatformDrill, PlanShare, PlanShareLink, User, UserAccess, UserMembership, UserPublicIdentity, conflict_insert
 from .models import Drill, LibraryImport, PracticePlan
 
 
@@ -22,13 +22,35 @@ class PlatformDrillNotFound(Exception):
 
 def platform_records(session: Session):
     rows = session.execute(
-        select(PlatformDrill, LibraryRecord)
+        select(UserPublicIdentity.public_id, PlatformDrill.drill_id, LibraryRecord.body)
+        .select_from(PlatformDrill)
         .join(LibraryRecord, and_(LibraryRecord.owner_id == PlatformDrill.owner_id,
                                   LibraryRecord.id == PlatformDrill.drill_id))
+        .join(UserPublicIdentity, UserPublicIdentity.user_id == PlatformDrill.owner_id)
         .where(LibraryRecord.collection == "drills", LibraryRecord.body.is_not(None))
         .order_by(LibraryRecord.revision.desc())
     )
-    return {(flag.owner_id, flag.drill_id): json.loads(record.body) for flag, record in rows}
+    result = {(str(owner), drill_id): json.loads(body) for owner, drill_id, body in rows}
+    public_drill_sources(session, list(result.values()))
+    return result
+
+
+def public_drill_sources(session: Session, drills: list[dict]) -> list[dict]:
+    legacy_sources = [
+        (drill, name, source)
+        for drill in drills
+        for name in ("platformSource", "sharedSource")
+        if isinstance(source := drill.get(name), dict) and type(source.get("ownerId")) is int
+    ]
+    if legacy_sources:
+        owners = {source["ownerId"] for _, _, source in legacy_sources}
+        identities = dict(session.execute(select(UserPublicIdentity.user_id, UserPublicIdentity.public_id).where(
+            UserPublicIdentity.user_id.in_(owners),
+        )).all())
+        for drill, name, source in legacy_sources:
+            public_id = identities.get(source["ownerId"])
+            drill[name] = {**source, "ownerId": str(public_id) if public_id else None}
+    return drills
 
 
 def resolve_platform_drills(drills: list[dict], platforms: dict) -> list[dict]:
@@ -38,7 +60,7 @@ def resolve_platform_drills(drills: list[dict], platforms: dict) -> list[dict]:
         current = None
         if isinstance(source, dict):
             key = (source.get("ownerId"), source.get("drillId"))
-            if isinstance(key[0], int) and isinstance(key[1], str):
+            if isinstance(key[0], str) and isinstance(key[1], str):
                 current = platforms.get(key)
         resolved.append({**current, "id": drill["id"], "platformSource": source} if current else drill)
     return resolved
@@ -107,7 +129,11 @@ class Library:
                 LibraryRecord.owner_id == owner_id, LibraryRecord.collection == collection,
                 LibraryRecord.id == record_id,
             ))
-            return json.loads(body) if body is not None else None
+            if body is None:
+                return None
+            item = json.loads(body)
+            public_drill_sources(session, item["activities"] if collection == "plans" else [item])
+            return item
 
     def read(self, owner_id: int) -> dict:
         result = {collection: [] for collection in MODELS}
@@ -125,7 +151,9 @@ class Library:
             for record in records:
                 item = json.loads(record.body)
                 if record.collection == "plans":
-                    item["activities"] = resolve_platform_drills(item["activities"], platforms)
+                    item["activities"] = resolve_platform_drills(public_drill_sources(session, item["activities"]), platforms)
+                else:
+                    public_drill_sources(session, [item])
                 result[record.collection].append(item)
         return result
 
@@ -208,11 +236,14 @@ class Library:
                 check_capacity(session, owner_id, collection, int(active is None))
                 if isinstance(payload, PracticePlan):
                     plan = payload.model_dump(mode="json", exclude_unset=True, exclude_none=True)
+                    public_drill_sources(session, plan["activities"])
                     if any(drill.get("platformSource") for drill in plan["activities"]):
                         plan["activities"] = resolve_platform_drills(plan["activities"], platform_records(session))
                     body = plan_body(plan)
                 else:
-                    body = payload.model_dump_json(exclude_unset=True, exclude_none=True, exclude={"platformSource"})
+                    body = payload.model_dump_json(
+                        exclude_unset=True, exclude_none=True, exclude={"platformSource", "sharedSource"},
+                    )
             # A new revision controls display order. Keep a null revision for deletions.
             session.execute(delete(LibraryRecord).where(
                 LibraryRecord.owner_id == owner_id,
@@ -248,7 +279,7 @@ class Library:
                         "id": str(payload.id),
                         "body": payload.model_dump_json(
                             exclude_unset=True, exclude_none=True,
-                            exclude={"platformSource"} if collection == "drills" else None,
+                            exclude={"platformSource", "sharedSource"} if collection == "drills" else None,
                         ),
                     })
                 if rows:

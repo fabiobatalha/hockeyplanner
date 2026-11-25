@@ -124,3 +124,5 @@ Open the app at [http://127.0.0.1:8000](http://127.0.0.1:8000). For a LAN-only d
 After editing `.env`, run `python3 deploy/configure-secrets.py` again and recreate the pod with `podman kube play --replace --network hockeyplanner deploy/hockeyplanner.yaml`. The configuration script preserves the database passwords on subsequent runs. Keep the PostgreSQL volume when replacing the pod.
 
 For local development, launching `hockeyplanner` without `HOCKEYPLANNER_DB_HOST` still uses SQLite. To connect directly to PostgreSQL, set `HOCKEYPLANNER_DB_HOST` and `HOCKEYPLANNER_DB_PASSWORD`. The optional `HOCKEYPLANNER_DB_NAME`, `HOCKEYPLANNER_DB_USER`, and `HOCKEYPLANNER_DB_PORT` default to `hockeyplanner`, `hockeyplanner`, and `5432`.
+
+A database client on the Podman host can connect to `127.0.0.1:5432` with database and user `hockeyplanner`. Use the password from the `hockeyplanner-postgres-app` Podman secret. The PostgreSQL port is published on the host's IPv4 loopback address only.

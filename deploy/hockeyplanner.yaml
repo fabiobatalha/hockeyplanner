@@ -16,6 +16,7 @@ data:
   pg_hba.conf: |
     local all postgres trust
     host all all 127.0.0.1/32 scram-sha-256
+    host all all samenet scram-sha-256
   01-create-app-role.sh: |
     createuser --username "$POSTGRES_USER" --no-superuser --no-createdb --no-createrole --pwprompt hockeyplanner <<PASSWORDS
     $HOCKEYPLANNER_DB_PASSWORD
@@ -35,9 +36,14 @@ spec:
       args:
         - postgres
         - "-c"
-        - "listen_addresses=127.0.0.1"
+        - "listen_addresses=0.0.0.0"
         - "-c"
         - "hba_file=/docker-entrypoint-initdb.d/pg_hba.conf"
+      ports:
+        - name: postgres
+          containerPort: 5432
+          hostIP: 127.0.0.1
+          hostPort: 5432
       env:
         - name: POSTGRES_USER
           value: postgres

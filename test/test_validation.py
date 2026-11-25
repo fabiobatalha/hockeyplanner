@@ -43,10 +43,10 @@ class ValidationTests(unittest.TestCase):
                     public_base_url()
 
     def test_platform_snapshot_uses_current_content_and_keeps_its_plan_id(self):
-        source = {"ownerId": 1, "drillId": "original"}
+        source = {"ownerId": "public-uuid", "drillId": "original"}
         snapshot = {"id": "plan-item", "title": "Old title", "platformSource": source}
         current = {"id": "original", "title": "Updated title"}
-        self.assertEqual(resolve_platform_drills([snapshot], {(1, "original"): current}), [
+        self.assertEqual(resolve_platform_drills([snapshot], {("public-uuid", "original"): current}), [
             {"id": "plan-item", "title": "Updated title", "platformSource": source},
         ])
         self.assertEqual(resolve_platform_drills([snapshot], {}), [snapshot])

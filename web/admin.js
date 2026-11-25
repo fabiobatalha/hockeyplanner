@@ -166,5 +166,5 @@ function setupAdmin(currentUserId) {
   return refreshAdmin
 }
 
-const refreshAdmin = setupAdmin(Number(document.getElementById('admin-user-id').dataset.id))
+const refreshAdmin = setupAdmin(document.getElementById('admin-user-id').dataset.id)
 await refreshAdmin()

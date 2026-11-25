@@ -12,7 +12,7 @@ from .accounts import SESSION_AGE, AccountNotFound, Accounts, AdministrationDeni
 from .email_confirmation import ConfirmationError, EmailConfirmations
 from .email_tasks import EmailDeliveryError
 from .library import MODELS, CapacityExceeded, Library, PlatformDrillNotFound, valid_id
-from .models import PASSWORD_REQUIREMENTS, AccountDeletion, AccountStatus, AccountUpdate, ConfirmEmail, EmailUpdate, ForgotPassword, LibraryImport, Login, PasswordChange, Registration, ResetPassword, PlanCopyRequest, PlanLinkClaim, PlanLinkPreview, PlanShareRequest, TierSelection
+from .models import PASSWORD_REQUIREMENTS, AccountDeletion, AccountUpdate, ConfirmEmail, EmailUpdate, ForgotPassword, LibraryImport, Login, PasswordChange, Registration, ResetPassword, PlanCopyRequest, PlanLinkClaim, PlanLinkPreview, PlanShareRequest, TierSelection
 from .password_reset import InvalidPasswordReset, PasswordResets
 from .sharing import ShareNotFound, Sharing
 
@@ -156,7 +156,7 @@ def create_api(library: Library, accounts: Accounts, sharing: Sharing, confirmat
 
     @api.get("/account")
     def account():
-        return jsonify(AccountStatus(user=g.user).model_dump())
+        return jsonify(user=g.user.public_payload() if g.user else None)
 
     @api.delete("/account")
     def delete_account():
@@ -238,18 +238,18 @@ def create_api(library: Library, accounts: Accounts, sharing: Sharing, confirmat
 
     @api.get("/admin/users")
     def list_users():
-        return jsonify(users=[user.model_dump() for user in accounts.list_users()])
+        return jsonify(users=[user.public_payload() for user in accounts.list_users()])
 
-    @api.put("/admin/users/<int:user_id>")
-    def update_user(user_id: int):
+    @api.put("/admin/users/<uuid:user_id>")
+    def update_user(user_id):
         request.max_content_length = 4096
         changes = AccountUpdate.model_validate(request.get_json())
-        updated = accounts.update_user(g.user.id, user_id, changes)
-        return jsonify(user=updated.model_dump())
+        updated = accounts.update_user(g.user.id, accounts.internal_id(user_id), changes)
+        return jsonify(user=updated.public_payload())
 
-    @api.delete("/admin/users/<int:user_id>")
-    def delete_user(user_id: int):
-        accounts.delete_user(g.user.id, user_id)
+    @api.delete("/admin/users/<uuid:user_id>")
+    def delete_user(user_id):
+        accounts.delete_user(g.user.id, accounts.internal_id(user_id))
         return "", 204
 
     @api.get("/library")
@@ -272,9 +272,9 @@ def create_api(library: Library, accounts: Accounts, sharing: Sharing, confirmat
         sharing.share(g.user.id, str(plan_id), details.username)
         return "", 204
 
-    @api.delete("/plans/<uuid:plan_id>/shares/<int:recipient_id>")
+    @api.delete("/plans/<uuid:plan_id>/shares/<uuid:recipient_id>")
     def revoke_plan_share(plan_id, recipient_id):
-        sharing.revoke(g.user.id, str(plan_id), recipient_id)
+        sharing.revoke(g.user.id, str(plan_id), accounts.internal_id(recipient_id))
         return "", 204
 
     @api.get("/plans/<uuid:plan_id>/link")
@@ -306,15 +306,15 @@ def create_api(library: Library, accounts: Accounts, sharing: Sharing, confirmat
         library.flag_platform_drill(g.user.id, str(drill_id), request.method == "PUT")
         return "", 204
 
-    @api.get("/platform-drills/<int:owner_id>/<uuid:drill_id>/link")
+    @api.get("/platform-drills/<uuid:owner_id>/<uuid:drill_id>/link")
     def platform_drill_link(owner_id, drill_id):
-        return jsonify(token=library.platform_link(owner_id, str(drill_id)))
+        return jsonify(token=library.platform_link(accounts.internal_id(owner_id), str(drill_id)))
 
-    @api.post("/platform-drills/<int:owner_id>/<uuid:drill_id>/copy")
+    @api.post("/platform-drills/<uuid:owner_id>/<uuid:drill_id>/copy")
     def copy_platform_drill(owner_id, drill_id):
         request.max_content_length = 4096
         details = PlanCopyRequest.model_validate(request.get_json())
-        return jsonify(id=library.copy_platform_drill(g.user.id, owner_id, str(drill_id), str(details.id))), 201
+        return jsonify(id=library.copy_platform_drill(g.user.id, accounts.internal_id(owner_id), str(drill_id), str(details.id))), 201
 
     @api.post("/shared-plans/preview")
     def preview_plan_link():
@@ -335,20 +335,20 @@ def create_api(library: Library, accounts: Accounts, sharing: Sharing, confirmat
     def shared_plans():
         return jsonify(plans=sharing.incoming(g.user.id))
 
-    @api.get("/shared-plans/<int:owner_id>/<uuid:plan_id>/link")
+    @api.get("/shared-plans/<uuid:owner_id>/<uuid:plan_id>/link")
     def read_received_plan_link(owner_id, plan_id):
-        return jsonify(token=sharing.received_link(g.user.id, owner_id, str(plan_id)))
+        return jsonify(token=sharing.received_link(g.user.id, accounts.internal_id(owner_id), str(plan_id)))
 
-    @api.delete("/shared-plans/<int:owner_id>/<uuid:plan_id>")
+    @api.delete("/shared-plans/<uuid:owner_id>/<uuid:plan_id>")
     def leave_shared_plan(owner_id, plan_id):
-        sharing.revoke(owner_id, str(plan_id), g.user.id)
+        sharing.revoke(accounts.internal_id(owner_id), str(plan_id), g.user.id)
         return "", 204
 
-    @api.post("/shared-plans/<int:owner_id>/<uuid:plan_id>/copy")
+    @api.post("/shared-plans/<uuid:owner_id>/<uuid:plan_id>/copy")
     def copy_shared_plan(owner_id, plan_id):
         request.max_content_length = 4096
         details = PlanCopyRequest.model_validate(request.get_json())
-        return jsonify(plan_id=sharing.copy(g.user.id, owner_id, str(plan_id), str(details.id))), 201
+        return jsonify(plan_id=sharing.copy(g.user.id, accounts.internal_id(owner_id), str(plan_id), str(details.id))), 201
 
     @api.route("/<collection>/<record_id>", methods=["PUT", "DELETE"])
     def write_library(collection: str, record_id: str):

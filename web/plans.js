@@ -27,7 +27,7 @@ function setupPlans({ getActivities, getPlatforms, refreshLibrary }) {
   const sharedList = document.getElementById('shared-plans-list')
   const sharedStatus = document.getElementById('shared-plans-status')
   const openSharing = setupPlanSharing()
-  const accountId = Number(document.getElementById('plans-page').dataset.accountId)
+  const accountId = document.getElementById('plans-page').dataset.accountId
   let sharedVersion = 0
   let plans = []
   let editingId = null

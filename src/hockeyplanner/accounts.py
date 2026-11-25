@@ -2,14 +2,15 @@ import hashlib
 import hmac
 import secrets
 import time
+from uuid import UUID
 
 from sqlalchemy import delete, func, or_, select, update
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import Session, selectinload, sessionmaker
 
 from .database import (
     AccountSession, DrillShareLink, EmailConfirmation, LibraryRecord, PasswordResetRequest, PlanShare, PlanShareLink,
-    PlatformDrill, RetiredUserId, User, UserAccess, UserEmail, UserMembership, lock_postgres,
+    PlatformDrill, RetiredUserId, User, UserAccess, UserEmail, UserMembership, UserPublicIdentity, lock_postgres,
 )
 from .models import AccountProfile, AccountTier, AccountUpdate, Credentials, Login, PasswordChange, UserProfile
 
@@ -40,7 +41,7 @@ class AdministrationDenied(Exception):
 
 def profile(user: User, access: UserAccess | None) -> UserProfile:
     return UserProfile(
-        id=user.id, username=user.username,
+        id=user.id, public_id=user.public_identity.public_id, username=user.username,
         role=access.role if access else "user",
         enabled=access.enabled if access else True,
     )
@@ -76,7 +77,7 @@ class Accounts:
             select(func.max(RetiredUserId.id)).scalar_subquery(),
         )).one()
         next_id = max(latest_user or 0, latest_retired or 0) + 1
-        user = User(id=next_id, username=username, salt=salt, password_hash=digest)
+        user = User(id=next_id, username=username, salt=salt, password_hash=digest, public_identity=UserPublicIdentity())
         session.add(user)
         try:
             session.flush()
@@ -192,12 +193,20 @@ class Accounts:
         with self.sessions() as session:
             rows = session.execute(
                 select(User, UserAccess, UserEmail.address, UserMembership.tier)
+                .options(selectinload(User.public_identity))
                 .outerjoin(UserAccess, UserAccess.user_id == User.id)
                 .outerjoin(UserEmail, UserEmail.user_id == User.id)
                 .outerjoin(UserMembership, UserMembership.user_id == User.id)
                 .order_by(User.username)
             )
             return [AccountProfile(**profile(user, access).model_dump(), email=email, tier=tier or "free") for user, access, email, tier in rows]
+
+    def internal_id(self, public_id: UUID) -> int:
+        with self.sessions() as session:
+            user_id = session.scalar(select(UserPublicIdentity.user_id).where(UserPublicIdentity.public_id == public_id))
+            if user_id is None:
+                raise AccountNotFound
+            return user_id
 
     @staticmethod
     def require_account_administrator(session: Session, actor_id: int, user_id: int) -> None:
