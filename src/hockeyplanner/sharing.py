@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from flask_babel import gettext
 
-from .library import check_capacity, lock_library, plan_body, platform_records, public_drill_sources, resolve_platform_drills
+from .library import check_capacity, lock_library, plan_body, platform_records, public_drill_sources, resolve_platform_drills, with_plan_duration
 from .database import DrillShareLink, LibraryRecord, PlatformDrill, PlanShare, PlanShareLink, User, UserAccess, UserMembership, UserPublicIdentity, conflict_insert
 
 
@@ -32,7 +32,7 @@ def find_plan(session: Session, owner_id: int, plan_id: str) -> LibraryRecord:
 
 
 def public_drill(drill: dict) -> dict:
-    return {key: drill[key] for key in ("id", "title", "description", "layout", "items") if key in drill}
+    return {key: drill[key] for key in ("id", "title", "description", "layout", "items", "duration_minutes") if key in drill}
 
 
 def public_owner(session: Session, owner_id: int) -> dict:
@@ -58,7 +58,10 @@ def resolved_plan(session: Session, record: LibraryRecord) -> dict:
         LibraryRecord.body.is_not(None),
     ))
     replacements = {drill.id: json.loads(drill.body) for drill in current}
-    activities = [drill if drill.get("platformSource") else replacements.get(drill["id"], drill) for drill in saved]
+    activities = [
+        drill if drill.get("platformSource") else with_plan_duration(replacements.get(drill["id"], drill), drill)
+        for drill in saved
+    ]
     public_drill_sources(session, activities)
     if any(drill.get("platformSource") for drill in activities):
         activities = resolve_platform_drills(activities, platform_records(session))
@@ -239,11 +242,12 @@ class Sharing:
                 if source_id not in copied:
                     new_drill = {**drill, "id": str(uuid4())}
                     new_drill.pop("sharedSource", None)
+                    new_drill.pop("duration_minutes", None)
                     copied[source_id] = new_drill
                     session.add(LibraryRecord(
                         owner_id=recipient_id, collection="drills", id=new_drill["id"], body=json.dumps(new_drill),
                     ))
-                activities.append(copied[source_id])
+                activities.append(with_plan_duration(copied[source_id], drill))
             plan = {**plan, "id": copy_id, "activities": activities}
             session.add(LibraryRecord(owner_id=recipient_id, collection="plans", id=copy_id, body=plan_body(plan)))
             return copy_id

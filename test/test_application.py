@@ -314,14 +314,19 @@ class LibraryTests(ApplicationTestCase):
         self.sign_in(recipient, "recipient")
 
         drill = self.drill()
-        plan = {"id": str(uuid4()), "name": "Practice plan", "activities": [drill]}
+        plan = {"id": str(uuid4()), "name": "Practice plan", "activities": [drill | {"duration_minutes": 8}]}
         path = f"/api/plans/{plan['id']}"
         self.assert_status(owner.put(f"/api/drills/{drill['id']}", json=drill), 204)
         self.assert_status(owner.put(path, json=plan), 200)
+        self.assert_status(owner.put(f"/api/drills/{drill['id']}", json=drill | {"title": "Updated drill"}), 204)
         link = owner.put(path + "/link")
         self.assert_status(link, 200)
         token = link.json["token"]
         self.assert_status(guest.get(f"/share/{token}/present"), 200)
+        preview = guest.post("/api/shared-plans/preview", json={"token": token})
+        self.assert_status(preview, 200)
+        self.assertEqual(preview.json["plan"]["activities"][0]["duration_minutes"], 8)
+        self.assertEqual(preview.json["plan"]["activities"][0]["title"], "Updated drill")
         self.assert_status(recipient.get(path + "/link"), 404)
         self.assert_status(recipient.get(f"/api/shared-plans/{owner_id}/{plan['id']}/link"), 404)
         self.assert_status(recipient.post(
@@ -337,3 +342,5 @@ class LibraryTests(ApplicationTestCase):
         self.assertEqual(copy["id"], copy_id)
         self.assertNotEqual(copied_drill["id"], drill["id"])
         self.assertEqual(copy["activities"][0]["id"], copied_drill["id"])
+        self.assertEqual(copy["activities"][0]["duration_minutes"], 8)
+        self.assertNotIn("duration_minutes", copied_drill)

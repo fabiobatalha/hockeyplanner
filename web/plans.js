@@ -75,9 +75,10 @@ function setupPlans({ getActivities, getPlatforms, refreshLibrary }) {
   function currentActivity(entry) {
     if (entry.platformSource) {
       const current = getPlatforms().find(drill => platformKey(drill.platformSource) === platformKey(entry.platformSource))
-      return current ? { ...current, id: entry.id } : undefined
+      return current ? { ...current, id: entry.id, duration_minutes: entry.duration_minutes } : undefined
     }
-    return getActivities().find(activity => activity.id === entry.id)
+    const current = getActivities().find(activity => activity.id === entry.id)
+    return current ? { ...current, duration_minutes: entry.duration_minutes } : undefined
   }
 
   function planActivities(plan, shared) {
@@ -193,8 +194,9 @@ function setupPlans({ getActivities, getPlatforms, refreshLibrary }) {
     const entry = availableDrills().get(key)
     if (!entry) return
     const { drill, sharedSource } = entry
-    selection.set(key, sharedSource ? { ...drill, id: newRecordId(), sharedSource }
-      : drill.platformSource ? { ...drill, id: newRecordId() } : drill)
+    const added = { ...drill, duration_minutes: undefined }
+    selection.set(key, sharedSource ? { ...added, id: newRecordId(), sharedSource }
+      : drill.platformSource ? { ...added, id: newRecordId() } : added)
     renderBuilder()
   }
 
@@ -258,6 +260,22 @@ function setupPlans({ getActivities, getPlatforms, refreshLibrary }) {
         : drill.sharedSource && !currentActivity(drill) ? gettext('%(title)s · Shared by %(owner)s', { title: drill.title, owner: drill.sharedSource.owner }) : drill.title
       const controls = document.createElement('div')
       controls.className = 'actions'
+      const duration = document.createElement('label')
+      duration.className = 'plan-drill-duration'
+      const minutes = document.createElement('input')
+      minutes.type = 'number'
+      minutes.inputMode = 'numeric'
+      minutes.min = '1'
+      minutes.max = String(Number.MAX_SAFE_INTEGER)
+      minutes.step = '1'
+      minutes.value = drill.duration_minutes ?? ''
+      minutes.disabled = saving
+      minutes.setAttribute('aria-label', gettext('Minutes for %(title)s', { title: drill.title }))
+      minutes.addEventListener('input', () => {
+        const value = minutes.valueAsNumber
+        selection.set(key, { ...selection.get(key), duration_minutes: Number.isSafeInteger(value) ? value : undefined })
+      })
+      duration.append(minutes, gettext('min'))
       const up = button('↑', () => reorderDrill(key, index - 1))
       up.disabled = saving || index === 0
       up.setAttribute('aria-label', gettext('Move %(title)s up', { title: drill.title }))
@@ -269,7 +287,7 @@ function setupPlans({ getActivities, getPlatforms, refreshLibrary }) {
         selection.delete(key)
         renderBuilder()
       })
-      controls.append(up, down, remove)
+      controls.append(duration, up, down, remove)
       const content = document.createElement('div')
       content.className = 'selected-drill'
       content.append(label, controls)

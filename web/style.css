@@ -477,6 +477,10 @@ body:has(.editor-fullscreen) { overflow: hidden; }
   padding: 1.25rem 5% 2rem;
 }
 .plan-viewer-activity h3 { font-size: clamp(1.15rem, 3vw, 1.65rem); overflow-wrap: anywhere; }
+.plan-viewer-drill-heading { display: flex; align-items: center; justify-content: center; gap: .5rem .8rem; flex-wrap: wrap; }
+.plan-viewer-duration { padding: .34rem .65rem; border-radius: 999px; background: #e1eeff; color: #17449c; font-weight: 750; white-space: nowrap; }
+.plan-viewer-main { display: grid; align-items: start; gap: .9rem; width: min(100%, 76rem); }
+.plan-viewer-rink-column { display: grid; justify-items: center; min-width: 0; gap: .9rem; }
 .plan-viewer-rink {
   display: block;
   width: min(100%, calc(58dvh * var(--diagram-ratio)));
@@ -499,10 +503,17 @@ body:has(.editor-fullscreen) { overflow: hidden; }
 }
 .plan-viewer-legend li { display: flex; align-items: center; gap: .35rem; font-size: .875rem; }
 .plan-viewer-legend canvas { flex: none; width: 6rem; height: 1.5rem; }
-.plan-viewer-description {
-  width: min(100%, 60rem);
-  white-space: pre-wrap;
+.plan-viewer-notes {
+  min-width: 0;
+  padding: .85rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: white;
   overflow-wrap: anywhere;
+}
+.plan-viewer-notes h4 { margin: 0 0 .45rem; }
+@media (min-width: 900px) {
+  .plan-viewer-main.has-notes { grid-template-columns: minmax(0, 3fr) minmax(16rem, 1fr); }
 }
 
 .plan-viewer-controls {
@@ -511,9 +522,16 @@ body:has(.editor-fullscreen) { overflow: hidden; }
   align-items: center;
   justify-content: center;
   gap: clamp(.4rem, 3vw, 1.5rem);
-  padding: .7rem 5%;
+  padding: .7rem 5% max(.7rem, env(safe-area-inset-bottom));
   background: white;
   border-top: 1px solid var(--border);
+}
+.plan-viewer-controls button { min-height: 3rem; min-width: min(28vw, 8rem); }
+.plan-viewer-controls button:enabled { background: #174fc9; color: white; border-color: #174fc9; }
+.plan-viewer-controls button:hover:enabled { background: #103ea4; border-color: #103ea4; }
+@media (max-width: 540px) {
+  .plan-viewer-controls { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); }
+  .plan-viewer-controls button { min-width: 0; }
 }
 #plan-viewer-position { font-size: .875rem; white-space: nowrap; }
 
@@ -752,6 +770,8 @@ body:has(.editor-fullscreen) { overflow: hidden; }
 #plan-activities .insert-before { border-block-start-color: var(--blue); }
 #plan-activities .insert-after { border-block-end-color: var(--blue); }
 .selected-drill { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .4rem; }
+.plan-drill-duration { display: inline-flex; gap: .3rem; align-items: center; font-size: .875rem; }
+.plan-drill-duration input { width: 4.5rem; min-height: 2.375rem; padding: .35rem; border: 1px solid var(--border); border-radius: 8px; }
 @media (max-width: 700px) {
   #plan-builder:not([hidden]) { grid-template-columns: 1fr; }
 }

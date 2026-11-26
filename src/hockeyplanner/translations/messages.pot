@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-25 14:15-0500\n"
+"POT-Creation-Date: 2026-11-25 14:28-0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -68,7 +68,7 @@ msgid "You cannot change your own account here."
 msgstr ""
 
 #: src/hockeyplanner/accounts.py:238 src/hockeyplanner/api.py:137
-#: src/hockeyplanner/library.py:170 src/hockeyplanner/pages.py:182
+#: src/hockeyplanner/library.py:179 src/hockeyplanner/pages.py:182
 msgid "Poweruser access is required."
 msgstr ""
 
@@ -202,17 +202,17 @@ msgstr ""
 msgid "Email delivery is unavailable. Try again later."
 msgstr ""
 
-#: src/hockeyplanner/library.py:83
+#: src/hockeyplanner/library.py:92
 #, python-format
 msgid "Free accounts can save up to %(limit)d drills."
 msgstr ""
 
-#: src/hockeyplanner/library.py:85
+#: src/hockeyplanner/library.py:94
 #, python-format
 msgid "Free accounts can save up to %(limit)d practice plans."
 msgstr ""
 
-#: src/hockeyplanner/library.py:233
+#: src/hockeyplanner/library.py:242
 msgid "Copy the platform drill before editing it."
 msgstr ""
 
@@ -317,15 +317,15 @@ msgstr ""
 msgid "This share link is no longer available."
 msgstr ""
 
-#: src/hockeyplanner/sharing.py:93
+#: src/hockeyplanner/sharing.py:96
 msgid "No active account matches that username."
 msgstr ""
 
-#: src/hockeyplanner/sharing.py:129 src/hockeyplanner/sharing.py:217
+#: src/hockeyplanner/sharing.py:132 src/hockeyplanner/sharing.py:220
 msgid "Shared plan not found."
 msgstr ""
 
-#: src/hockeyplanner/sharing.py:177
+#: src/hockeyplanner/sharing.py:180
 msgid "This drill is no longer in the shared plan."
 msgstr ""
 
@@ -535,7 +535,7 @@ msgid "Personal Drill"
 msgstr ""
 
 #: src/hockeyplanner/templates/drills.html:22 web/drill-library.js:20
-#: web/plans.js:180 web/plans.js:183
+#: web/plans.js:181 web/plans.js:184
 msgid "Platform Drill"
 msgstr ""
 
@@ -1007,7 +1007,7 @@ msgstr ""
 msgid "Recipient username"
 msgstr ""
 
-#: src/hockeyplanner/templates/plan_sharing.html:12 web/plans.js:162
+#: src/hockeyplanner/templates/plan_sharing.html:12 web/plans.js:163
 msgid "Share"
 msgstr ""
 
@@ -1162,11 +1162,11 @@ msgstr ""
 msgid "Permanently delete my account"
 msgstr ""
 
-#: src/hockeyplanner/templates/share.html:9 web/plans.js:145 web/plans.js:452
+#: src/hockeyplanner/templates/share.html:9 web/plans.js:146 web/plans.js:470
 msgid "View Fullscreen"
 msgstr ""
 
-#: src/hockeyplanner/templates/share.html:10 web/plans.js:114
+#: src/hockeyplanner/templates/share.html:10 web/plans.js:115
 msgid "Print PDF"
 msgstr ""
 
@@ -1182,7 +1182,7 @@ msgstr ""
 msgid "Sign in to accept"
 msgstr ""
 
-#: src/hockeyplanner/templates/share.html:28 web/plans.js:186
+#: src/hockeyplanner/templates/share.html:28 web/plans.js:187
 #, python-format
 msgid "Shared by %(owner)s"
 msgstr ""
@@ -1556,7 +1556,7 @@ msgid "Download %(format)s for %(title)s"
 msgstr ""
 
 #: web/drill-library.js:73 web/editor.js:788 web/plan-invite.js:43
-#: web/plans.js:120
+#: web/plans.js:121
 msgid "Could not generate the PDF."
 msgstr ""
 
@@ -1976,10 +1976,19 @@ msgstr ""
 
 #: web/plan-viewer.js:74
 #, python-format
+msgid "%(time)s min"
+msgstr ""
+
+#: web/plan-viewer.js:88
+#, python-format
 msgid "Rink diagram for %(title)s"
 msgstr ""
 
-#: web/plan-viewer.js:91
+#: web/plan-viewer.js:102
+msgid "Coaching notes"
+msgstr ""
+
+#: web/plan-viewer.js:113
 #, python-format
 msgid "%(position)d of %(total)d"
 msgstr ""
@@ -1993,151 +2002,160 @@ msgstr ""
 msgid "Update date not recorded"
 msgstr ""
 
-#: web/plans.js:104 web/plans.js:257
+#: web/plans.js:105 web/plans.js:259
 #, python-format
 msgid "%(title)s · Platform Drill"
 msgstr ""
 
-#: web/plans.js:125
+#: web/plans.js:126
 #, python-format
 msgid "Print PDF for %(title)s"
 msgstr ""
 
-#: web/plans.js:138
+#: web/plans.js:139
 msgid "No saved practice plans."
 msgstr ""
 
-#: web/plans.js:147
+#: web/plans.js:148
 msgid "Delete Plan"
 msgstr ""
 
-#: web/plans.js:148
+#: web/plans.js:149
 #, python-format
 msgid "Delete the plan “%(title)s”?"
 msgstr ""
 
-#: web/plans.js:148
+#: web/plans.js:149
 msgid "Delete plan"
 msgstr ""
 
-#: web/plans.js:154
+#: web/plans.js:155
 msgid "Plan deleted."
 msgstr ""
 
-#: web/plans.js:156
+#: web/plans.js:157
 msgid "Could not delete the plan on the application server."
 msgstr ""
 
-#: web/plans.js:162
+#: web/plans.js:163
 msgid "Edit Plan"
 msgstr ""
 
-#: web/plans.js:180
+#: web/plans.js:181
 msgid "My drill"
 msgstr ""
 
-#: web/plans.js:258
+#: web/plans.js:260
 #, python-format
 msgid "%(title)s · Shared by %(owner)s"
 msgstr ""
 
-#: web/plans.js:263
+#: web/plans.js:273
+#, python-format
+msgid "Minutes for %(title)s"
+msgstr ""
+
+#: web/plans.js:278
+msgid "min"
+msgstr ""
+
+#: web/plans.js:281
 #, python-format
 msgid "Move %(title)s up"
 msgstr ""
 
-#: web/plans.js:266
+#: web/plans.js:284
 #, python-format
 msgid "Move %(title)s down"
 msgstr ""
 
-#: web/plans.js:267
+#: web/plans.js:285
 msgid "Remove"
 msgstr ""
 
-#: web/plans.js:291
+#: web/plans.js:309
 msgid "No drills match your search."
 msgstr ""
 
-#: web/plans.js:291
+#: web/plans.js:309
 msgid "No drills available."
 msgstr ""
 
-#: web/plans.js:312
+#: web/plans.js:330
 msgid "Added"
 msgstr ""
 
-#: web/plans.js:312
+#: web/plans.js:330
 msgid "Add"
 msgstr ""
 
-#: web/plans.js:314
+#: web/plans.js:332
 #, python-format
 msgid "Added %(title)s · %(source)s"
 msgstr ""
 
-#: web/plans.js:314
+#: web/plans.js:332
 #, python-format
 msgid "Add %(title)s · %(source)s"
 msgstr ""
 
-#: web/plans.js:366
+#: web/plans.js:384
 msgid "Enter a name for the plan."
 msgstr ""
 
-#: web/plans.js:371
+#: web/plans.js:389
 msgid "Select at least one drill."
 msgstr ""
 
-#: web/plans.js:387
+#: web/plans.js:405
 msgid "Plan saved."
 msgstr ""
 
-#: web/plans.js:389
+#: web/plans.js:407
 msgid "Could not save the plan. Try again."
 msgstr ""
 
-#: web/plans.js:414
+#: web/plans.js:432
 msgid "No practice plans have been shared with you."
 msgstr ""
 
-#: web/plans.js:419
+#: web/plans.js:437
 #, python-format
 msgid "Shared by %(owner)s · Read-only"
 msgstr ""
 
-#: web/plans.js:423
+#: web/plans.js:441
 msgid "Copy to My Account"
 msgstr ""
 
-#: web/plans.js:428
+#: web/plans.js:446
 msgid "Plan and drills copied to your account."
 msgstr ""
 
-#: web/plans.js:429
+#: web/plans.js:447
 msgid "Copied to My Account"
 msgstr ""
 
-#: web/plans.js:438
+#: web/plans.js:456
 msgid "Remove from Shared with me"
 msgstr ""
 
-#: web/plans.js:439
+#: web/plans.js:457
 #, python-format
 msgid ""
 "Remove “%(title)s” from Shared with me? Any copies in your account will "
 "be kept."
 msgstr ""
 
-#: web/plans.js:439
+#: web/plans.js:457
 msgid "Remove plan"
 msgstr ""
 
-#: web/plans.js:445
+#: web/plans.js:463
 msgid "Plan removed from Shared with me."
 msgstr ""
 
-#: web/plans.js:489
+#: web/plans.js:507
 msgid "Could not load the practice plans."
 msgstr ""
 

@@ -1,6 +1,6 @@
-import { gettext } from './i18n.js'
+import { gettext, locale } from './i18n.js'
 import { drawItem, drawRink, drawMovementSample, movementLegend, rinkHeight, rinkWidth } from './drawing.js'
-import { markdownText } from './markdown.js'
+import { renderMarkdown } from './markdown.js'
 
 const viewer = document.getElementById('plan-viewer')
 const presentation = document.getElementById('plan-presentation')
@@ -63,8 +63,22 @@ function showActivity(index) {
   activityIndex = index
   const section = document.createElement('article')
   section.className = 'plan-viewer-activity'
+  const heading = document.createElement('header')
+  heading.className = 'plan-viewer-drill-heading'
   const title = document.createElement('h3')
   title.textContent = activity.title
+  heading.append(title)
+  if (Number.isSafeInteger(activity.duration_minutes) && activity.duration_minutes > 0) {
+    const duration = document.createElement('span')
+    duration.className = 'plan-viewer-duration'
+    duration.textContent = gettext('%(time)s min', { time: new Intl.NumberFormat(locale).format(activity.duration_minutes) })
+    heading.append(duration)
+  }
+
+  const body = document.createElement('div')
+  body.className = 'plan-viewer-main'
+  const rinkColumn = document.createElement('div')
+  rinkColumn.className = 'plan-viewer-rink-column'
 
   const diagram = document.createElement('canvas')
   diagram.width = rinkWidth(activity.layout)
@@ -75,17 +89,25 @@ function showActivity(index) {
   const context = diagram.getContext('2d')
   drawRink(context)
   for (const item of activity.items) drawItem(context, item)
-  section.append(title, diagram)
+  rinkColumn.append(diagram)
   const entries = movementLegend(activity.items)
-  if (entries.length) section.append(renderMovementLegend(entries))
+  if (entries.length) rinkColumn.append(renderMovementLegend(entries))
+  body.append(rinkColumn)
 
-  const description = markdownText(activity.description ?? '').trim()
+  const description = activity.description?.trim()
   if (description) {
-    const text = document.createElement('p')
-    text.className = 'plan-viewer-description'
-    text.textContent = description
-    section.append(text)
+    const notes = document.createElement('section')
+    notes.className = 'plan-viewer-notes'
+    const noteTitle = document.createElement('h4')
+    noteTitle.textContent = gettext('Coaching notes')
+    const text = document.createElement('div')
+    text.className = 'formatted-description'
+    renderMarkdown(description, text)
+    notes.append(noteTitle, text)
+    body.classList.add('has-notes')
+    body.append(notes)
   }
+  section.append(heading, body)
   viewerActivities.replaceChildren(section)
   viewerActivities.scrollTop = 0
   position.textContent = gettext('%(position)d of %(total)d', { position: index + 1, total: displayedActivities.length })

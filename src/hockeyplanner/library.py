@@ -55,6 +55,12 @@ def public_drill_sources(session: Session, drills: list[dict]) -> list[dict]:
     return drills
 
 
+def with_plan_duration(drill: dict, snapshot: dict) -> dict:
+    if "duration_minutes" in snapshot:
+        return {**drill, "duration_minutes": snapshot["duration_minutes"]}
+    return drill
+
+
 def resolve_platform_drills(drills: list[dict], platforms: dict) -> list[dict]:
     resolved = []
     for drill in drills:
@@ -64,7 +70,10 @@ def resolve_platform_drills(drills: list[dict], platforms: dict) -> list[dict]:
             key = (source.get("ownerId"), source.get("drillId"))
             if isinstance(key[0], str) and isinstance(key[1], str):
                 current = platforms.get(key)
-        resolved.append({**current, "id": drill["id"], "platformSource": source} if current else drill)
+        if current:
+            resolved.append(with_plan_duration({**current, "id": drill["id"], "platformSource": source}, drill))
+        else:
+            resolved.append(drill)
     return resolved
 
 
@@ -247,7 +256,7 @@ class Library:
                     body = plan_body(plan)
                 else:
                     body = payload.model_dump_json(
-                        exclude_unset=True, exclude_none=True, exclude={"platformSource", "sharedSource"},
+                        exclude_unset=True, exclude_none=True, exclude={"platformSource", "sharedSource", "duration_minutes"},
                     )
             # A new revision controls display order. Keep a null revision for deletions.
             session.execute(delete(LibraryRecord).where(
@@ -284,7 +293,7 @@ class Library:
                         "id": str(payload.id),
                         "body": payload.model_dump_json(
                             exclude_unset=True, exclude_none=True,
-                            exclude={"platformSource", "sharedSource"} if collection == "drills" else None,
+                            exclude={"platformSource", "sharedSource", "duration_minutes"} if collection == "drills" else None,
                         ),
                     })
                 if rows:

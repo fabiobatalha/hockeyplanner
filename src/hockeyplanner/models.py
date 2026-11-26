@@ -183,12 +183,16 @@ class Drill(BaseModel):
     items: list[RinkItem]
 
 
+class PlanDrill(Drill):
+    duration_minutes: Annotated[int, Field(strict=True, ge=1, le=9_007_199_254_740_991)] | None = None
+
+
 class PracticePlan(BaseModel):
     model_config = ConfigDict(extra="allow")
 
     id: UUID
     name: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
-    activities: Annotated[list[Drill], Field(min_length=1)]
+    activities: Annotated[list[PlanDrill], Field(min_length=1)]
 
 
 class LibraryImport(BaseModel):

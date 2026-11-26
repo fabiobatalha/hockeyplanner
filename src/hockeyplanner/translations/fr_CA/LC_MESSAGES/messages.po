@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Hockey Planner VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-11-25 14:15-0500\n"
+"POT-Creation-Date: 2026-11-25 14:28-0500\n"
 "PO-Revision-Date: 2026-11-25 09:24-0500\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: fr_CA\n"
@@ -71,7 +71,7 @@ msgid "You cannot change your own account here."
 msgstr "Vous ne pouvez pas modifier votre propre compte ici."
 
 #: src/hockeyplanner/accounts.py:238 src/hockeyplanner/api.py:137
-#: src/hockeyplanner/library.py:170 src/hockeyplanner/pages.py:182
+#: src/hockeyplanner/library.py:179 src/hockeyplanner/pages.py:182
 msgid "Poweruser access is required."
 msgstr "L’accès administrateur est requis."
 
@@ -216,19 +216,19 @@ msgstr "Le service de courriel est occupé. Réessayez plus tard."
 msgid "Email delivery is unavailable. Try again later."
 msgstr "Le service de courriel est indisponible. Réessayez plus tard."
 
-#: src/hockeyplanner/library.py:83
+#: src/hockeyplanner/library.py:92
 #, python-format
 msgid "Free accounts can save up to %(limit)d drills."
 msgstr "Un compte gratuit permet d’enregistrer jusqu’à %(limit)d exercices."
 
-#: src/hockeyplanner/library.py:85
+#: src/hockeyplanner/library.py:94
 #, python-format
 msgid "Free accounts can save up to %(limit)d practice plans."
 msgstr ""
 "Un compte gratuit permet d’enregistrer jusqu’à %(limit)d plans "
 "d’entraînement."
 
-#: src/hockeyplanner/library.py:233
+#: src/hockeyplanner/library.py:242
 msgid "Copy the platform drill before editing it."
 msgstr "Copiez l’exercice de la plateforme pour pouvoir le modifier."
 
@@ -338,15 +338,15 @@ msgstr "Exercice introuvable."
 msgid "This share link is no longer available."
 msgstr "Ce lien de partage n’est plus disponible."
 
-#: src/hockeyplanner/sharing.py:93
+#: src/hockeyplanner/sharing.py:96
 msgid "No active account matches that username."
 msgstr "Aucun compte actif ne correspond à ce nom d’utilisateur."
 
-#: src/hockeyplanner/sharing.py:129 src/hockeyplanner/sharing.py:217
+#: src/hockeyplanner/sharing.py:132 src/hockeyplanner/sharing.py:220
 msgid "Shared plan not found."
 msgstr "Plan partagé introuvable."
 
-#: src/hockeyplanner/sharing.py:177
+#: src/hockeyplanner/sharing.py:180
 msgid "This drill is no longer in the shared plan."
 msgstr "Cet exercice ne fait plus partie du plan partagé."
 
@@ -558,7 +558,7 @@ msgid "Personal Drill"
 msgstr "Exercice personnel"
 
 #: src/hockeyplanner/templates/drills.html:22 web/drill-library.js:20
-#: web/plans.js:180 web/plans.js:183
+#: web/plans.js:181 web/plans.js:184
 msgid "Platform Drill"
 msgstr "Exercice de la plateforme"
 
@@ -1051,7 +1051,7 @@ msgstr ""
 msgid "Recipient username"
 msgstr "Nom d’utilisateur du destinataire"
 
-#: src/hockeyplanner/templates/plan_sharing.html:12 web/plans.js:162
+#: src/hockeyplanner/templates/plan_sharing.html:12 web/plans.js:163
 msgid "Share"
 msgstr "Partager"
 
@@ -1223,11 +1223,11 @@ msgstr ""
 msgid "Permanently delete my account"
 msgstr "Supprimer définitivement mon compte"
 
-#: src/hockeyplanner/templates/share.html:9 web/plans.js:145 web/plans.js:452
+#: src/hockeyplanner/templates/share.html:9 web/plans.js:146 web/plans.js:470
 msgid "View Fullscreen"
 msgstr "Afficher en plein écran"
 
-#: src/hockeyplanner/templates/share.html:10 web/plans.js:114
+#: src/hockeyplanner/templates/share.html:10 web/plans.js:115
 msgid "Print PDF"
 msgstr "Imprimer en PDF"
 
@@ -1243,7 +1243,7 @@ msgstr "Finalisez la configuration du compte pour accepter"
 msgid "Sign in to accept"
 msgstr "Se connecter pour accepter"
 
-#: src/hockeyplanner/templates/share.html:28 web/plans.js:186
+#: src/hockeyplanner/templates/share.html:28 web/plans.js:187
 #, python-format
 msgid "Shared by %(owner)s"
 msgstr "Partagé par %(owner)s"
@@ -1676,7 +1676,7 @@ msgid "Download %(format)s for %(title)s"
 msgstr "Télécharger le fichier %(format)s de %(title)s"
 
 #: web/drill-library.js:73 web/editor.js:788 web/plan-invite.js:43
-#: web/plans.js:120
+#: web/plans.js:121
 msgid "Could not generate the PDF."
 msgstr "Impossible de générer le PDF."
 
@@ -2137,10 +2137,19 @@ msgstr "Partager %(title)s"
 
 #: web/plan-viewer.js:74
 #, python-format
+msgid "%(time)s min"
+msgstr "%(time)s min"
+
+#: web/plan-viewer.js:88
+#, python-format
 msgid "Rink diagram for %(title)s"
 msgstr "Schéma de la patinoire pour %(title)s"
 
-#: web/plan-viewer.js:91
+#: web/plan-viewer.js:102
+msgid "Coaching notes"
+msgstr "Notes de l’entraîneur"
+
+#: web/plan-viewer.js:113
 #, python-format
 msgid "%(position)d of %(total)d"
 msgstr "%(position)d sur %(total)d"
@@ -2154,136 +2163,145 @@ msgstr "Mis à jour le %(date)s"
 msgid "Update date not recorded"
 msgstr "Date de mise à jour inconnue"
 
-#: web/plans.js:104 web/plans.js:257
+#: web/plans.js:105 web/plans.js:259
 #, python-format
 msgid "%(title)s · Platform Drill"
 msgstr "%(title)s · Exercice de la plateforme"
 
-#: web/plans.js:125
+#: web/plans.js:126
 #, python-format
 msgid "Print PDF for %(title)s"
 msgstr "Imprimer le PDF de %(title)s"
 
-#: web/plans.js:138
+#: web/plans.js:139
 msgid "No saved practice plans."
 msgstr "Aucun plan d’entraînement enregistré."
 
-#: web/plans.js:147
+#: web/plans.js:148
 msgid "Delete Plan"
 msgstr "Supprimer le plan"
 
-#: web/plans.js:148
+#: web/plans.js:149
 #, python-format
 msgid "Delete the plan “%(title)s”?"
 msgstr "Supprimer le plan « %(title)s »?"
 
-#: web/plans.js:148
+#: web/plans.js:149
 msgid "Delete plan"
 msgstr "Supprimer le plan"
 
-#: web/plans.js:154
+#: web/plans.js:155
 msgid "Plan deleted."
 msgstr "Plan supprimé."
 
-#: web/plans.js:156
+#: web/plans.js:157
 msgid "Could not delete the plan on the application server."
 msgstr "Impossible de supprimer le plan sur le serveur."
 
-#: web/plans.js:162
+#: web/plans.js:163
 msgid "Edit Plan"
 msgstr "Modifier le plan"
 
-#: web/plans.js:180
+#: web/plans.js:181
 msgid "My drill"
 msgstr "Mon exercice"
 
-#: web/plans.js:258
+#: web/plans.js:260
 #, python-format
 msgid "%(title)s · Shared by %(owner)s"
 msgstr "%(title)s · Partagé par %(owner)s"
 
-#: web/plans.js:263
+#: web/plans.js:273
+#, python-format
+msgid "Minutes for %(title)s"
+msgstr "Durée en minutes de %(title)s"
+
+#: web/plans.js:278
+msgid "min"
+msgstr "min"
+
+#: web/plans.js:281
 #, python-format
 msgid "Move %(title)s up"
 msgstr "Monter %(title)s"
 
-#: web/plans.js:266
+#: web/plans.js:284
 #, python-format
 msgid "Move %(title)s down"
 msgstr "Descendre %(title)s"
 
-#: web/plans.js:267
+#: web/plans.js:285
 msgid "Remove"
 msgstr "Retirer"
 
-#: web/plans.js:291
+#: web/plans.js:309
 msgid "No drills match your search."
 msgstr "Aucun exercice ne correspond à votre recherche."
 
-#: web/plans.js:291
+#: web/plans.js:309
 msgid "No drills available."
 msgstr "Aucun exercice disponible."
 
-#: web/plans.js:312
+#: web/plans.js:330
 msgid "Added"
 msgstr "Ajouté"
 
-#: web/plans.js:312
+#: web/plans.js:330
 msgid "Add"
 msgstr "Ajouter"
 
-#: web/plans.js:314
+#: web/plans.js:332
 #, python-format
 msgid "Added %(title)s · %(source)s"
 msgstr "%(title)s ajouté · %(source)s"
 
-#: web/plans.js:314
+#: web/plans.js:332
 #, python-format
 msgid "Add %(title)s · %(source)s"
 msgstr "Ajouter %(title)s · %(source)s"
 
-#: web/plans.js:366
+#: web/plans.js:384
 msgid "Enter a name for the plan."
 msgstr "Entrez un nom pour le plan."
 
-#: web/plans.js:371
+#: web/plans.js:389
 msgid "Select at least one drill."
 msgstr "Sélectionnez au moins un exercice."
 
-#: web/plans.js:387
+#: web/plans.js:405
 msgid "Plan saved."
 msgstr "Plan enregistré."
 
-#: web/plans.js:389
+#: web/plans.js:407
 msgid "Could not save the plan. Try again."
 msgstr "Impossible d’enregistrer le plan. Réessayez."
 
-#: web/plans.js:414
+#: web/plans.js:432
 msgid "No practice plans have been shared with you."
 msgstr "Aucun plan d’entraînement n’a été partagé avec vous."
 
-#: web/plans.js:419
+#: web/plans.js:437
 #, python-format
 msgid "Shared by %(owner)s · Read-only"
 msgstr "Partagé par %(owner)s · Lecture seule"
 
-#: web/plans.js:423
+#: web/plans.js:441
 msgid "Copy to My Account"
 msgstr "Copier dans mon compte"
 
-#: web/plans.js:428
+#: web/plans.js:446
 msgid "Plan and drills copied to your account."
 msgstr "Le plan et les exercices ont été copiés dans votre compte."
 
-#: web/plans.js:429
+#: web/plans.js:447
 msgid "Copied to My Account"
 msgstr "Copié dans mon compte"
 
-#: web/plans.js:438
+#: web/plans.js:456
 msgid "Remove from Shared with me"
 msgstr "Retirer des plans partagés"
 
-#: web/plans.js:439
+#: web/plans.js:457
 #, python-format
 msgid ""
 "Remove “%(title)s” from Shared with me? Any copies in your account will "
@@ -2292,15 +2310,15 @@ msgstr ""
 "Retirer « %(title)s » des plans partagés? Les copies dans votre compte "
 "seront conservées."
 
-#: web/plans.js:439
+#: web/plans.js:457
 msgid "Remove plan"
 msgstr "Retirer le plan"
 
-#: web/plans.js:445
+#: web/plans.js:463
 msgid "Plan removed from Shared with me."
 msgstr "Plan retiré de la liste des plans partagés."
 
-#: web/plans.js:489
+#: web/plans.js:507
 msgid "Could not load the practice plans."
 msgstr "Impossible de charger les plans d’entraînement."
 

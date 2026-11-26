@@ -44,9 +44,9 @@ class ValidationTests(unittest.TestCase):
 
     def test_platform_snapshot_uses_current_content_and_keeps_its_plan_id(self):
         source = {"ownerId": "public-uuid", "drillId": "original"}
-        snapshot = {"id": "plan-item", "title": "Old title", "platformSource": source}
+        snapshot = {"id": "plan-item", "title": "Old title", "platformSource": source, "duration_minutes": 8}
         current = {"id": "original", "title": "Updated title"}
         self.assertEqual(resolve_platform_drills([snapshot], {("public-uuid", "original"): current}), [
-            {"id": "plan-item", "title": "Updated title", "platformSource": source},
+            {"id": "plan-item", "title": "Updated title", "platformSource": source, "duration_minutes": 8},
         ])
         self.assertEqual(resolve_platform_drills([snapshot], {}), [snapshot])
